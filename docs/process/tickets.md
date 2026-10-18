@@ -4,7 +4,10 @@ Esta guía es para quien nunca usó GitHub Projects. El porqué de esta herramie
 en el ADR-0002.
 
 - **Repo:** <https://github.com/clemgrass/MedievalZombies>
-- **Tablero:** el Project `MedievalZombies` del perfil `clemgrass`
+- **Tablero:** el Project #1 `MedievalZombies` del perfil `clemgrass` (épicas,
+  features, tareas e investigaciones)
+- **Bugs:** el Project #2 `MedievalZombies – Bug hunting`, separado del tablero para no
+  mezclar arreglos con features (ADR-0011). Ver [Bugs](#bugs)
 
 ## Conceptos
 
@@ -66,7 +69,7 @@ Cada acción tiene su ruta en la web y su comando `gh` equivalente.
 ### …crear un issue
 
 - **Web:** *Issues* → *New issue* → elegir el formulario (Épica, Feature, Tarea,
-  Investigación).
+  Investigación o Bug).
 - **gh:** `gh issue create --web` abre el selector de formularios en el navegador.
   Si creas el issue solo con `gh`, sin pasar por el formulario, tienes que poner los
   labels tú: `gh issue create --title "…" --label "tipo:tarea" --body "…"`.
@@ -104,6 +107,77 @@ merge. El issue se cierra solo y el tablero lo pasa a `Hecho`.
 
 Ojo: la búsqueda filtrada usa el índice de búsqueda de GitHub, así que un issue recién
 creado puede tardar unos segundos en aparecer.
+
+## Bugs
+
+El porqué de todo esto está en el ADR-0011, sección 6. Los bugs son issues normales del
+repo, con label `tipo:bug`, pero **viven en el Project #2**, no en el tablero de
+features.
+
+### Campos del Project de bugs
+
+| Campo | Valores | De dónde sale |
+|---|---|---|
+| Estado (`Status`) | `Sin confirmar` → `Confirmado` → `En progreso` → `En revisión` → `Cerrado` | El ciclo de vida de Bugzilla (`UNCONFIRMED`, `NEW`, `ASSIGNED`, `RESOLVED`, `CLOSED`) |
+| Severidad | `S1 – Crítica`, `S2 – Mayor`, `S3 – Menor`, `S4 – Cosmética` | IEEE 1044. **Cuánto daño hace** en el juego |
+| Prioridad | `Alta`, `Media`, `Baja` | **Cuándo se arregla.** Es independiente de la severidad |
+| Reproducibilidad | `Siempre`, `A veces`, `No reproducible` | ISO/IEC/IEEE 29119-3 |
+| Resolución | `FIXED`, `WONTFIX`, `DUPLICATE`, `WORKSFORME`, `INVALID` | Bugzilla. Solo se llena al cerrar |
+| Test de regresión | Texto: ruta y nombre del test | ADR-0011, sección 6.3 |
+
+El formulario pide la severidad de quien reporta. La del Project es la definitiva, que se
+fija al clasificar el bug (puede ser distinta).
+
+### Ciclo de vida de un bug
+
+1. **Reportar.** *New issue* → **Bug**. El formulario pone `tipo:bug` y agrega el issue
+   al Project #2 en `Sin confirmar`. El label `área:` se agrega a mano, como siempre.
+2. **Confirmar.** Reproducirlo y llenar Severidad, Prioridad y Reproducibilidad en el
+   Project. Si se puede reproducir con código, **se escribe el test de regresión ahora**,
+   antes de arreglarlo:
+   - va en `tests/regression/bug_<N>.cpp` y se llama `Bug<N>_<descripción>`, con la URL
+     del issue en un comentario;
+   - verifica el comportamiento **correcto**, así que falla mientras el bug existe;
+   - se registra en CTest con `WILL_FAIL` (falla esperada), para que la suite siga en
+     verde;
+   - su ruta y nombre van al campo Test de regresión.
+
+   Estado: `Confirmado`.
+3. **Arreglar.** Rama `<N>-descripcion` y estado `En progreso`. Cuando el arreglo
+   funciona, el test **pasa de forma inesperada** y CTest lo marca. En el mismo PR se
+   **quita `WILL_FAIL`**: desde ahí es un test de regresión normal, que queda para
+   siempre.
+4. **Cerrar.** El PR lleva `Closes #N`. Al hacer merge, el issue se cierra y el Project
+   lo pasa a `Cerrado`. **La Resolución se llena a mano**: `FIXED`.
+
+### Bugs sin test
+
+No todo bug se puede reproducir con un test (una falla del driver, un problema de timing,
+algo que pasó una vez). **Se registra igual**: se llena "Por qué no tiene test" en el
+formulario y se deja vacío el campo Test de regresión. Si no se vuelve a ver, se cierra
+como *not planned* con Resolución `WORKSFORME`, y queda como historial.
+
+| Resolución | Cuándo | Cómo se cierra en GitHub |
+|---|---|---|
+| `FIXED` | Arreglado, con su test si se pudo | `Closes #N` en el PR (*completed*) |
+| `WONTFIX` | Es un bug, pero no se va a arreglar | *Close as not planned* |
+| `DUPLICATE` | Ya estaba reportado | *Close as duplicate*, enlazando el original |
+| `WORKSFORME` | No se pudo reproducir | *Close as not planned* |
+| `INVALID` | No era un bug | *Close as not planned* |
+
+### Con `gh`
+
+```bash
+# Reportar sin el formulario: poner el label y agregarlo al Project #2 a mano.
+gh issue create --title "…" --label "tipo:bug" --label "área:slicing" --body "…"
+gh project item-add 2 --owner clemgrass --url <url-del-issue>
+
+# Cambiar un campo del Project de bugs.
+gh project item-edit 2 --owner clemgrass --url <url-del-issue> --field Severidad --value "S1 – Crítica"
+
+# Listar los bugs abiertos.
+gh issue list --label "tipo:bug"
+```
 
 ## Errores comunes
 

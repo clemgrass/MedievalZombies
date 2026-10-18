@@ -1,7 +1,7 @@
 # MedievalZombies
 
 Videojuego 3D sobre un apocalipsis zombie en la época medieval, con engine propio,
-escrito en C, C++ o C# (por decidir en un ADR).
+escrito en C++20 (ADR-0003).
 
 > **Estado actual:** milestone M1 (decisiones fundacionales, épica #5). M2 (decisiones de
 > sistemas, épica #35) espera a M1. M0 está
@@ -69,13 +69,19 @@ escrito en C, C++ o C# (por decidir en un ADR).
     `Co-Authored-By: Claude`.
   - En TDD (ADR-0011), Claude escribe primero el test que falla, a partir de la
     especificación acordada con el autor, y después la implementación.
-- **Antes de cada PR corre la auditoría contra los ADRs** (skill, ticket #52). Sus
-  hallazgos se revisan juntos: se corrigen, se ignoran o quedan como `deuda-técnica`.
+- **Antes de cada PR corre la auditoría contra los ADRs** (skill `/auditoria-adr`, en
+  `.claude/skills/auditoria-adr/`). Sus hallazgos se revisan juntos: se corrigen, se
+  ignoran o quedan como `deuda-técnica`.
 
 ## Estructura del repositorio
 
-Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen `docs/`, `.github/` (formularios de issue) y `tools/` (scripts de
-configuración del repo).
+Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
+
+- `docs/`: ADRs, investigación, specs, planes y guías;
+- `.github/`: formularios de issue y plantilla de PR;
+- `.claude/`: skills y agentes de Claude Code, como la auditoría `/auditoria-adr`;
+- `tools/`: scripts de configuración del repo;
+- `LICENSE`, `LICENSES/`, `REUSE.toml` y `CREDITS.md`: licencias (ADR-0019).
 
 La spec de la base del proyecto define la estructura de `docs/`, el formato de ADR, el
 sistema de tickets (GitHub Issues + Projects) y el orden de los primeros ADRs:

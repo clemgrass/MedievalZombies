@@ -1,0 +1,63 @@
+{
+  "skill_name": "auditoria-adr",
+  "evals": [
+    {
+      "id": 1,
+      "name": "codigo-con-violaciones",
+      "prompt": "terminé el primer pedazo del ECS en la rama 99-ecs-inicial, antes de abrir el PR audítalo contra los ADRs. el ticket #99 todavía no está en GitHub, este es su texto: 'Tarea: ECS inicial: entidades y componentes. modo:dirigido. Criterios: crear y destruir entidades con handles con generación; guardar componentes en sparse sets; tests de crear, destruir y reusar un handle viejo.' El título del PR va a ser 'feat: ECS inicial con entidades y componentes'.",
+      "expected_output": "Informe con hallazgos bloqueantes de varios temas: shared_ptr, throw y dynamic_cast (ADR-0009); SDL incluido en core y ECS que no es sparse set ni usa handles con generación (ADR-0012/0004); miembros sin m_ (ADR-0013); -ffast-math y -march (ADR-0008/0006); faltan los tests en zona TDD (ADR-0011); comentario que cita un ADR (ADR-0014); comparación == entre floats (ADR-0008). Los criterios del ticket no se cumplen.",
+      "files": [
+        "evals/fixtures/eval-1/"
+      ],
+      "assertions": [
+        "Detecta el uso de shared_ptr como violación del ADR-0009",
+        "Detecta throw/excepciones como violación del ADR-0009",
+        "Detecta dynamic_cast (RTTI) como violación del ADR-0009",
+        "Detecta que engine/core incluye SDL (capas del ADR-0012 o plataforma del ADR-0004)",
+        "Detecta -ffast-math o -march como violación del ADR-0008",
+        "Detecta que faltan los tests en una zona con TDD (ADR-0011)",
+        "Detecta el comentario que cita un ADR en el código (ADR-0014, regla 8)",
+        "Detecta la comparación == entre floats (ADR-0008)",
+        "Detecta miembros sin prefijo m_ (ADR-0013)",
+        "Detecta que el ECS no usa sparse sets ni handles con generación, o que no cumple los criterios del ticket",
+        "Cada hallazgo cita un ADR concreto",
+        "Clasifica los hallazgos con severidad (bloqueante / importante / sugerencia)",
+        "Cada hallazgo trae una solución propuesta"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "adr-con-problemas",
+      "prompt": "Ya escribí el ADR-0017 (pipeline de assets) en la rama 30-adr-0017 y lo dejé como Aceptado. Antes de darme los comandos del PR, corre la auditoría.",
+      "expected_output": "Hallazgos de docs-y-adrs y proceso: menciona 'TUM' y 'AAA' (regla de audiencia genérica); 'Cómo lo defiendo' vacío en un ADR Aceptado; contradice ADR-0008 al usar GLM; falta su fila en docs/README.md. No se lanzan auditores de código C++.",
+      "files": [
+        "evals/fixtures/eval-2/"
+      ],
+      "assertions": [
+        "Detecta la mención de 'TUM' o 'AAA' (audiencia genérica)",
+        "Detecta que 'Cómo lo defiendo' está vacío en un ADR Aceptado",
+        "Detecta que usar GLM contradice el ADR-0008",
+        "Detecta que falta la fila del ADR-0017 en docs/README.md",
+        "No reporta hallazgos sobre código C++ (el cambio es solo documentación)",
+        "Cada hallazgo cita un ADR concreto o una regla de CLAUDE.md",
+        "Cada hallazgo trae una solución propuesta"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "cambio-limpio",
+      "prompt": "listo el README del #46 en la rama 46-readme, revisa que cumpla todo antes del PR",
+      "expected_output": "Cero hallazgos bloqueantes por reglas inventadas. El README no explica la estructura del repo, que pide un criterio del #46: detectarlo es correcto. Verifica los criterios de aceptación (enlaces, licencias, REUSE.toml actualizado). Solo corren proceso, docs-y-adrs y build-y-licencias.",
+      "files": [
+        "evals/fixtures/eval-3/",
+        "más: agregar \"README.md\" a la anotación CC BY 4.0 de REUSE.toml"
+      ],
+      "assertions": [
+        "No reporta ningún hallazgo bloqueante",
+        "Reporta como mucho 2 hallazgos de severidad importante",
+        "Verifica los criterios de aceptación del ticket #46 (menciona REUSE.toml o reuse lint)",
+        "No inventa reglas: cada hallazgo cita un ADR, una regla de CLAUDE.md o un criterio del ticket"
+      ]
+    }
+  ]
+}

@@ -75,7 +75,9 @@ por rama y PR. El *ruleset* "Proteger main" del repo lo hace cumplir, sin excepc
 
 ## Antes de abrir el PR
 
-1. Correr la **skill de auditoría** contra los ADRs (ticket #52).
+1. Correr la **skill de auditoría** contra los ADRs (`/auditoria-adr`, en
+   `.claude/skills/auditoria-adr/`). Claude la corre siempre antes de dar los comandos
+   del PR.
 2. Revisar juntos sus hallazgos. Cada uno se corrige, se ignora (con el motivo escrito en
    el PR) o queda como deuda técnica, con su issue `deuda-técnica`.
 3. Completar la lista de revisión de la plantilla del PR.

@@ -4,6 +4,7 @@
 - **Fecha:** AAAA-MM-DD
 - **Ticket:** #N
 - **Reemplaza / Reemplazado por:** — <!-- ADR-XXXX, si aplica -->
+<!-- - **Fe de erratas:** AAAA-MM-DD (#N): qué se corrigió. Solo durante la investigación (ADR-0014, regla 11). -->
 
 ## Contexto y problema
 

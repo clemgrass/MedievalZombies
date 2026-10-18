@@ -47,4 +47,5 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0005](graphics/adr/0005-api-grafica.md) | API gráfica (Vulkan 1.3) | Gráficos | Aceptado |
 | [ADR-0006](adr/0006-build-system-y-toolchain.md) | Build system y toolchain (CMake + Ninja, Clang/GCC) | Transversal | Aceptado |
 | [ADR-0009](adr/0009-subconjunto-de-cpp.md) | Subconjunto de C++ (sin excepciones ni RTTI, STL por zonas) | Transversal | Aceptado |
+| [ADR-0012](adr/0012-arquitectura-del-engine.md) | Arquitectura del engine (ECS sparse set, capas, paso fijo) | Transversal | Aceptado |
 | [ADR-0013](adr/0013-convenciones-y-analisis-estatico.md) | Convenciones de código y análisis estático | Transversal | Aceptado |

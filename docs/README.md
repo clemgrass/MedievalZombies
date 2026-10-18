@@ -43,3 +43,4 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0001](adr/0001-registrar-decisiones-con-adrs.md) | Registrar decisiones con ADRs | Proceso | Aceptado |
 | [ADR-0002](adr/0002-tickets-con-github-issues-projects.md) | Tickets con GitHub Issues + Projects | Proceso | Aceptado |
 | [ADR-0003](adr/0003-lenguaje.md) | Lenguaje del engine y del juego | Transversal | Aceptado |
+| [ADR-0004](adr/0004-capa-de-plataforma.md) | Capa de plataforma (ventana, input y tiempo) | Transversal | Aceptado |

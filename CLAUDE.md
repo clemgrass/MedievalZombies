@@ -3,9 +3,8 @@
 Videojuego 3D sobre un apocalipsis zombie en la época medieval, con engine propio,
 escrito en C, C++ o C# (por decidir en un ADR).
 
-> **Estado actual:** milestone M0 (base del proyecto). La spec de la base está
-> aprobada. No existe código del juego: el código empieza después de cerrar M1
-> (decisiones fundacionales).
+> **Estado actual:** milestone M1 (decisiones fundacionales, épica #5). M0 está
+> cerrado. No existe código del juego: el código empieza después de cerrar M1.
 
 ## El juego
 
@@ -46,6 +45,9 @@ escrito en C, C++ o C# (por decidir en un ADR).
   la conversación sin dejarlo escrito.
 - **Las áreas grandes llevan su propia carpeta** (por ejemplo `docs/graphics/`), con
   varios ADRs y notas de investigación, en vez de un solo documento.
+- **Los ADRs hablan de la audiencia en términos genéricos.** No nombran la universidad
+  objetivo ni usan etiquetas de tipo de empresa ("AAA"). Se escribe "la industria",
+  "estudios grandes" o "programas de posgrado en ingeniería de videojuegos".
 - **El autor decide.** Claude recomienda con fundamentos, pero la decisión final es
   del autor.
 - **Trabajo en piezas chicas.** Los trabajos gigantes (como el renderer) se parten en

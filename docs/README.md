@@ -45,3 +45,5 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0003](adr/0003-lenguaje.md) | Lenguaje del engine y del juego | Transversal | Aceptado |
 | [ADR-0004](adr/0004-capa-de-plataforma.md) | Capa de plataforma (ventana, input y tiempo) | Transversal | Aceptado |
 | [ADR-0005](graphics/adr/0005-api-grafica.md) | API gráfica (Vulkan 1.3) | Gráficos | Aceptado |
+| [ADR-0006](adr/0006-build-system-y-toolchain.md) | Build system y toolchain (CMake + Ninja, Clang/GCC) | Transversal | Aceptado |
+| [ADR-0013](adr/0013-convenciones-y-analisis-estatico.md) | Convenciones de código y análisis estático | Transversal | Aceptado |

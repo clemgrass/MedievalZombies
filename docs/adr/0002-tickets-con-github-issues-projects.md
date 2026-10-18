@@ -1,8 +1,8 @@
 # ADR-0002: Tickets con GitHub Issues + Projects
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-18
-- **Ticket:** pendiente (se crea en la sesión guiada de M0)
+- **Ticket:** #7
 - **Reemplaza / Reemplazado por:** —
 
 ## Contexto y problema
@@ -68,7 +68,13 @@ Puntos clave:
 
 ## Decisión
 
-<!-- TODO(human) -->
+Elijo GitHub Issues + Projects. Mantiene todo en un solo lugar: el proyecto completo
+se puede seguir únicamente desde GitHub. Además, es visualmente ordenado, fácil de
+integrar con IA, y permite crear tickets en cualquier momento sin que pierdan su
+integración con el resto.
+
+Lo que sacrifico: aunque es generoso, tiene un límite, y técnicamente podría llegar a
+molestar. Además, hay que aprender la interfaz propia de GitHub.
 
 ## Consecuencias
 
@@ -83,7 +89,24 @@ Puntos clave:
 
 ## Cómo lo defiendo
 
-<!-- TODO(human) -->
+**Muchos estudios y startups usan Linear. ¿Por qué no lo usaste?**
+Integrar un tercero significaba mantener Linear y GitHub a la vez. Para un proyecto de
+una sola persona, eso era demasiado.
+
+**¿No te ata demasiado a GitHub? ¿Qué pasa si cambia sus precios o funciones?**
+Es cierto. Pero en cualquiera de esos casos siempre se puede exportar todo y cambiar
+de estrategia. Hoy GitHub funciona correctamente.
+
+**Backlog.md guarda los tickets en el mismo repo, versionados con git. ¿No es todavía
+mejor?**
+Me parece demasiado desordenado, y no se ve bien al actualizarlo. Además, tener que
+editar texto en vez de mover una tarjeta se siente incorrecto, como si no avanzáramos.
+Y al ser un gran Markdown, sería más propenso a errores.
+
+**¿Para qué hacer públicos los tickets? ¿No te expone mostrar errores y trabajo a
+medias?**
+Eso es exactamente lo que quiero demostrar: cómo arreglo los errores a medida que
+aparecen y cuáles son mis flujos de trabajo.
 
 ## Referencias
 

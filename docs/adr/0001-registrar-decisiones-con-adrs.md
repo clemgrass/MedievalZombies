@@ -1,8 +1,8 @@
 # ADR-0001: Registrar decisiones con ADRs
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-18
-- **Ticket:** pendiente (se crea en la sesión guiada de M0)
+- **Ticket:** #4
 - **Reemplaza / Reemplazado por:** —
 
 ## Contexto y problema
@@ -67,7 +67,12 @@ que elegir cómo registrarlas.
 
 ## Decisión
 
-<!-- TODO(human) -->
+Elijo la opción 4: ADRs con MADR. Es el formato con el que ya he trabajado, y deja un
+historial correcto de las decisiones tomadas frente a las opciones más populares.
+También es lo mejor a futuro, para entender bien por qué se decidió algo.
+
+No creo que sacrifique nada en particular. Solo es un poco más largo de escribir que
+las otras opciones.
 
 ## Consecuencias
 
@@ -80,7 +85,18 @@ que elegir cómo registrarlas.
 
 ## Cómo lo defiendo
 
-<!-- TODO(human) -->
+**¿Por qué no un documento de diseño único que se va actualizando?**
+He trabajado con documentos GDD y TDD, y me parecen muy desordenados: una vez escritos,
+nunca más los leo. Esta forma es más ordenada, tanto para mí como para una IA.
+
+**Si una decisión aceptada resulta estar mal, ¿qué haces?**
+Se escribe un ADR nuevo que reemplaza al anterior y corrige lo que salió mal. El ADR
+original no se borra: queda marcado como `Reemplazado por ADR-XXXX`, y el nuevo deja
+registrado por qué la decisión original fue incorrecta.
+
+**¿No es demasiada burocracia para un proyecto de una sola persona?**
+Puede ser, pero también estoy practicando técnicas de trabajo en equipo. Si en algún
+momento el proyecto creciera y se sumara más gente, esto facilitaría la transición.
 
 ## Referencias
 

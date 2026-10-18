@@ -40,5 +40,5 @@ las opciones evaluadas, lo que se eligió y por qué.
 
 | ADR | Título | Área | Estado |
 |---|---|---|---|
-| [ADR-0001](adr/0001-registrar-decisiones-con-adrs.md) | Registrar decisiones con ADRs | Proceso | Propuesto |
+| [ADR-0001](adr/0001-registrar-decisiones-con-adrs.md) | Registrar decisiones con ADRs | Proceso | Aceptado |
 | [ADR-0002](adr/0002-tickets-con-github-issues-projects.md) | Tickets con GitHub Issues + Projects | Proceso | Propuesto |

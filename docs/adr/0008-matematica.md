@@ -4,6 +4,8 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #12
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-18 (#52): el frente de un modelo glTF mira hacia +Z (la
+  cámara, hacia −Z). Se aclara en Opciones, Investigación y Consecuencias.
 
 ## Contexto y problema
 
@@ -68,6 +70,9 @@ templates* chocan con el subconjunto de C++ (ADR-0009) y alargan mucho la compil
 | **Mano derecha, Z arriba** | Blender, 3ds Max, la mayoría del software CAD |
 | **Mano izquierda, Z arriba** | Unreal Engine |
 | **Mano izquierda, Y arriba** | Unity, Direct3D clásico |
+
+"Adelante" es hacia dónde mira la **cámara**. El **frente de un modelo** es otra
+convención: en glTF y en Godot, los modelos miran hacia **+Z**, al revés que la cámara.
 
 Unidades: **metros** (glTF y los motores de física suelen asumirlos) y ángulos en
 **radianes**.
@@ -146,10 +151,13 @@ cualquier x86-64.
 ### Convenciones
 
 - **glTF 2.0**, el estándar abierto de Khronos para intercambiar modelos 3D, define un
-  sistema **de mano derecha, Y arriba, en metros**. Las herramientas que exportan a
-  glTF convierten a esa convención al exportar. El formato y las herramientas de assets
-  del proyecto se deciden en el ADR-0017.
-- **Godot** usa mano derecha, Y arriba y −Z adelante, igual que glTF.
+  sistema **de mano derecha, Y arriba, en metros**. Su cámara mira hacia −Z, pero "el
+  frente de un asset glTF mira hacia +Z". Las herramientas que exportan a glTF
+  convierten a esa convención al exportar. El formato y las herramientas de assets del
+  proyecto se deciden en el ADR-0017.
+- **Godot** usa la misma convención que glTF: la cámara y los nodos miran hacia −Z
+  (`Vector3.FORWARD`), y los modelos importados hacia +Z (`Vector3.MODEL_FRONT`). Por
+  eso importa glTF sin rotar nada, a cambio de manejar dos direcciones "adelante".
 - **Unreal** usa Z arriba y mano izquierda, y desde UE5 usa `double` en `FVector`
   (*Large World Coordinates*) para mundos enormes.
 - **Vulkan:** el espacio NDC tiene Y hacia abajo y profundidad en [0, 1]. Las
@@ -253,7 +261,11 @@ el mundo (como Unreal 5) resuelve un problema que este juego no tiene.
 - **Flags:** el CMake no agrega `-ffast-math` ni `-march`. Si un día el profiler
   justifica AVX2, se decide en un ADR nuevo.
 - **Los assets** se convierten a Y arriba y metros al importarlos, venga de la
-  herramienta que decida el ADR-0017.
+  herramienta que decida el ADR-0017, y su frente queda hacia −Z. Si el ADR-0017 elige
+  glTF, cuyos modelos miran hacia +Z, el importador los rota 180° sobre Y. Esa rotación
+  no espeja, y deja una sola dirección "adelante" para la cámara, los personajes y la
+  IA, en vez de las dos de Godot. Se aplica a toda la jerarquía (nodos, esqueleto,
+  matrices de *bind* inversas y animaciones), y el detalle lo define el ADR-0017.
 - **Lo que queda abierto:** los predicados robustos del corte (ADR-0007), el formato de
   assets (ADR-0017) y qué sistemas pasan a SoA, que se decide midiendo.
 

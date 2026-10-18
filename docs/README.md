@@ -35,7 +35,9 @@ las opciones evaluadas, lo que se eligió y por qué.
   que reemplaza al anterior, y el viejo pasa a `Reemplazado por ADR-XXXX`.
   **Excepción, solo durante la etapa de investigación** (mientras no exista código): un
   ADR aceptado se puede corregir como fe de erratas, por un error o un malentendido
-  (ADR-0014). Cuando empieza el código, la inmutabilidad es estricta.
+  (ADR-0014). Cada corrección se registra en el campo **Fe de erratas** del encabezado,
+  con la fecha, el ticket y qué cambió. Cuando empieza el código, la inmutabilidad es
+  estricta.
 - **Un ADR por ticket** `tipo:investigación`, enlazados en ambas direcciones.
 - **Cada ADR nuevo se agrega al índice** de abajo.
 

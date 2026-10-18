@@ -36,13 +36,15 @@ git switch -c 42-shadow-map-depth-pass
 
 ## Integración: PR con squash merge
 
-1. Al terminar el ticket, se abre un PR hacia `main`. El cuerpo lleva `Closes #N`.
+1. Al terminar el ticket, se abre un PR hacia `main`. **El título del PR sigue
+   Conventional Commits**, porque se convierte en el commit de `main`. El cuerpo
+   lleva `Closes #N`.
 2. Se integra con **squash merge**: todo el trabajo del ticket queda como **un solo
    commit** en `main`.
 3. Al hacer merge, GitHub cierra el issue `#N` y el tablero lo mueve a `Hecho`.
 
 ```bash
-gh pr create --fill --body "Closes #42"
+gh pr create --title "feat: depth pass para shadow maps" --body "Closes #42"
 gh pr merge --squash --delete-branch
 ```
 

@@ -38,8 +38,8 @@ el milestone son del issue. Estado, Prioridad y Tamaño son campos del Project.
 | Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:tooling`, `área:docs` | Qué parte del proyecto toca |
 | Owner | `owner:autor`, `owner:claude` | Quién escribe el código (regla B, ver `CLAUDE.md`) |
 
-Cada formulario de issue pone su label de `tipo:` automáticamente. El de `área:` se
-agrega a mano.
+Cada formulario de issue pone su label de `tipo:` automáticamente, **pero solo si el
+issue se crea desde la web**. El label de `área:` siempre se agrega a mano.
 
 **El `owner` se elige en el formulario, pero el label `owner:` se pone al refinar.**
 Sin ese label, el ticket no puede pasar a `Listo`.
@@ -67,7 +67,9 @@ Cada acción tiene su ruta en la web y su comando `gh` equivalente.
 
 - **Web:** *Issues* → *New issue* → elegir el formulario (Épica, Feature, Tarea,
   Investigación).
-- **gh:** `gh issue create --template "Tarea"`
+- **gh:** `gh issue create --web` abre el selector de formularios en el navegador.
+  Si creas el issue solo con `gh`, sin pasar por el formulario, tienes que poner los
+  labels tú: `gh issue create --title "…" --label "tipo:tarea" --body "…"`.
 
 ### …agregar un sub-issue
 
@@ -86,7 +88,8 @@ Cada acción tiene su ruta en la web y su comando `gh` equivalente.
 - **Web:** en el tablero, arrastrar la tarjeta a otra columna. También se puede
   cambiar *Status* en la barra lateral del issue.
 - **gh:**
-  `gh project item-edit --owner clemgrass --url <url-del-issue> --field Status --value "En progreso"`
+  `gh project item-edit 1 --owner clemgrass --url <url-del-issue> --field Status --value "En progreso"`
+  (el `1` es el número del Project)
 
 ### …cerrar un ticket desde un PR
 

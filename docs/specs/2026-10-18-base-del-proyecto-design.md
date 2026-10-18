@@ -1,7 +1,7 @@
 # Spec: base del proyecto MedievalZombies
 
 - **Fecha:** 2026-10-18
-- **Estado:** Propuesta, pendiente de revisión del autor
+- **Estado:** Aprobada por el autor (2026-10-18)
 - **Alcance:** primer subproyecto. Define cómo documentamos decisiones, cómo
   organizamos el trabajo y en qué orden decidimos lo fundacional. **No incluye
   código del juego ni decisiones técnicas del engine**: esas se toman después, cada

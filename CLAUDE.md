@@ -70,6 +70,21 @@ La spec de la base del proyecto define la estructura de `docs/`, el formato de A
 sistema de tickets (GitHub Issues + Projects) y el orden de los primeros ADRs:
 `docs/specs/2026-10-18-base-del-proyecto-design.md`.
 
+## Tickets
+
+- **Tablero:** GitHub Project #1, `MedievalZombies` (público):
+  <https://github.com/users/clemgrass/projects/1>
+- **Guía completa** (labels, campos, Listo/Hecho, comandos): `docs/process/tickets.md`.
+  Convenciones git: `docs/process/git.md`.
+- **Claude usa solo `gh`**, nunca el MCP de GitHub:
+  - `gh issue view|list|create|edit` (`--parent N` para sub-issues);
+  - `gh project item-list 1 --owner clemgrass`;
+  - `gh project item-edit --owner clemgrass --url <issue> --field Status --value "<estado>"`.
+- **Claude solo crea issues con aprobación del autor.** Antes de trabajar, lee el
+  ticket y respeta su label `owner:`.
+- `gh issue list --label` usa el índice de búsqueda: un issue recién creado puede
+  tardar unos segundos en aparecer.
+
 ## Herramientas de aprendizaje disponibles
 
 - Output style **Learning** de Claude Code (`/output-style learning`): Claude deja

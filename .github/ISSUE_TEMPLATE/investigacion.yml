@@ -1,0 +1,27 @@
+name: Investigación
+description: Una decisión que hay que investigar. Produce un ADR.
+labels: ["tipo:investigación"]
+body:
+  - type: textarea
+    id: pregunta
+    attributes:
+      label: Pregunta a decidir
+      description: Qué decisión tiene que tomar el ADR.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios
+      description: Con qué se van a evaluar las opciones (aprendizaje, rendimiento, portafolio, complejidad...).
+  - type: dropdown
+    id: carpeta
+    attributes:
+      label: Carpeta del ADR
+      options:
+        - adr/
+        - graphics/adr/
+        - slicing/adr/
+        - otra
+    validations:
+      required: true

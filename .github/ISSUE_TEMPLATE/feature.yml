@@ -1,0 +1,40 @@
+name: Feature
+description: Una capacidad concreta (por ejemplo "Shadow maps"). Va como sub-issue de una épica y se parte en tareas.
+labels: ["tipo:feature"]
+body:
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción
+      description: Qué capacidad se agrega y por qué.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: Cómo sabemos que está terminada.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: Owner
+      description: Quién escribe el código (regla B en CLAUDE.md). Al refinar se agrega el label owner:autor u owner:claude.
+      options:
+        - autor
+        - claude
+    validations:
+      required: true
+  - type: input
+    id: adr
+    attributes:
+      label: ADR relacionado
+      placeholder: ADR-0005
+  - type: textarea
+    id: explicar
+    attributes:
+      label: Qué debo poder explicar
+      description: Preguntas que haría un evaluador sobre este trabajo. Obligatoria si el owner es autor.

@@ -48,7 +48,7 @@ Sin ese label, el ticket no puede pasar a `Listo`.
 
 | Campo | Valores |
 |---|---|
-| Estado | `Backlog` → `Listo` → `En progreso` → `En revisión` → `Hecho` |
+| Estado (en GitHub se llama `Status`) | `Backlog` → `Listo` → `En progreso` → `En revisión` → `Hecho` |
 | Prioridad | `Alta`, `Media`, `Baja` |
 | Tamaño | `S`, `M`, `L` |
 
@@ -104,3 +104,26 @@ merge. El issue se cierra solo y el tablero lo pasa a `Hecho`.
 
 Ojo: la búsqueda filtrada usa el índice de búsqueda de GitHub, así que un issue recién
 creado puede tardar unos segundos en aparecer.
+
+## Errores comunes
+
+Lo que más confundió en la primera sesión con el tablero:
+
+- **No aparecen Prioridad ni Tamaño en el issue.** En la barra lateral, dentro de
+  *Projects*, hay que desplegar `MedievalZombies`. Es más fácil editarlos en la vista
+  **Tabla**, haciendo clic en la celda.
+- **La Definición de Listo no la impone GitHub.** Un ticket se puede mover a `Listo`
+  sin `owner:` ni Tamaño. La regla la cumplimos nosotros.
+- **Los cambios en una vista no se guardan solos.** Después de renombrar o filtrar una
+  vista, hay que presionar **Save** en el menú ▾ de la pestaña.
+- **El botón verde del PR por defecto es *Create a merge commit*.** Nuestra convención
+  es **Squash and merge**, que está en la flecha ▾ al lado del botón.
+- **La rama no se borra sola.** Después del merge, presiona **Delete branch** en el PR.
+- **Si renombras opciones de `Status`, no las borres.** Los workflows apuntan al id de
+  la opción, no a su nombre.
+- **En bash, `&&` va al final de la línea**, no al inicio de la siguiente:
+
+  ```bash
+  comando1 && \
+    comando2
+  ```

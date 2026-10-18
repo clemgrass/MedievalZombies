@@ -1,0 +1,24 @@
+version = 1
+
+# Licencias del proyecto (ADR-0019).
+# Si varias anotaciones coinciden con un archivo, gana la última.
+
+# Por defecto: código y configuración bajo MIT.
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2026 Clemente Grass"
+SPDX-License-Identifier = "MIT"
+
+# Documentación bajo CC BY 4.0.
+[[annotations]]
+path = ["docs/**", "CREDITS.md", "CLAUDE.md"]
+SPDX-FileCopyrightText = "2026 Clemente Grass"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# Assets propios bajo CC BY 4.0.
+# Los assets de terceros declaran su propia licencia y autor en CREDITS.md
+# y con una anotación específica aquí, debajo de esta.
+[[annotations]]
+path = "assets/**"
+SPDX-FileCopyrightText = "2026 Clemente Grass"
+SPDX-License-Identifier = "CC-BY-4.0"

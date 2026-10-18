@@ -1,0 +1,28 @@
+name: Épica
+description: Un área completa del proyecto (por ejemplo "Renderer" o "Corte de mallas"). Se parte en features y tareas como sub-issues.
+labels: ["tipo:épica"]
+body:
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: Qué se logra cuando esta épica está terminada.
+    validations:
+      required: true
+  - type: textarea
+    id: alcance
+    attributes:
+      label: Alcance
+      description: Qué incluye.
+    validations:
+      required: true
+  - type: textarea
+    id: fuera_de_alcance
+    attributes:
+      label: Fuera de alcance
+      description: Qué NO incluye, para que no crezca sin control.
+  - type: input
+    id: adrs
+    attributes:
+      label: ADRs relacionados
+      placeholder: ADR-0005, ADR-0007

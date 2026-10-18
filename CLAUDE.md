@@ -3,9 +3,9 @@
 Videojuego 3D sobre un apocalipsis zombie en la época medieval, con engine propio,
 escrito en C, C++ o C# (por decidir en un ADR).
 
-> **Estado actual:** fase de brainstorming y diseño de la base del proyecto.
-> No existe código. No se escribe código, scaffolding ni dependencias hasta que
-> la spec de la base esté aprobada por el autor.
+> **Estado actual:** milestone M0 (base del proyecto). La spec de la base está
+> aprobada. No existe código del juego: el código empieza después de cerrar M1
+> (decisiones fundacionales).
 
 ## El juego
 
@@ -64,11 +64,31 @@ escrito en C, C++ o C# (por decidir en un ADR).
 
 ## Estructura del repositorio
 
-Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora solo existe `docs/`.
+Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen `docs/`, `.github/` (formularios de issue) y `tools/` (scripts de
+configuración del repo).
 
 La spec de la base del proyecto define la estructura de `docs/`, el formato de ADR, el
 sistema de tickets (GitHub Issues + Projects) y el orden de los primeros ADRs:
 `docs/specs/2026-10-18-base-del-proyecto-design.md`.
+
+## Tickets
+
+- **Tablero:** GitHub Project #1, `MedievalZombies` (público):
+  <https://github.com/users/clemgrass/projects/1>
+- **Guía completa** (labels, campos, Listo/Hecho, comandos): `docs/process/tickets.md`.
+  Convenciones git: `docs/process/git.md`.
+- **Claude usa solo `gh`**, nunca el MCP de GitHub:
+  - `gh issue view|list|create|edit` (`--parent N` para sub-issues);
+  - `gh project item-list 1 --owner clemgrass`;
+  - `gh project item-edit 1 --owner clemgrass --url <issue> --field Status --value "<estado>"`.
+- **Al crear issues con `gh`**, los labels del formulario **no** se aplican solos (solo
+  los pone la web). Siempre pasar `--label "tipo:…"`, más `área:` y `--milestone`
+  cuando apliquen, y un `--body` con las mismas secciones del formulario
+  correspondiente en `.github/ISSUE_TEMPLATE/`.
+- **Claude solo crea issues con aprobación del autor.** Antes de trabajar, lee el
+  ticket y respeta su label `owner:`.
+- `gh issue list --label` usa el índice de búsqueda: un issue recién creado puede
+  tardar unos segundos en aparecer.
 
 ## Herramientas de aprendizaje disponibles
 

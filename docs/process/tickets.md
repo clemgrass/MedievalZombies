@@ -98,3 +98,6 @@ merge. El issue se cierra solo y el tablero lo pasa a `Hecho`.
 - **Web:** en la barra de filtros, por ejemplo `label:"tipo:investigación" is:open`
   (las comillas son necesarias por los dos puntos).
 - **gh:** `gh issue list --label "tipo:investigación" --milestone "M1 – Decisiones fundacionales"`
+
+Ojo: la búsqueda filtrada usa el índice de búsqueda de GitHub, así que un issue recién
+creado puede tardar unos segundos en aparecer.

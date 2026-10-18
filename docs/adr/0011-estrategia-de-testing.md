@@ -90,8 +90,8 @@ Los tres primeros están en los repositorios oficiales de Arch (`gtest` 1.18,
 
 | Opción | Qué significa |
 |---|---|
-| **El dueño del código escribe sus tests** | Los del núcleo, el autor. Los del periférico, Claude. La infraestructura de tests (fixtures, el arnés de imágenes de referencia, el del fuzzer) es periférica |
-| **Claude escribe todos los tests** | El autor escribe solo el código del núcleo |
+| **Claude escribe los tests y el autor los revisa** | Igual que el resto del código. El autor define qué tiene que cumplirse, y Claude lo convierte en tests |
+| **El autor escribe los tests** | Claude escribe la implementación y el autor la especificación ejecutable |
 
 ### 5. Organización
 
@@ -235,7 +235,7 @@ caída se guarda y **se convierte en un test de regresión**.
 | 1 | Framework | **GoogleTest.** Los tests de propiedades se escriben sobre él, con un generador de semilla fija que se imprime al fallar |
 | 2 | Tipos de test | **Desde el inicio:** unitarios, de propiedades, de invariantes de malla, de regresión y fuzzing. **Cuando existan el renderer y el gameplay:** imágenes de referencia y *replay*. **La sensación del combate:** playtest |
 | 3 | TDD | **Estricto** en la matemática, la memoria, los contenedores, el ECS y las funciones del corte. **Tests después** en el renderer y el gameplay. **Sin tests** en los *spikes* |
-| 4 | Quién escribe los tests | **Claude escribe los tests y el autor los revisa.** En las zonas con TDD, Claude escribe primero el test que falla, a partir de la especificación acordada, y el autor escribe la implementación del núcleo que lo hace pasar |
+| 4 | Quién escribe los tests | **Claude escribe los tests y el autor los revisa.** En las zonas con TDD, Claude escribe primero el test que falla, a partir de la especificación acordada con el autor, y después la implementación que lo hace pasar |
 | 5 | Organización y cobertura | Un ejecutable por módulo (`tests/core/`, `tests/slicing/`…) más `tests/regression/`. CTest con etiquetas por tipo. Todo corre en el preset Debug, con ASan y UBSan. **Cobertura del 100 % en el core y en las zonas con TDD**, siguiendo los criterios de los sistemas críticos. El resto se mide sin meta |
 | 6.1 | Lista de bugs | **GitHub Issues con formulario `bug`, en un Project aparte de *bug hunting***, separado del Project #1, para no mezclar el dominio de los arreglos con el de las features |
 | 6.2 | Campos del reporte | Los de **ISO/IEC/IEEE 29119-3** adaptados, la severidad de **IEEE 1044** y las resoluciones de **Bugzilla** |
@@ -243,10 +243,9 @@ caída se guarda y **se convierte en un test de regresión**.
 
 ## Consecuencias
 
-- **Cambia la regla de reparto de `CLAUDE.md`:** los tests pasan a ser trabajo de Claude
-  en todo el engine, con el autor como revisor. El código del núcleo sigue siendo del
-  autor. El autor tiene que entender cada test que aprueba, porque un evaluador puede
-  preguntar por cualquiera.
+- **Los tests son trabajo de Claude** en todo el engine, con el autor como revisor. El
+  autor tiene que entender cada test que aprueba, porque un evaluador puede preguntar por
+  cualquiera.
 - **Cobertura del 100 %:**
   - se mide con la cobertura de Clang (`-fprofile-instr-generate -fcoverage-mapping`,
     más `-fcoverage-mcdc` si se exige MC/DC) y `llvm-cov`, en un preset `coverage` nuevo;

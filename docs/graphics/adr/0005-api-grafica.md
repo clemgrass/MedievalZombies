@@ -163,7 +163,7 @@ Sobre las bibliotecas de apoyo:
   de desarrollo, el paquete del sistema `vulkan-validation-layers`.
 - **Shaders:** GLSL compilado a SPIR-V con glslang o shaderc. Es una herramienta más
   del build, y la elige el ADR-0006.
-- **Inicialización propia:** se parte en tickets chicos con `owner:autor` (instancia →
+- **Inicialización propia:** se parte en tickets chicos en modo dirigido (instancia →
   GPU física → dispositivo y colas → swapchain → limpiar la pantalla de un color →
   triángulo).
 - **`gpu::Allocator`:** es la interfaz de memoria de la GPU. Su primera versión es

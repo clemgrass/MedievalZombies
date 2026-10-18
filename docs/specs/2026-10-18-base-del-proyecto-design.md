@@ -36,14 +36,17 @@ El engine es propio, escrito en C, C++ o C# (se decide en el ADR-0003).
 | Idioma | Colaboración y documentación en español |
 | Repositorio | Monorepo público: `github.com/clemgrass/MedievalZombies` |
 
-### 1.3 Reparto de roles (regla B)
+### 1.3 Modelo de colaboración
 
-- **Núcleo → lo escribe el autor.** Renderer, corte de mallas, física, animación, IA y
-  cualquier sistema que se presente como trabajo propio. Claude explica, da referencias
-  y pistas graduales, deja `TODO(human)` y revisa, pero no entrega la implementación.
-- **Periférico → lo puede escribir Claude.** Build, scripts, boilerplate, carga de
-  archivos, tooling y tests de soporte. El autor lo revisa hasta entenderlo.
-- Cada ticket declara su `owner`. Si no está claro, se pregunta antes de escribir código.
+Es un trabajo colaborativo. El autor da las ideas macro de cada sistema, revisa todo el
+código y es responsable de entender el sistema completo. Claude escribe el código.
+
+- **Modo dirigido:** para los sistemas grandes (renderer, corte de mallas, física,
+  animación, IA). El autor explica el flujo, y Claude lo escribe, marcando con
+  `TODO(human)` los puntos de decisión que el autor resuelve con sus palabras.
+- **Modo propuesto:** para lo periférico. Claude propone, y el autor cuestiona y
+  aprueba.
+- Cada feature y tarea declara su `modo`.
 
 El detalle operativo vive en `CLAUDE.md`.
 
@@ -77,7 +80,7 @@ para organizaciones, así que el tipo se marca con labels.
 |---|---|
 | `tipo:` | `épica`, `feature`, `tarea`, `bug`, `investigación` |
 | `área:` | `graphics`, `slicing`, `physics`, `animation`, `ai`, `gameplay`, `tooling`, `docs` |
-| `owner:` | `autor`, `claude` |
+| `modo:` | `dirigido`, `propuesto` |
 
 Una tarea `tipo:investigación` produce un ADR. Las áreas nuevas se agregan como labels
 cuando aparecen.
@@ -101,23 +104,23 @@ nuevos del repo y mueven a `Hecho` los cerrados.
 En `.github/ISSUE_TEMPLATE/`, como formularios de GitHub:
 
 - **Épica:** objetivo, alcance, fuera de alcance, ADRs relacionados.
-- **Feature / Tarea:** descripción, criterios de aceptación, `owner`, ADR relacionado
+- **Feature / Tarea:** descripción, criterios de aceptación, `modo`, ADR relacionado
   y la sección **"Qué debo poder explicar"**: preguntas que un evaluador haría sobre ese
-  trabajo. En tareas de núcleo esta sección es obligatoria y la tarea solo se cierra
-  cuando el autor puede responderlas.
+  trabajo. Es obligatoria, y la tarea solo se cierra cuando el autor puede
+  responderlas.
 - **Investigación:** pregunta a decidir, criterios, carpeta destino del ADR.
 
 ### 2.6 Definición de Listo y de Hecho
 
-- **Listo:** tiene criterios de aceptación, `owner`, tamaño, y su ADR relacionado
+- **Listo:** tiene criterios de aceptación, `modo`, tamaño, y su ADR relacionado
   (si aplica) está aceptado.
-- **Hecho:** cumple los criterios de aceptación, está mergeado con `Closes #N`, y (si es
-  de núcleo) el autor respondió "Qué debo poder explicar".
+- **Hecho:** cumple los criterios de aceptación, está mergeado con `Closes #N`, y el
+  autor respondió "Qué debo poder explicar".
 
 ### 2.7 Reglas para Claude con los tickets
 
 - Propone cómo partir el trabajo, pero **solo crea issues cuando el autor lo aprueba**.
-- Lee el ticket antes de trabajar y respeta su `owner`.
+- Lee el ticket antes de trabajar y respeta su `modo`.
 - Mueve el estado del ticket y enlaza los commits con `Closes #N` o `Refs #N`.
 
 ### 2.8 Enseñanza (entregable de M0)

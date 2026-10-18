@@ -51,7 +51,31 @@ gh pr merge --squash --delete-branch
 Así queda la cadena que puede seguir un evaluador:
 **ADR (por qué) → issue (qué) → commit en `main` (cómo)**.
 
-## Excepción: commits directos a `main`
+## Coautoría
 
-Solo para cambios triviales de documentación (una errata, un enlace roto). Si tienen
-relación con un ticket, llevan `Refs #N`. Esa referencia no cierra el issue.
+Los commits que incluyen código o texto escrito por Claude terminan con la línea:
+
+```
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+```
+
+El nombre del modelo cambia según la versión de Claude que se use. GitHub muestra a
+Claude como coautor del commit, así que la autoría queda en el historial de git, commit
+por commit (ADR-0014).
+
+## `main` protegida
+
+**Nunca se trabaja directo en `main`, ni siquiera para una errata.** Todo cambio entra
+por rama y PR. El *ruleset* "Proteger main" del repo lo hace cumplir, sin excepciones:
+
+- PR obligatorio para cualquier cambio;
+- las conversaciones del PR se resuelven antes del merge;
+- sin *force push* y sin borrar la rama;
+- cuando exista la CI (ADR-0029), también la CI en verde.
+
+## Antes de abrir el PR
+
+1. Correr la **skill de auditoría** contra los ADRs (ticket #52).
+2. Revisar juntos sus hallazgos. Cada uno se corrige, se ignora (con el motivo escrito en
+   el PR) o queda como deuda técnica, con su issue `deuda-técnica`.
+3. Completar la lista de revisión de la plantilla del PR.

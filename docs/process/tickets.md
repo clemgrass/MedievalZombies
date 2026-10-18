@@ -39,13 +39,15 @@ el milestone son del issue. Estado, Prioridad y Tamaño son campos del Project.
 |---|---|---|
 | Tipo | `tipo:épica`, `tipo:feature`, `tipo:tarea`, `tipo:bug`, `tipo:investigación` | Qué clase de ticket es. Una `tipo:investigación` produce un ADR |
 | Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:audio`, `área:ui`, `área:tooling`, `área:docs` | Qué parte del proyecto toca |
-| Owner | `owner:autor`, `owner:claude` | Quién escribe el código (regla B, ver `CLAUDE.md`) |
+| Modo | `modo:dirigido`, `modo:propuesto` | Cómo se trabaja la feature o la tarea (ADR-0014): el autor dirige el diseño, o Claude lo propone |
+| Deuda | `deuda-técnica` | Un atajo deliberado que hay que pagar. Su `TODO(#N)` en el código apunta al issue |
 
 Cada formulario de issue pone su label de `tipo:` automáticamente, **pero solo si el
 issue se crea desde la web**. El label de `área:` siempre se agrega a mano.
 
-**El `owner` se elige en el formulario, pero el label `owner:` se pone al refinar.**
-Sin ese label, el ticket no puede pasar a `Listo`.
+**El `modo` se elige en el formulario, pero el label `modo:` se pone al refinar.**
+Sin ese label, una feature o una tarea no puede pasar a `Listo`. Las investigaciones no
+llevan modo.
 
 ## Campos del tablero
 
@@ -57,10 +59,11 @@ Sin ese label, el ticket no puede pasar a `Listo`.
 
 ## Definición de Listo y de Hecho
 
-- **Listo:** tiene criterios de aceptación, label `owner:`, Tamaño, y su ADR
+- **Listo:** tiene criterios de aceptación, label `modo:` (si es feature o tarea),
+  Tamaño, y su ADR
   relacionado (si aplica) está `Aceptado`.
 - **Hecho:** cumple los criterios de aceptación, está mergeado con `Closes #N`, y (si
-  es `owner:autor`) el autor respondió "Qué debo poder explicar".
+  es feature o tarea) el autor respondió "Qué debo poder explicar".
 
 ## Cómo hago…
 

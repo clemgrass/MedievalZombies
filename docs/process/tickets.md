@@ -35,7 +35,7 @@ el milestone son del issue. Estado, Prioridad y Tamaño son campos del Project.
 | Grupo | Labels | Para qué |
 |---|---|---|
 | Tipo | `tipo:épica`, `tipo:feature`, `tipo:tarea`, `tipo:bug`, `tipo:investigación` | Qué clase de ticket es. Una `tipo:investigación` produce un ADR |
-| Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:tooling`, `área:docs` | Qué parte del proyecto toca |
+| Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:audio`, `área:ui`, `área:tooling`, `área:docs` | Qué parte del proyecto toca |
 | Owner | `owner:autor`, `owner:claude` | Quién escribe el código (regla B, ver `CLAUDE.md`) |
 
 Cada formulario de issue pone su label de `tipo:` automáticamente, **pero solo si el

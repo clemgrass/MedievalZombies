@@ -15,7 +15,7 @@ create() { gh label create "$1" --repo "$REPO" --color "$2" --description "$3" -
 for t in épica feature tarea bug investigación; do
   create "tipo:$t" 5319e7 "Tipo de ticket"
 done
-for a in graphics slicing physics animation ai gameplay tooling docs; do
+for a in graphics slicing physics animation ai gameplay audio ui tooling docs; do
   create "área:$a" 0e8a16 "Área del proyecto"
 done
 create "owner:autor" fbca04 "Lo escribe el autor (núcleo)"

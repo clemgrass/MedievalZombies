@@ -61,7 +61,10 @@ escrito en C, C++ o C# (por decidir en un ADR).
     da referencias y revisa, pero no entrega la implementación. Usa `TODO(human)` y
     pistas graduales.
   - **Periférico → lo puede escribir Claude**: build, scripts, boilerplate, carga de
-    archivos, tooling, tests de soporte. El autor lo revisa hasta entenderlo.
+    archivos, tooling. El autor lo revisa hasta entenderlo.
+  - **Tests → los escribe Claude, en todo el engine, y el autor los revisa** (ADR-0011).
+    En las zonas con TDD, Claude escribe primero el test que falla, a partir de la
+    especificación acordada, y el autor escribe la implementación del núcleo.
   - Cada ticket indica explícitamente quién lo escribe (`autor` o `claude`). Si no está
     claro, se pregunta antes de escribir código.
 

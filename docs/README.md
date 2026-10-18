@@ -48,6 +48,7 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0006](adr/0006-build-system-y-toolchain.md) | Build system y toolchain (CMake + Ninja, Clang/GCC) | Transversal | Aceptado |
 | [ADR-0008](adr/0008-matematica.md) | Matemática propia (Y arriba, column-major, reverse-Z) | Transversal | Aceptado |
 | [ADR-0009](adr/0009-subconjunto-de-cpp.md) | Subconjunto de C++ (sin excepciones ni RTTI, STL por zonas) | Transversal | Aceptado |
+| [ADR-0011](adr/0011-estrategia-de-testing.md) | Testing (GoogleTest, TDD en el núcleo, xfail por bug) | Transversal | Aceptado |
 | [ADR-0012](adr/0012-arquitectura-del-engine.md) | Arquitectura del engine (ECS sparse set, capas, paso fijo) | Transversal | Aceptado |
 | [ADR-0013](adr/0013-convenciones-y-analisis-estatico.md) | Convenciones de código y análisis estático | Transversal | Aceptado |
 | [ADR-0019](adr/0019-licencias.md) | Licencias (código MIT, docs y assets CC BY 4.0) | Transversal | Aceptado |

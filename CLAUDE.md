@@ -81,7 +81,10 @@ sistema de tickets (GitHub Issues + Projects) y el orden de los primeros ADRs:
 
 - **Tablero:** GitHub Project #1, `MedievalZombies` (público):
   <https://github.com/users/clemgrass/projects/1>
-- **Guía completa** (labels, campos, Listo/Hecho, comandos): `docs/process/tickets.md`.
+- **Bugs:** GitHub Project #2, `MedievalZombies – Bug hunting` (público), aparte del
+  tablero de features: <https://github.com/users/clemgrass/projects/2>. Cada bug con
+  test sigue el flujo xfail del ADR-0011 (`WILL_FAIL` hasta el arreglo).
+- **Guía completa** (labels, campos, Listo/Hecho, bugs, comandos): `docs/process/tickets.md`.
   Convenciones git: `docs/process/git.md`.
 - **Claude usa solo `gh`**, nunca el MCP de GitHub:
   - `gh issue view|list|create|edit` (`--parent N` para sub-issues);

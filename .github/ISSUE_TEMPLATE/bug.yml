@@ -1,0 +1,84 @@
+name: Bug
+description: Un comportamiento incorrecto del engine o del juego. Se registra siempre, tenga o no un test que lo reproduzca (ADR-0011).
+labels: ["tipo:bug"]
+projects: ["clemgrass/2"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Los campos siguen el reporte de incidente de ISO/IEC/IEEE 29119-3. Escribe el
+        título como un resumen corto de lo que pasa, por ejemplo "El corte deja un
+        agujero cuando el plano pasa por un vértice".
+  - type: textarea
+    id: obtenido
+    attributes:
+      label: Qué pasa
+      description: El resultado obtenido. Lo que se ve, el mensaje de error o el valor incorrecto.
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué debería pasar
+      description: El resultado esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      description: Lo mínimo necesario para que vuelva a pasar. Si no se sabe, escribe lo que se estaba haciendo.
+      value: |
+        1.
+    validations:
+      required: true
+  - type: dropdown
+    id: reproducibilidad
+    attributes:
+      label: Reproducibilidad
+      options:
+        - Siempre
+        - A veces
+        - No reproducible
+    validations:
+      required: true
+  - type: dropdown
+    id: severidad
+    attributes:
+      label: Severidad (evaluación de quien reporta)
+      description: Cuánto daño hace en el juego, no cuándo se arregla. La severidad definitiva se fija al clasificar, en el Project.
+      options:
+        - "S1 – Crítica: crash, cuelgue o datos corruptos"
+        - "S2 – Mayor: una función importante no sirve y no hay forma de evitarlo"
+        - "S3 – Menor: algo falla, pero se puede seguir o evitar"
+        - "S4 – Cosmética: un detalle visual o de texto"
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Commit o versión, preset de build (Debug, RelWithDebInfo, Release), GPU y driver si toca el render.
+      placeholder: |
+        Commit: abc1234
+        Preset: debug
+        GPU / driver: Intel UHD 620, Mesa 26.2.2
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia
+      description: Logs, salida de los sanitizers, capturas o archivos de entrada. Arrastra las imágenes aquí.
+      render: shell
+  - type: input
+    id: test
+    attributes:
+      label: Test de regresión
+      description: Ruta y nombre del test que reproduce el bug. Si todavía no existe, déjalo vacío y se completa al confirmarlo.
+      placeholder: tests/regression/bug_123.cpp · Bug123_CorteConPlanoSobreVertice
+  - type: textarea
+    id: sin-test
+    attributes:
+      label: Por qué no tiene test
+      description: Obligatorio si el bug no puede tener un test automático (falla del driver, timing, no reproducible). El bug queda registrado igual, como historial.

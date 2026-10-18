@@ -44,3 +44,4 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0002](adr/0002-tickets-con-github-issues-projects.md) | Tickets con GitHub Issues + Projects | Proceso | Aceptado |
 | [ADR-0003](adr/0003-lenguaje.md) | Lenguaje del engine y del juego | Transversal | Aceptado |
 | [ADR-0004](adr/0004-capa-de-plataforma.md) | Capa de plataforma (ventana, input y tiempo) | Transversal | Aceptado |
+| [ADR-0005](graphics/adr/0005-api-grafica.md) | API gráfica (Vulkan 1.3) | Gráficos | Aceptado |

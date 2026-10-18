@@ -18,8 +18,14 @@ done
 for a in graphics slicing physics animation ai gameplay audio ui tooling docs; do
   create "área:$a" 0e8a16 "Área del proyecto"
 done
-create "owner:autor" fbca04 "Lo escribe el autor (núcleo)"
-create "owner:claude" fbca04 "Lo puede escribir Claude (periférico)"
+create "modo:dirigido" fbca04 "El autor explica el flujo y Claude lo escribe (ADR-0014)"
+create "modo:propuesto" fbca04 "Claude propone el diseño y el código, el autor aprueba (ADR-0014)"
+create "deuda-técnica" d93f0b "Atajo deliberado que hay que pagar (ADR-0014)"
+
+# Labels que ya no se usan.
+for label in "owner:autor" "owner:claude"; do
+  gh label delete "$label" --repo "$REPO" --yes 2>/dev/null || true
+done
 
 existing=$(gh api "repos/$REPO/milestones?state=all" -q '.[].title')
 for m in "M0 – Base" "M1 – Decisiones fundacionales"; do

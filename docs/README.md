@@ -33,6 +33,9 @@ las opciones evaluadas, lo que se eligió y por qué.
 - **Estados:** `Propuesto`, `Aceptado`, `Reemplazado`, `Descartado`.
 - **Inmutables una vez aceptados.** Si se cambia una decisión, se escribe un ADR nuevo
   que reemplaza al anterior, y el viejo pasa a `Reemplazado por ADR-XXXX`.
+  **Excepción, solo durante la etapa de investigación** (mientras no exista código): un
+  ADR aceptado se puede corregir como fe de erratas, por un error o un malentendido
+  (ADR-0014). Cuando empieza el código, la inmutabilidad es estricta.
 - **Un ADR por ticket** `tipo:investigación`, enlazados en ambas direcciones.
 - **Cada ADR nuevo se agrega al índice** de abajo.
 
@@ -51,4 +54,5 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0011](adr/0011-estrategia-de-testing.md) | Testing (GoogleTest, TDD en el núcleo, xfail por bug) | Transversal | Aceptado |
 | [ADR-0012](adr/0012-arquitectura-del-engine.md) | Arquitectura del engine (ECS sparse set, capas, paso fijo) | Transversal | Aceptado |
 | [ADR-0013](adr/0013-convenciones-y-analisis-estatico.md) | Convenciones de código y análisis estático | Transversal | Aceptado |
+| [ADR-0014](adr/0014-metodologia-de-desarrollo.md) | Colaboración y metodología (modo dirigido, cortes verticales, DOD) | Proceso | Aceptado |
 | [ADR-0019](adr/0019-licencias.md) | Licencias (código MIT, docs y assets CC BY 4.0) | Transversal | Aceptado |

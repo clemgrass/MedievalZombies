@@ -19,13 +19,13 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: owner
+    id: modo
     attributes:
-      label: Owner
-      description: Quién escribe el código (regla B en CLAUDE.md). Al refinar se agrega el label owner:autor u owner:claude.
+      label: Modo
+      description: "Cómo se trabaja (ADR-0014). Dirigido: el autor explica el flujo y Claude lo escribe. Propuesto: Claude propone y el autor aprueba. Al refinar se agrega el label modo:dirigido o modo:propuesto."
       options:
-        - autor
-        - claude
+        - dirigido
+        - propuesto
     validations:
       required: true
   - type: input
@@ -37,4 +37,6 @@ body:
     id: explicar
     attributes:
       label: Qué debo poder explicar
-      description: Preguntas que haría un evaluador sobre este trabajo. Obligatoria si el owner es autor; la tarea no se cierra hasta poder responderlas.
+      description: Preguntas que haría un evaluador sobre este trabajo. La tarea no se cierra hasta que el autor pueda responderlas.
+    validations:
+      required: true

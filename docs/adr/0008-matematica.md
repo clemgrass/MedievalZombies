@@ -236,7 +236,7 @@ el mundo (como Unreal 5) resuelve un problema que este juego no tiene.
 
 ## Consecuencias
 
-- **La biblioteca es núcleo (`owner:autor`).** Va en su propio ticket, cuando empiece el
+- **La biblioteca es núcleo (modo dirigido).** Va en su propio ticket, cuando empiece el
   código, con tests desde el primer día: valores calculados a mano y propiedades como
   `inverse(M) * M ≈ I`, `|q| = 1` o `dot(v, cross(v, w)) ≈ 0`. El framework se decide
   en el ADR-0011.

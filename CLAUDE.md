@@ -54,19 +54,23 @@ escrito en C, C++ o C# (por decidir en un ADR).
 - **Trabajo en piezas chicas.** Los trabajos gigantes (como el renderer) se parten en
   tickets pequeños y realizables.
 - **Ritmo pausado.** No adelantarse a implementar ni saltarse aprobaciones.
-- **Reparto de roles: se decide por ticket, con una regla fija.**
-  - **Núcleo → lo escribe el autor**, con guía de Claude. Son los algoritmos que un
-    evaluador va a preguntar: renderer, corte de mallas, física, animación, IA y
-    cualquier sistema que se presente como trabajo propio. Claude explica, propone,
-    da referencias y revisa, pero no entrega la implementación. Usa `TODO(human)` y
-    pistas graduales.
-  - **Periférico → lo puede escribir Claude**: build, scripts, boilerplate, carga de
-    archivos, tooling. El autor lo revisa hasta entenderlo.
-  - **Tests → los escribe Claude, en todo el engine, y el autor los revisa** (ADR-0011).
-    En las zonas con TDD, Claude escribe primero el test que falla, a partir de la
-    especificación acordada, y el autor escribe la implementación del núcleo.
-  - Cada ticket indica explícitamente quién lo escribe (`autor` o `claude`). Si no está
-    claro, se pregunta antes de escribir código.
+- **Trabajo colaborativo (ADR-0014).** El autor da las ideas macro de cada sistema,
+  revisa todo el código y es responsable de entender el sistema completo. Claude escribe
+  el código (núcleo, periférico y tests), además de investigar, proponer y explicar.
+  - **Modo dirigido** (`modo:dirigido`): para los sistemas grandes (renderer, corte de
+    mallas, física, animación, IA). El autor explica el flujo y lo que quiere. Claude
+    prepara el código y marca con `TODO(human)` los puntos de decisión clave. El autor
+    explica con sus palabras cómo resolverlos, y Claude lo escribe, lo mejora y señala
+    dónde la idea puede fallar.
+  - **Modo propuesto** (`modo:propuesto`): para lo periférico. Claude propone el diseño
+    y el código, y el autor lo cuestiona y lo aprueba.
+  - **Nada entra a `main` sin la revisión del autor.** Claude explica lo suficiente para
+    que el autor pueda revisarlo y defenderlo. Los commits con código de Claude llevan
+    `Co-Authored-By: Claude`.
+  - En TDD (ADR-0011), Claude escribe primero el test que falla, a partir de la
+    especificación acordada con el autor, y después la implementación.
+- **Antes de cada PR corre la auditoría contra los ADRs** (skill, ticket #52). Sus
+  hallazgos se revisan juntos: se corrigen, se ignoran o quedan como `deuda-técnica`.
 
 ## Estructura del repositorio
 
@@ -95,12 +99,15 @@ sistema de tickets (GitHub Issues + Projects) y el orden de los primeros ADRs:
   cuando apliquen, y un `--body` con las mismas secciones del formulario
   correspondiente en `.github/ISSUE_TEMPLATE/`.
 - **Claude solo crea issues con aprobación del autor.** Antes de trabajar, lee el
-  ticket y respeta su label `owner:`.
+  ticket y respeta su label `modo:`.
+- **Nunca se trabaja directo en `main`:** siempre rama y PR. El *ruleset* "Proteger
+  main" lo exige.
 - `gh issue list --label` usa el índice de búsqueda: un issue recién creado puede
   tardar unos segundos en aparecer.
 
 ## Herramientas de aprendizaje disponibles
 
 - Output style **Learning** de Claude Code (`/output-style learning`): Claude deja
-  marcadores `TODO(human)` para que el autor escriba piezas clave del código.
+  marcadores `TODO(human)` en los puntos de decisión del modo dirigido. El autor explica
+  la solución y Claude la escribe.
 - MCP **context7**: documentación actualizada de librerías y APIs.

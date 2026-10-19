@@ -14,7 +14,8 @@ guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, cualquier dependencia nueva |
 | [graficos](#graficos) | 0005, 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
-| [testing](#testing) | 0011 | `tests/**`, o cualquier cambio en `engine/**` o `game/**` (para ver si trae sus tests) |
+| [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
+| [testing](#testing) | 0011, 0015 (TDD en la animación) | `tests/**`, o cualquier cambio en `engine/**` o `game/**` (para ver si trae sus tests) |
 
 ### Activación por contenido
 
@@ -30,6 +31,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Rasgos de C++ (excepciones, RTTI, punteros inteligentes, templates, `virtual`) | `cpp-y-convenciones` |
 | Tests, cobertura, bugs, TDD | `testing` |
 | Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) |
+| Animación, skinning, esqueletos, huesos, clips, IK, ragdoll | `animacion` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -238,9 +240,41 @@ Qué mirar:
   (`inverse(M) * M ≈ I`, `|q| = 1`, `dot(v, cross(v, w)) ≈ 0`). El TDD y la cobertura
   no son de este tema: los audita `testing`.
 
+## animacion
+
+**ADRs:** 0015 (sistema de animación).
+
+Qué mirar:
+
+- **Por capas:** clips para la base, procedural encima (la espada, el torso, los
+  agarres) y física para lo que ya no tiene control.
+- **El tajo es mixto:** la espada y los brazos no usan clips (la punta sigue un arco en
+  el plano del tajo y los brazos llegan con IK analítica de dos huesos), y el cuerpo sí
+  lleva un clip (el paso adelante y la carga).
+- **LBS con hasta 4 huesos por vértice.** El aspecto rígido de PS1 son pesos de 1,0 en
+  el asset, no otra ruta del engine. Cambiar a DQS cambia la Decisión 2: con código
+  existente, necesita un ADR nuevo (ADR-0001).
+- **Skinning en la GPU** (vertex shader) para dibujar. **La CPU deforma solo el zombie
+  que se corta,** en el paso del corte (Decisión 3).
+- **El skinning de la CPU es una función pura en una capa de abajo** (junto a la
+  matemática de `core`), y hace la misma cuenta que el shader. `slicing` no depende de
+  `animation` para usarla.
+- **La pose se evalúa en el paso de simulación,** no en el frame de render, y después del
+  corte (orden del ADR-0012): el combate y el corte usan la pose del paso anterior. El
+  render interpola con *nlerp* y revisa el hemisferio (`dot < 0` → invertir). Una pose
+  que depende del frame de render rompe el determinismo.
+- **La garantía al corte:** las matrices y los pesos están en la CPU para que el corte
+  asigne pesos a los vértices nuevos y el pedazo vivo siga animado. Los pedazos heredan
+  la pose anterior del zombie. El método de los pesos no es de este tema: lo decide el
+  ADR-0007.
+- **El pedazo vivo y el zombie mutilado** conservan el esqueleto completo, con los
+  huesos perdidos enmascarados, y reutilizan los mismos clips.
+- **La IK de dos huesos acota `d`** a `[|a − b| + ε, a + b − ε]` antes del `acos`.
+- El TDD y la cobertura de la animación no son de este tema: los audita `testing`.
+
 ## testing
 
-**ADRs:** 0011.
+**ADRs:** 0011, 0015 (reparto del TDD en la animación).
 
 Qué mirar:
 
@@ -248,6 +282,12 @@ Qué mirar:
   fallar.
 - **TDD estricto** en la matemática, la memoria, los contenedores, el ECS y las
   funciones del corte. Código nuevo en esas zonas **sin test** es `bloqueante`.
+- **En la animación (ADR-0015),** el TDD y el 100 % de cobertura aplican al skinning de
+  la CPU (va en la ruta del corte), a la IK de dos huesos, al recorrido de la jerarquía
+  y al *nlerp*. Código nuevo en esas piezas sin test es `bloqueante`, como en las demás
+  zonas con TDD. La máquina de estados y la mezcla de capas llevan tests después.
+- **Cuando exista el renderer,** el skinning trae un test que compara la GPU (con
+  lavapipe) con la CPU, vértice a vértice y con tolerancia (ADR-0015).
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.

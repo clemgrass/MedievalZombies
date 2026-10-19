@@ -16,11 +16,15 @@ docs/
 ├── plans/           planes de implementación derivados de las specs
 ├── adr/             ADRs transversales y plantilla (template.md)
 ├── graphics/        renderer: README, adr/, research/
-└── slicing/         corte de mallas: README, adr/, research/
+├── slicing/         corte de mallas: README, adr/, research/
+└── performance/     rendimiento: README y presupuestos por sistema (documento vivo)
 ```
 
 Las carpetas de área nuevas (`physics/`, `animation/`, `ai/`, etc.) se crean cuando
 les toca su primer ADR y tienen la misma forma que `graphics/`.
+
+`performance/` no es una carpeta de área: guarda documentos vivos, que cambian con cada
+medición. Su ADR (el ADR-0020) vive en `adr/`, porque es transversal.
 
 ## Reglas de los ADRs
 
@@ -58,3 +62,4 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0013](adr/0013-convenciones-y-analisis-estatico.md) | Convenciones de código y análisis estático | Transversal | Aceptado |
 | [ADR-0014](adr/0014-metodologia-de-desarrollo.md) | Colaboración y metodología (modo dirigido, cortes verticales, DOD) | Proceso | Aceptado |
 | [ADR-0019](adr/0019-licencias.md) | Licencias (código MIT, docs y assets CC BY 4.0) | Transversal | Aceptado |
+| [ADR-0020](adr/0020-requisitos-y-presupuestos-de-rendimiento.md) | Requisitos y presupuestos de rendimiento (UHD 620, 60 fps, 640×360) | Transversal | Aceptado |

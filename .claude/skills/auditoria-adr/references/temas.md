@@ -7,10 +7,10 @@ guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
 
 | Tema | ADRs | Se activa cuando el PR toca… |
 |---|---|---|
-| [proceso](#proceso) | 0001, 0002, 0014 | **Siempre** |
+| [proceso](#proceso) | 0001, 0002, 0014, 0020 | **Siempre** |
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
-| [arquitectura](#arquitectura) | 0004, 0012 | `engine/**`, `game/**`, cualquier `CMakeLists.txt` |
+| [arquitectura](#arquitectura) | 0004, 0012, 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, cualquier dependencia nueva |
 | [graficos](#graficos) | 0005, 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
@@ -29,6 +29,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | ECS, capas, módulos, SDL, input, el bucle de juego | `arquitectura` |
 | Rasgos de C++ (excepciones, RTTI, punteros inteligentes, templates, `virtual`) | `cpp-y-convenciones` |
 | Tests, cobertura, bugs, TDD | `testing` |
+| Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -42,8 +43,9 @@ aceptado del índice de `docs/README.md` no aparece en ningún tema.
 
 ## proceso
 
-**ADRs:** 0001 (ADRs), 0002 (tickets), 0014 (colaboración y metodología). También
-`docs/process/git.md` y `docs/process/tickets.md`.
+**ADRs:** 0001 (ADRs), 0002 (tickets), 0014 (colaboración y metodología), 0020
+(requisitos y protocolo de medición del rendimiento). También `docs/process/git.md`,
+`docs/process/tickets.md` y `docs/performance/presupuestos.md`.
 
 Qué mirar:
 
@@ -62,7 +64,18 @@ Qué mirar:
   respondida o pendiente para el autor antes del merge.
 - Una deuda deliberada nueva lleva `TODO(#N)` y su issue `deuda-técnica`. Un `TODO`
   suelto, sin issue, es un hallazgo.
-- Los cambios de rendimiento incluyen la medición antes y después (ADR-0014, regla 9).
+- Los cambios de rendimiento incluyen la medición antes y después (ADR-0014, regla 9),
+  hecha con el **protocolo del ADR-0020**:
+  - preset `relwithdebinfo` sin validation layers, con calentamiento y al menos 5
+    ejecuciones;
+  - p50, p99, p99,9 y máximo en ms, nunca fps promedio;
+  - una mejora o un empeoramiento solo cuentan si los intervalos de confianza del 95 %
+    no se superponen.
+- Un cambio a `docs/performance/presupuestos.md` trae su medición y una línea nueva en el
+  historial. Un número sin medir sigue marcado como hipótesis.
+- Un cambio que sube la carga del juego (más zombies, más pedazos o un sistema nuevo en
+  el frame) respeta los requisitos R1 a R5 del ADR-0020, o deja el incumplimiento
+  registrado como bug o ticket, según el ADR-0020.
 - No hay código de un *spike* (ramas `spike/…`) entrando a `main`.
 - Si el cambio agrega código de Claude: el commit previsto lleva `Co-Authored-By`.
 - Si hay tags o releases: SemVer `0.y.z` y `CHANGELOG.md` al día.
@@ -132,7 +145,8 @@ Qué mirar:
 
 ## arquitectura
 
-**ADRs:** 0004 (capa de plataforma), 0012 (arquitectura del engine).
+**ADRs:** 0004 (capa de plataforma), 0012 (arquitectura del engine), 0020 (reparto del
+frame por sistema).
 
 Qué mirar:
 
@@ -148,6 +162,10 @@ Qué mirar:
   frame y el frame recortado a 250 ms.
 - **Comunicación:** colas de eventos por frame, guardadas en la arena del frame.
 - **Un solo hilo** por ahora.
+- **Reparto del frame (ADR-0020):** `docs/performance/presupuestos.md` separa el costo
+  por paso de simulación del costo por frame. Un frame con dos pasos tiene que caber en
+  16,7 ms. Lo que depende de la simulación (por ejemplo, la cuota de cortes) se cuenta
+  en pasos, no en frames, para no romper el determinismo.
 - **Estructura del monorepo:** `engine/`, `game/`, `tools/`, `shaders/`, `tests/` y
   `docs/`.
 

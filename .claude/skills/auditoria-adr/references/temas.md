@@ -11,12 +11,13 @@ guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
-| [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, cualquier dependencia nueva |
+| [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
 | [graficos](#graficos) | 0005, 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [testing](#testing) | 0011, 0015 y 0016 (TDD en la animación y la física) | `tests/**`, o cualquier cambio en `engine/**` o `game/**` (para ver si trae sus tests) |
+| [assets](#assets) | 0017 | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [testing](#testing) | 0011, 0015, 0016 y 0017 (TDD en la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 
 ### Activación por contenido
 
@@ -34,6 +35,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) |
 | Animación, skinning, esqueletos, huesos, clips, IK | `animacion` |
 | Física, colisiones, cuerpos rígidos, ragdoll, solver, cápsulas, controlador de personaje, la detección del tajo | `fisica` |
+| Assets, Blender, glTF, texturas, formatos de archivo, el cocinador, Git LFS | `assets` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -106,8 +108,8 @@ Qué mirar:
   `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, nombrar una herramienta de assets antes del
-  ADR-0017.
+  pendiente es un hallazgo. Por ejemplo, fijar el formato de las escenas antes del
+  ADR-0027, o decidir el *hot reload* antes del ADR-0028.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo
@@ -173,8 +175,10 @@ Qué mirar:
   por paso de simulación del costo por frame. Un frame con dos pasos tiene que caber en
   16,7 ms. Lo que depende de la simulación (por ejemplo, la cuota de cortes) se cuenta
   en pasos, no en frames, para no romper el determinismo.
-- **Estructura del monorepo:** `engine/`, `game/`, `tools/`, `shaders/`, `tests/` y
-  `docs/`.
+- **Estructura del monorepo:** `engine/`, `game/`, `tools/`, `shaders/`, `tests/`,
+  `docs/` y `assets/` (la fuente de los assets, ADR-0017 y ADR-0019).
+- **El cocinador de assets** (`tools/`) enlaza solo `engine/core`. Nada de `engine/` ni
+  de `game/` enlaza el cocinador ni sus dependencias (ADR-0017).
 
 ## build-y-licencias
 
@@ -192,6 +196,10 @@ Qué mirar:
 - **SDL3:** del sistema, con la opción `MZ_VENDOR_SDL3` para usar FetchContent.
 - **Shaders:** `glslc` y `spirv-val`.
 - **Dependencias:** una dependencia nueva necesita su ADR y su fila en `CREDITS.md`.
+  Una dependencia **copiada en el repo** (como `tools/third_party/`) lleva además su
+  anotación en `REUSE.toml`, con el copyright y la licencia de sus autores, debajo de la
+  anotación por defecto. Sin ella, `reuse lint` pasa igual, pero con el autor
+  equivocado.
 - **Licencias (ADR-0019):** el código va bajo MIT, y la documentación y los assets
   propios bajo CC BY 4.0. Un asset de terceros solo puede ser CC0 o CC BY, con su fila
   en `CREDITS.md` y su anotación en `REUSE.toml` si no es CC BY 4.0 de Clemente Grass.
@@ -295,7 +303,10 @@ Qué mirar:
 - **Las cápsulas por hueso son la única forma física del cuerpo del zombie:** detectan
   el tajo, forman el ragdoll y dan la forma de los pedazos (como cuerpo compuesto si son
   varias). El zombie vivo usa además la cápsula de su controlador para moverse. Los
-  huesos enmascarados no tienen cápsula activa.
+  huesos enmascarados no tienen cápsula activa, y un hueso que no mueve ningún vértice
+  (como `root`) no tiene cápsula. Si queda en medio de una cadena, la rótula une a sus
+  hijos con el ancestro más cercano con cápsula, y ese hueso se mueve rígido junto a él
+  (fe de erratas del ADR-0016, por el ADR-0017).
 - **Recortar una cápsula en el plano del corte** recorta su segmento al semiespacio con
   distancia al plano mayor o igual que su radio, para que la cápsula entera quede de su
   lado. Si no queda segmento, sobra una esfera en el extremo más lejano, de radio
@@ -319,9 +330,66 @@ Qué mirar:
 - **Determinismo:** un hilo, orden fijo (nunca por dirección de memoria ni por hash),
   memoria inicializada y nada que dependa del reloj.
 
+## assets
+
+**ADRs:** 0017 (pipeline de assets).
+
+Qué mirar:
+
+- **El camino:** `.blend` → `blender -b` → `.glb` → cocinador → binario. Lo exportado y
+  lo cocinado viven en el directorio de build: un `.glb` o un binario cocinado
+  **versionado** en el repo es un hallazgo. **La única excepción** son los fixtures de
+  los tests del cocinador: `.gltf` chicos en `tests/tools/fixtures/`.
+- **cgltf y stb_image** están copiados en `tools/third_party/`, con su fila en
+  `CREDITS.md` y su anotación en `REUSE.toml` (esto último lo audita
+  `build-y-licencias`).
+- **El cocinador sigue el ADR-0009:** sin excepciones ni RTTI, y los errores salen como
+  un `result` y un código de salida distinto de cero.
+- **Blender, con la versión fijada,** y el build la verifica. Cambiar la versión es un
+  cambio deliberado, con todo re-exportado.
+- **glTF 2.0 es el único formato de intercambio.** Leer FBX, OBJ, USD o `.blend` directo
+  cambia la Decisión 2.
+- **cgltf y stb_image viven solo en el cocinador.** Si el juego (`engine/` o `game/`) los
+  incluye o los enlaza, es `bloqueante`: el juego carga solo el binario cocinado.
+- **El binario cocinado:** cabecera con firma y versión, secciones planas con offsets
+  relativos y sin punteros. El cargador valida la firma, la versión y que cada offset
+  caiga dentro del archivo antes de usarlo. No hay compatibilidad hacia atrás: si el
+  formato cambia, sube la versión.
+- **El cocinador falla el build, no solo avisa:** un vértice sin pesos en una malla con
+  esqueleto, más de 256
+  huesos, un prefijo de colisión mal escrito o desconocido (incluido `UCX_`), una
+  primitiva que no calza, o un hueso conservado que cuelga de uno que se quita. Un
+  vértice con más de 4 huesos no es un error: primero se funden los pesos de los huesos
+  quitados, y después conserva los 4 de mayor peso y se renormaliza.
+- **La rotación de ejes es la del cocinador,** y es su primer paso: 180° sobre Y en toda
+  la jerarquía. La regla matemática la audita `matematica`.
+- **El recorte de huesos no depende de un rig:** el cocinador no conoce nombres de
+  Quaternius ni de ningún rig. Cada rig dice qué huesos conserva, solo se quitan
+  subárboles completos, y los pesos de los que se quitan se funden en el ancestro
+  conservado más cercano.
+- **Los clips** se guardan a la frecuencia de la escena de Blender, con cada canal
+  constante reducido a un solo valor y cada clave en el mismo hemisferio que la
+  anterior.
+- **Las texturas guardan su `VkFormat`:** `R8G8B8A8_SRGB` para el color y `_UNORM` para
+  los datos.
+- **Las texturas son RGBA8 sin comprimir.** BC7, BC1 o Basis cambian la Decisión 5.
+- **Las cápsulas por hueso** se ajustan en el cocinador, después del recorte de huesos,
+  con correcciones a mano. Tiene cápsula todo hueso que mueve algún vértice (si no
+  domina en ninguno, se ajusta con los de cualquier peso), y uno que no mueve ninguno no
+  la tiene. En el escenario, solo `UBX_`, `UCP_` y `USP_`.
+- **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
+  de carga.
+- **Un asset de terceros que solo existe como `.glb`** se versiona importado a `.blend`,
+  con el original anotado en `CREDITS.md`.
+- **Git directo, nunca LFS:** un `.gitattributes` con `filter=lfs` es `bloqueante`.
+  Ningún archivo pasa de 50 MiB.
+- Las licencias de los assets de terceros y las filas de `CREDITS.md` no son de este
+  tema: las audita `build-y-licencias`.
+
 ## testing
 
-**ADRs:** 0011, 0015 y 0016 (reparto del TDD en la animación y la física).
+**ADRs:** 0011, 0015, 0016 y 0017 (reparto del TDD en la animación, la física y el
+cocinador de assets).
 
 Qué mirar:
 
@@ -343,6 +411,16 @@ Qué mirar:
   conocidos (una pila de pedazos que se queda quieta, una esfera que se detiene, un
   ragdoll que no explota). Hay un test de determinismo desde el principio: el mismo
   escenario dos veces, con el mismo hash del estado.
+- **En el cocinador de assets (ADR-0017),** llevan TDD y el 100 % de cobertura las
+  conversiones puras: la rotación de 180° sobre Y, fundir huesos y pesos, conservar los 4
+  huesos de mayor peso, quitar canales constantes, alinear el hemisferio de las claves y
+  el ajuste de cápsulas y primitivas (incluido que un hueso que no mueve vértices no
+  tiene cápsula). Viven en una biblioteca probada en
+  `tests/tools/`. Código nuevo ahí sin test es `bloqueante`. Cada propiedad va con casos
+  calculados a mano: "rotar dos veces devuelve el original" solo no alcanza, porque no
+  detecta un espejo (hace falta la normal de un triángulo). Además: fixtures `.gltf`
+  chicos en `tests/tools/fixtures/`, un test de que cocinar dos veces da los mismos
+  bytes, y fuzzing del cargador del binario.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.

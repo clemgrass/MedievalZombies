@@ -15,6 +15,7 @@ docs/
 ├── specs/           specs aprobadas
 ├── plans/           planes de implementación derivados de las specs
 ├── adr/             ADRs transversales y plantilla (template.md)
+├── research/        notas de investigación de los ADRs transversales
 ├── graphics/        renderer: README, adr/, research/
 ├── slicing/         corte de mallas: README, adr/, research/
 ├── animation/       animación: README, adr/, research/
@@ -65,5 +66,6 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0014](adr/0014-metodologia-de-desarrollo.md) | Colaboración y metodología (modo dirigido, cortes verticales, DOD) | Proceso | Aceptado |
 | [ADR-0015](animation/adr/0015-sistema-de-animacion.md) | Sistema de animación (por capas, LBS en la GPU, IK para el tajo) | Animación | Aceptado |
 | [ADR-0016](physics/adr/0016-fisica.md) | Física propia (Soft Step, cápsulas por hueso, tajo barrido en su plano) | Física | Aceptado |
+| [ADR-0017](adr/0017-pipeline-de-assets.md) | Pipeline de assets (Blender, glTF, binario cocinado en el build) | Transversal | Aceptado |
 | [ADR-0019](adr/0019-licencias.md) | Licencias (código MIT, docs y assets CC BY 4.0) | Transversal | Aceptado |
 | [ADR-0020](adr/0020-requisitos-y-presupuestos-de-rendimiento.md) | Requisitos y presupuestos de rendimiento (UHD 620, 60 fps, 640×360) | Transversal | Aceptado |

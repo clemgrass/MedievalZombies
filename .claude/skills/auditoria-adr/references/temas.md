@@ -10,12 +10,13 @@ guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
 | [proceso](#proceso) | 0001, 0002, 0014, 0020 | **Siempre** |
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
-| [arquitectura](#arquitectura) | 0004, 0012, 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
+| [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, cualquier dependencia nueva |
 | [graficos](#graficos) | 0005, 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
-| [testing](#testing) | 0011, 0015 (TDD en la animación) | `tests/**`, o cualquier cambio en `engine/**` o `game/**` (para ver si trae sus tests) |
+| [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
+| [testing](#testing) | 0011, 0015 y 0016 (TDD en la animación y la física) | `tests/**`, o cualquier cambio en `engine/**` o `game/**` (para ver si trae sus tests) |
 
 ### Activación por contenido
 
@@ -31,7 +32,8 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Rasgos de C++ (excepciones, RTTI, punteros inteligentes, templates, `virtual`) | `cpp-y-convenciones` |
 | Tests, cobertura, bugs, TDD | `testing` |
 | Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) |
-| Animación, skinning, esqueletos, huesos, clips, IK, ragdoll | `animacion` |
+| Animación, skinning, esqueletos, huesos, clips, IK | `animacion` |
+| Física, colisiones, cuerpos rígidos, ragdoll, solver, cápsulas, controlador de personaje, la detección del tajo | `fisica` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -147,8 +149,8 @@ Qué mirar:
 
 ## arquitectura
 
-**ADRs:** 0004 (capa de plataforma), 0012 (arquitectura del engine), 0020 (reparto del
-frame por sistema).
+**ADRs:** 0004 (capa de plataforma), 0012 (arquitectura del engine), 0016 (consultas
+directas a la física), 0020 (reparto del frame por sistema).
 
 Qué mirar:
 
@@ -162,7 +164,10 @@ Qué mirar:
 - **ECS:** de *sparse sets* propio. La entidad es un handle con generación.
 - **Bucle:** paso fijo de 60 Hz con acumulador e interpolación, como mucho 8 pasos por
   frame y el frame recortado a 250 ms.
-- **Comunicación:** colas de eventos por frame, guardadas en la arena del frame.
+- **Comunicación:** colas de eventos por frame, guardadas en la arena del frame, para
+  las órdenes que cambian el estado. Las consultas de solo lectura (rayos, barridos, el
+  barrido del tajo) son llamadas directas hacia abajo (fe de erratas del ADR-0012, por
+  el ADR-0016).
 - **Un solo hilo** por ahora.
 - **Reparto del frame (ADR-0020):** `docs/performance/presupuestos.md` separa el costo
   por paso de simulación del costo por frame. Un frame con dos pasos tiene que caber en
@@ -272,9 +277,51 @@ Qué mirar:
 - **La IK de dos huesos acota `d`** a `[|a − b| + ε, a + b − ε]` antes del `acos`.
 - El TDD y la cobertura de la animación no son de este tema: los audita `testing`.
 
+## fisica
+
+**ADRs:** 0016 (física).
+
+Qué mirar:
+
+- **Física propia.** Una biblioteca de física (Jolt, Bullet, PhysX) contradice la
+  Decisión 1 y necesita su propio ADR.
+- **Alcance acotado:** cuerpos dinámicos esféricos y de cápsula; cajas solo estáticas
+  (el escenario); contactos con fricción; rótulas con límites; dormir; rayo y barrido de
+  esfera; controlador de personaje. Agregar cajas dinámicas, casco convexo, mallas de
+  triángulos, física activa, cuerpos blandos o telas cambia la Decisión 2.
+- **Solver Soft Step:** impulsos secuenciales con subpasos y restricciones blandas. Se
+  construye primero con impulsos secuenciales simples, y después se agregan los
+  subpasos y las restricciones blandas.
+- **Las cápsulas por hueso son la única forma física del cuerpo del zombie:** detectan
+  el tajo, forman el ragdoll y dan la forma de los pedazos (como cuerpo compuesto si son
+  varias). El zombie vivo usa además la cápsula de su controlador para moverse. Los
+  huesos enmascarados no tienen cápsula activa.
+- **Recortar una cápsula en el plano del corte** recorta su segmento al semiespacio con
+  distancia al plano mayor o igual que su radio, para que la cápsula entera quede de su
+  lado. Si no queda segmento, sobra una esfera en el extremo más lejano, de radio
+  `min(r, dist)`, o nada.
+- **El zombie muerto entero es un ragdoll, y los pedazos son cuerpos rígidos,** con un
+  tope propio de ragdolls activos. Los cuerpos unidos por una rótula no chocan entre sí.
+- **Los personajes son controladores cinemáticos** que se mueven y se sacan de lo que
+  penetran, con pruebas de superposición, no con barridos ni como cuerpos dinámicos. El
+  empuje es un impulso programado. El avance por paso queda muy por debajo del radio de
+  la cápsula: los movimientos rápidos (esquive, empuje) se recortan o se subdividen.
+- **El tajo se detecta con el barrido en su plano:** hay golpe si la distancia del
+  segmento de una cápsula al sector de anillo es menor o igual que su radio (inflado con
+  lo que se movió el centro del arco). La espada es la de los pasos N−2 y N−1. Un test
+  discreto por paso pierde golpes.
+- **Los datos entre animación, física y corte pasan por componentes del ECS.** Las
+  consultas de solo lectura son llamadas directas hacia abajo, y las colas quedan para
+  las órdenes que cambian el estado.
+- **Fase amplia por fuerza bruta.** Cambiarla a una grilla uniforme necesita una medición
+  que lo justifique (ADR-0014). Otra estructura (árbol, *sweep and prune*) cambia la
+  Decisión 8.
+- **Determinismo:** un hilo, orden fijo (nunca por dirección de memoria ni por hash),
+  memoria inicializada y nada que dependa del reloj.
+
 ## testing
 
-**ADRs:** 0011, 0015 (reparto del TDD en la animación).
+**ADRs:** 0011, 0015 y 0016 (reparto del TDD en la animación y la física).
 
 Qué mirar:
 
@@ -288,6 +335,14 @@ Qué mirar:
   zonas con TDD. La máquina de estados y la mezcla de capas llevan tests después.
 - **Cuando exista el renderer,** el skinning trae un test que compara la GPU (con
   lavapipe) con la CPU, vértice a vértice y con tolerancia (ADR-0015).
+- **En la física (ADR-0016),** llevan TDD y el 100 % de cobertura las pruebas de cada
+  forma que se mueve (esfera, cápsula y la cápsula del controlador) contra cada forma
+  (esfera, cápsula y caja estática), el rayo, el barrido de esfera, recortar una cápsula
+  en un plano y el barrido del tajo. Código nuevo en esas piezas sin
+  test es `bloqueante`. El solver y el controlador llevan tests después, con escenarios
+  conocidos (una pila de pedazos que se queda quieta, una esfera que se detiene, un
+  ragdoll que no explota). Hay un test de determinismo desde el principio: el mismo
+  escenario dos veces, con el mismo hash del estado.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.

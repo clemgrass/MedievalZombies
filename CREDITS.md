@@ -23,3 +23,5 @@ para saber de dónde vino cada archivo.
 |---|---|---|
 | [SDL3](https://github.com/libsdl-org/SDL) | zlib | Ventana, input, tiempo y audio (ADR-0004) |
 | [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) | Apache-2.0 o MIT | API gráfica (ADR-0005) |
+| [cgltf](https://github.com/jkuhlmann/cgltf) | MIT | Leer glTF, solo en el cocinador de assets (ADR-0017) |
+| [stb_image](https://github.com/nothings/stb) | MIT (o dominio público; se usa bajo MIT) | Decodificar PNG, solo en el cocinador de assets (ADR-0017) |

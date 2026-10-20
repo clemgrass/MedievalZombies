@@ -4,6 +4,11 @@
 - **Fecha:** 2026-10-19
 - **Ticket:** #29
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-20 (#30): "una cápsula por hueso" significa "por hueso que
+  mueve algún vértice". Un hueso que no mueve ninguno (como `root`) no tiene cápsula. Si
+  queda en medio de una cadena, la rótula une a sus hijos con el ancestro más cercano
+  que tenga cápsula, y ese hueso se mueve rígido junto a él (ADR-0017). Se aclara en
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -291,8 +296,10 @@ contra el escenario y el golpe de la espada.
 - **Las cápsulas por hueso son la única forma física del cuerpo del zombie:** detectan el
   tajo, forman el ragdoll y dan la forma de los pedazos. Para moverse por el escenario,
   el zombie vivo usa además la cápsula de su controlador. Cada esqueleto necesita una
-  cápsula por hueso (radio y segmento). Cómo se generan (a mano o ajustadas a los
-  vértices de cada hueso) lo decide el ADR-0017.
+  cápsula por cada hueso que mueve algún vértice (radio y segmento). Si un hueso sin
+  cápsula queda en medio de una cadena, la rótula une a sus hijos con el ancestro más
+  cercano con cápsula, y ese hueso se mueve rígido junto a él. Cómo se generan (a mano o
+  ajustadas a los vértices de cada hueso) lo decide el ADR-0017.
 - **Los huesos enmascarados no tienen cápsula activa** (ADR-0015): un segundo tajo no
   puede golpear el brazo que ya no está. En el pedazo vivo, las cápsulas que toca el
   plano se recortan igual que en los pedazos.

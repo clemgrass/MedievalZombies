@@ -166,7 +166,8 @@ Qué mirar:
   frame y el frame recortado a 250 ms.
 - **Comunicación:** colas de eventos por frame, guardadas en la arena del frame, para
   las órdenes que cambian el estado. Las consultas de solo lectura (rayos, barridos, el
-  barrido del tajo) son llamadas directas hacia abajo (ADR-0016).
+  barrido del tajo) son llamadas directas hacia abajo (fe de erratas del ADR-0012, por
+  el ADR-0016).
 - **Un solo hilo** por ahora.
 - **Reparto del frame (ADR-0020):** `docs/performance/presupuestos.md` separa el costo
   por paso de simulación del costo por frame. Un frame con dos pasos tiene que caber en

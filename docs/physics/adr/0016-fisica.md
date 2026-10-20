@@ -309,8 +309,8 @@ contra el escenario y el golpe de la espada.
 - **Las consultas de solo lectura son llamadas directas hacia abajo.** El barrido del
   tajo, el rayo, el barrido de esfera y el *move and slide* devuelven un resultado en el
   momento. Las colas del ADR-0012 quedan para las órdenes que cambian el estado, como
-  `slice_request`. **Esto precisa la Decisión 4 del ADR-0012** ("colas de eventos por
-  frame entre sistemas"), que no distinguía las consultas de las órdenes. El combate es
+  `slice_request`. **Esto precisa la Decisión 4 del ADR-0012**, que no distinguía las
+  consultas de las órdenes, y quedó registrado allí como fe de erratas. El combate es
   gameplay y vive en `game/`, así que llamar a la física es una llamada legal hacia
   abajo.
 - **El avance del controlador por paso tiene que quedar muy por debajo de su radio,**

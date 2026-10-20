@@ -4,6 +4,10 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #22
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-19 (#29): la comunicación por colas es para las órdenes que
+  cambian el estado. Las consultas de solo lectura (por ejemplo, a la física) son
+  llamadas directas hacia abajo (ADR-0016). Se aclara en la Decisión 4 y en
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -165,7 +169,7 @@ docs/      documentación
 | 1 | Modelo de entidades | **ECS propio y simple, con sparse sets.** La entidad es un `handle` con generación (ADR-0009) |
 | 2 | Módulos | **Capas estrictas** (`platform` → `core` → `gpu` → sistemas → `game`), que CMake hace cumplir: cada módulo es un target y solo enlaza con los de abajo |
 | 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo |
-| 4 | Comunicación | **Colas de eventos por frame entre sistemas**, guardadas en la arena por frame. Dentro de un mismo módulo, llamadas directas |
+| 4 | Comunicación | **Colas de eventos por frame entre sistemas** para las órdenes que cambian el estado, guardadas en la arena por frame. Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
 | 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida |
 | 6 | Monorepo | `engine/`, `game/`, `tools/`, `shaders/`, `tests/`, `docs/` |
 
@@ -190,6 +194,10 @@ docs/      documentación
   mínimo, las transformaciones).
 - **Las colas de eventos** son tipadas (por ejemplo `slice_request`) y viven en la
   arena por frame, así que desaparecen solas al terminar el frame.
+- **Las consultas no van por colas:** un sistema que necesita una respuesta en el momento
+  (el combate preguntando qué tocó la espada, la cámara preguntando si hay una pared) la
+  pide con una llamada directa a un módulo de abajo. Una consulta no cambia el estado,
+  así que no altera el orden explícito que dan las colas.
 - **La estructura del monorepo** se crea con el primer ticket de código. Hoy solo
   existen `docs/`, `.github/` y `tools/`.
 

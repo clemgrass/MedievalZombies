@@ -29,7 +29,7 @@
       "id": 2,
       "name": "adr-con-problemas",
       "prompt": "Ya escribí el ADR-0017 (pipeline de assets) en la rama 30-adr-0017 y lo dejé como Aceptado. Antes de darme los comandos del PR, corre la auditoría.",
-      "expected_output": "Hallazgos de docs-y-adrs y proceso: menciona 'TUM' y 'AAA' (regla de audiencia genérica); 'Cómo lo defiendo' vacío en un ADR Aceptado; contradice ADR-0008 al usar GLM; falta su fila en docs/README.md. No se lanzan auditores de código C++.",
+      "expected_output": "Hallazgos de docs-y-adrs y proceso: menciona 'TUM' y 'AAA' (regla de audiencia genérica); 'Cómo lo defiendo' vacío en un ADR Aceptado; contradice ADR-0008 al usar GLM; falta su fila en docs/README.md. No se audita el tema de código C++.",
       "files": [
         "evals/fixtures/eval-2/"
       ],

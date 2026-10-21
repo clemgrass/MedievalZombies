@@ -61,6 +61,7 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0007](slicing/adr/0007-corte-de-mallas.md) | Corte de mallas (geométrico en la CPU, hasta donde llega la hoja, hendidura en cuña) | Corte de mallas | Aceptado |
 | [ADR-0008](adr/0008-matematica.md) | Matemática propia (Y arriba, column-major, reverse-Z) | Transversal | Aceptado |
 | [ADR-0009](adr/0009-subconjunto-de-cpp.md) | Subconjunto de C++ (sin excepciones ni RTTI, STL por zonas) | Transversal | Aceptado |
+| [ADR-0010](adr/0010-estrategia-de-memoria.md) | Estrategia de memoria (regiones tocadas al iniciar, arenas por paso, TLSF para los pedazos) | Transversal | Aceptado |
 | [ADR-0011](adr/0011-estrategia-de-testing.md) | Testing (GoogleTest, TDD en el núcleo, xfail por bug) | Transversal | Aceptado |
 | [ADR-0012](adr/0012-arquitectura-del-engine.md) | Arquitectura del engine (ECS sparse set, capas, paso fijo) | Transversal | Aceptado |
 | [ADR-0013](adr/0013-convenciones-y-analisis-estatico.md) | Convenciones de código y análisis estático | Transversal | Aceptado |

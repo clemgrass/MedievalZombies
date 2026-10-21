@@ -57,9 +57,9 @@ flowchart TB
     d6[/"pedazos"/]
     gpu[("índices por pedazo<br/>+ vértices nuevos")]
 
-    e1@{ shape: braces, label: "d = (−1, +1, +1)" }
-    e2@{ shape: braces, label: "p01 = (1, 1, 0), p02 = (0, 1, 0), t = 0,5" }
-    e3@{ shape: braces, label: "debajo: 1 triángulo; encima: 2; contorno: p01–p02" }
+    e1@{ shape: doc, label: "d = (−1, +1, +1)" }
+    e2@{ shape: doc, label: "p01 = (1, 1, 0), p02 = (0, 1, 0), t = 0,5" }
+    e3@{ shape: doc, label: "debajo: 1 triángulo; encima: 2; contorno: p01–p02" }
 
     req -.-> f1
     mesh -.-> f1

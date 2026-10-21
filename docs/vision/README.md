@@ -1,6 +1,7 @@
 # Visión del juego
 
-- **Versión:** 1 (2026-10-18)
+- **Versión:** 2 (2026-10-20): se suma la hoja que queda clavada (#11). Versión 1:
+  2026-10-18.
 - **Ticket:** #13 (`modo:dirigido`: las ideas son del autor y Claude las redacta)
 - **Qué es este documento:** el diseño del juego. **No es un ADR.** Les da a las
   decisiones técnicas los números y las prioridades que necesitan (por ejemplo, cuántos
@@ -82,6 +83,12 @@ algo de tragicomedia.
 - **La fuerza decide qué atraviesa la espada:** un zombie, un zombie con armadura, varios
   zombies en línea o varios con armadura. La precisión decide *por dónde* corta, y la
   fuerza *hasta dónde* llega.
+- **La hoja puede quedar clavada.** Si la fuerza alcanza para entrar pero no para
+  atravesar, la hoja se detiene dentro del zombie: puede cortar solo un brazo, o llegar
+  hasta la mitad del torso y quedarse clavada. Entonces la caballera tiene que sacarla,
+  y eso gasta energía. Donde se detuvo queda una herida abierta, en la que se ve el
+  interior. Bajo el umbral de corte, el tajo no entra: empuja o rebota. Las reglas
+  exactas las fija el ADR-0018, y la geometría de la herida, el ADR-0007.
 - **Mientras se carga, se puede corregir el ángulo, pero cuesta energía.** El costo es
   proporcional a cuánto se gira: un ajuste de 5° casi no cuesta, y uno de 90° vacía la
   energía. Además, **la línea gira más lento mientras se carga**, por el peso de la
@@ -171,7 +178,7 @@ alternativas y fija las reglas exactas.
 - **Todo se resuelve con cortes.** No hay vida acumulable: varios tajos que solo empujan
   no matan a nadie.
 - **Umbral de corte:** cada zombie tiene un umbral de fuerza para partirlo. Bajo ese
-  umbral, el tajo solo lo empuja.
+  umbral, el tajo no entra: lo empuja o rebota.
 - **Cualquier corte en la cabeza lo mata.** Como los zombies se mueven, acertarle a la
   cabeza es difícil.
 - **Regla general para el resto:** mientras conserve **la cabeza completa y al menos un

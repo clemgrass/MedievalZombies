@@ -12,12 +12,13 @@ guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
-| [graficos](#graficos) | 0005, 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
+| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017 | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
-| [testing](#testing) | 0011, 0015, 0016 y 0017 (TDD en la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
+| [testing](#testing) | 0011, 0007, 0015, 0016 y 0017 (TDD en el corte, la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 
 ### Activación por contenido
 
@@ -36,6 +37,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Animación, skinning, esqueletos, huesos, clips, IK | `animacion` |
 | Física, colisiones, cuerpos rígidos, ragdoll, solver, cápsulas, controlador de personaje, la detección del tajo | `fisica` |
 | Assets, Blender, glTF, texturas, formatos de archivo, el cocinador, Git LFS | `assets` |
+| Corte de mallas, tapas, pedazos, hendidura, `slice_request`, índice soldado | `corte` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -78,7 +80,9 @@ Qué mirar:
   - una mejora o un empeoramiento solo cuentan si los intervalos de confianza del 95 %
     no se superponen.
 - Un cambio a `docs/performance/presupuestos.md` trae su medición y una línea nueva en el
-  historial. Un número sin medir sigue marcado como hipótesis.
+  historial. Un número sin medir sigue marcado como hipótesis. La excepción: una nota que
+  solo cita la decisión de un ADR aceptado, sin cambiar ninguna meta, va en el PR de ese
+  ADR, con su línea en el historial y "Ninguna" en la columna de medición.
 - Un cambio que sube la carga del juego (más zombies, más pedazos o un sistema nuevo en
   el frame) respeta los requisitos R1 a R5 del ADR-0020, o deja el incumplimiento
   registrado como bug o ticket, según el ADR-0020.
@@ -207,7 +211,8 @@ Qué mirar:
 
 ## graficos
 
-**ADRs:** 0005 (API gráfica), 0008 (proyección y buffers).
+**ADRs:** 0005 (API gráfica), 0007 (frames en vuelo y subida de los pedazos), 0008
+(proyección y buffers).
 
 Qué mirar:
 
@@ -216,7 +221,13 @@ Qué mirar:
 - **Inicialización propia**, sin vk-bootstrap.
 - **`gpu::Allocator` propio** (VMA es solo el plan B, y necesita su ADR).
 - **Ring buffer** persistente y mapeado, uno por frame en vuelo, de tamaño máximo por
-  frame × frames en vuelo.
+  frame × frames en vuelo. **2 frames en vuelo** (ADR-0007). El máximo por frame cuenta
+  el peor caso de cortes (4 por paso × 8 pasos), las matrices de los huesos de los
+  zombies y las de los ragdolls.
+- **Los pedazos viven en un pool, no en el *ring*** (ADR-0007): en la ruta dedicada se
+  copian del *ring* al pool *device-local*, y en la integrada se escriben directo en el
+  pool. Reusar el lugar de un pedazo antes de que terminen sus frames en vuelo es un
+  hallazgo.
 - **Las dos rutas:** GPU dedicada e integrada.
 - **Validation layers** activas en los builds de desarrollo.
 - **Reverse-Z (ADR-0008):** el buffer de profundidad es `D32_SFLOAT`, se limpia a `0.0`
@@ -248,7 +259,10 @@ Qué mirar:
 - **Flags de punto flotante:** no son de este tema. `-ffast-math` lo audita
   `build-y-licencias`.
 - **Comparaciones de `float`:** nunca `==` salvo con valores exactos.
-  `nearly_equal(a, b, tol)`, con una tolerancia explícita.
+  `nearly_equal(a, b, tol)`, con una tolerancia explícita. **Excepciones decididas en el
+  ADR-0007:** la clasificación del corte por el signo de la distancia (el 0 cuenta como
+  positivo) y el índice soldado por posición idéntica bit a bit no usan tolerancia. Las
+  audita `corte`.
 - **Tests (ADR-0008, Consecuencias):** valores calculados a mano y propiedades
   (`inverse(M) * M ≈ I`, `|q| = 1`, `dot(v, cross(v, w)) ≈ 0`). El TDD y la cobertura
   no son de este tema: los audita `testing`.
@@ -310,7 +324,9 @@ Qué mirar:
 - **Recortar una cápsula en el plano del corte** recorta su segmento al semiespacio con
   distancia al plano mayor o igual que su radio, para que la cápsula entera quede de su
   lado. Si no queda segmento, sobra una esfera en el extremo más lejano, de radio
-  `min(r, dist)`, o nada.
+  `min(r, dist)`, o nada. **Solo donde el corte separa pedazos:** las cápsulas que solo
+  toca una hendidura no cambian (fe de erratas del ADR-0016, por el ADR-0007). Las
+  recorta el corte, y la física las lee del pedazo.
 - **El zombie muerto entero es un ragdoll, y los pedazos son cuerpos rígidos,** con un
   tope propio de ragdolls activos. Los cuerpos unidos por una rótula no chocan entre sí.
 - **Los personajes son controladores cinemáticos** que se mueven y se sacan de lo que
@@ -332,7 +348,7 @@ Qué mirar:
 
 ## assets
 
-**ADRs:** 0017 (pipeline de assets).
+**ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte).
 
 Qué mirar:
 
@@ -360,7 +376,12 @@ Qué mirar:
   huesos, un prefijo de colisión mal escrito o desconocido (incluido `UCX_`), una
   primitiva que no calza, o un hueso conservado que cuelga de uno que se quita. Un
   vértice con más de 4 huesos no es un error: primero se funden los pesos de los huesos
-  quitados, y después conserva los 4 de mayor peso y se renormaliza.
+  quitados, y después conserva los 4 de mayor peso, se renormaliza y se cuantiza.
+- **Formato de vértice de todas las mallas animadas (ADR-0007),** se corten o no:
+  índices de hueso `uint8` × 4 y pesos `unorm8` × 4 que suman exactamente 255. El resto
+  de los atributos lo define el ticket del cocinador en `engine/core/asset_format`, con
+  32 B por vértice como objetivo. Lo que se cuantiza, se cuantiza antes de usarlo en el
+  corte.
 - **La rotación de ejes es la del cocinador,** y es su primer paso: 180° sobre Y en toda
   la jerarquía. La regla matemática la audita `matematica`.
 - **El recorte de huesos no depende de un rig:** el cocinador no conoce nombres de
@@ -373,8 +394,16 @@ Qué mirar:
 - **Las texturas guardan su `VkFormat`:** `R8G8B8A8_SRGB` para el color y `_UNORM` para
   los datos.
 - **Las texturas son RGBA8 sin comprimir.** BC7, BC1 o Basis cambian la Decisión 5.
-- **Las cápsulas por hueso** se ajustan en el cocinador, después del recorte de huesos,
-  con correcciones a mano. Tiene cápsula todo hueso que mueve algún vértice (si no
+- **Las mallas que se cortan (ADR-0007):**
+  - el cocinador **falla el build** si una cáscara no es cerrada y *manifold* (cada
+    arista soldada con exactamente dos triángulos, de orientaciones opuestas);
+  - el binario trae el índice soldado, las cáscaras y los huesos dominantes de cada una,
+    calculados con los pesos ya cuantizados;
+  - cómo se marca una malla que se corta lo decide el ticket del cocinador. Usar "tiene
+    esqueleto" como criterio contradice el ADR-0007: la caballera también lo tiene;
+  - lo que el corte hace en el juego lo audita `corte`.
+- **Las cápsulas por hueso** se ajustan en el cocinador, después del recorte de huesos y
+  de cuantizar los pesos (ADR-0007), con correcciones a mano. Tiene cápsula todo hueso que mueve algún vértice (si no
   domina en ninguno, se ajusta con los de cualquier peso), y uno que no mueve ninguno no
   la tiene. En el escenario, solo `UBX_`, `UCP_` y `USP_`.
 - **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
@@ -386,10 +415,89 @@ Qué mirar:
 - Las licencias de los assets de terceros y las filas de `CREDITS.md` no son de este
   tema: las audita `build-y-licencias`.
 
+## corte
+
+**ADRs:** 0007 (corte de mallas).
+
+Qué mirar:
+
+- **Corte geométrico de la superficie, en la CPU.** Simular el corte en el shader,
+  cortar en puntos fijos o usar una malla de tetraedros cambia la Decisión 1.
+- **El corte usa la pose del paso anterior** (ADR-0015): deforma en la CPU solo el
+  zombie que se corta, con la misma cuenta que el shader.
+- **Solo se corta la región barrida.** El `slice_request` lleva el plano, la recta donde
+  se detuvo la hoja (de la guarda a la punta) con el sentido del barrido, y la pose del
+  zombie. **La recta y la pose son del mismo paso: el que emite el pedido.** La pose es
+  la vigente en ese paso (la que dejó el paso anterior), la misma que usó el combate con
+  las cápsulas. Guardar la pose con que termina ese paso es un hallazgo. Un corte
+  completo no lleva recta. Dónde se detiene la hoja, y el roce de la punta, los decide
+  el combate con las cápsulas, no el corte con la malla.
+- **El corte usa la pose guardada en el pedido,** también cuando se procesa en un paso
+  posterior. Usar la pose actual de un zombie diferido es un hallazgo.
+- **Contornos contra la región:** un contorno entero dentro se corta completo; uno en
+  parte dentro deja una hendidura, sin separar, abierta en cuña (máxima en la boca, 0 en
+  el fondo); uno al que le falta un solo segmento se corta completo. El fondo sigue las
+  aristas de la malla, con los triángulos del borde partidos en abanico (sin vértices
+  en T).
+- **Clasificación:** una sola vez por vértice soldado, con una distancia exactamente 0
+  del lado positivo. Volver a clasificar un vértice por triángulo, o comparar posiciones
+  con tolerancia para encadenar contornos, es un hallazgo.
+- **Un punto de corte por arista soldada,** calculado una sola vez desde el extremo de
+  menor índice. Los contornos se encadenan por índice, nunca por posición.
+- **Lo que hace el cocinador para el corte** (índice soldado, cáscaras, huesos dominantes
+  y validación *manifold*) lo audita `assets`. Aquí solo se revisa que el corte no
+  recalcule el índice de la malla original en el juego: lo extiende a sus vértices
+  nuevos por construcción (cada vértice nuevo apunta a su punto de corte **de su
+  lado**), nunca comparando posiciones. Los dos lados de un punto partido tienen
+  identificadores distintos, y un punto unido (el fondo de la ranura), uno solo. Darles
+  el mismo identificador a las dos caras de una ranura es un hallazgo: cada arista de la
+  boca quedaría con 4 caras.
+- **Tapas cortando orejas,** propio, en una base del plano con `u × v = n`. Los agujeros
+  se buscan solo en la misma cáscara. Los contornos invertidos se triangulan solos, con
+  su propia orientación, y los de área cero, como exteriores: descartarlos deja el
+  pedazo abierto. Las coordenadas de textura de la tapa salen de una proyección plana en
+  esa base.
+- **Vértices nuevos des-deformados** (`b = (Σ wᵢ·Mᵢ)⁻¹·p`), con los pesos ya mezclados,
+  recortados a 4 y cuantizados a `unorm8` (que suman exactamente 255). Interpolar la
+  posición de referencia, o des-deformar antes de cuantizar, es un hallazgo. Si el
+  determinante de la parte 3 × 3 queda bajo el umbral, el vértice pasa entero a su hueso
+  dominante (y se revisa también el determinante de esa matriz: un hueso con escala 0 no
+  se invierte; en ese caso, el último recurso es interpolar). Dividir por un
+  determinante sin revisar es un hallazgo. La normal de la
+  tapa se des-deforma con la inversa de lo que hace el shader, y se renormaliza.
+- **La cuña** desplaza cada vértice de una cara `Δb = A⁻¹·(±(h/2)·n)` en la pose de
+  referencia: `+` en la cara del lado positivo, `−` en la del negativo, y `h` como ancho
+  total, de 0 en el fondo al máximo en la boca. El vértice del borde de la piel y su
+  copia en la tapa, del mismo lado, se desplazan igual. Un mismo signo en las dos caras
+  es un hallazgo: la ranura no se abre.
+- **El corte escribe en cada pedazo:** la máscara de huesos (los que tienen peso
+  distinto de cero en algún vértice del pedazo, no los que dominan), las cápsulas
+  recortadas y el índice soldado extendido con sus cáscaras y huesos dominantes. En el
+  pedazo vivo, la máscara no quita matrices: la jerarquía completa se sigue evaluando.
+  Los pedazos rígidos usan sus matrices congeladas en la pose del corte (ADR-0016), y
+  eso no es un hallazgo. Solo se recortan las cápsulas donde el corte separa pedazos: una
+  hendidura no las cambia. La geometría de recortar una cápsula vive en `engine/core`
+  (la llama el corte, y la especifica y prueba la física).
+- **Un corte da N pedazos:** fragmentos conexos, unidos cuando comparten un hueso
+  dominante **del mismo lado**. El lado se mira por triángulo: un fragmento con hendidura
+  tiene los dos, y se une por cada lado con sus huesos de ese lado. Juntar fragmentos de
+  lados distintos por un hueso vuelve a pegar las dos mitades de un hueso cortado.
+- **Los pedazos comparten el buffer de vértices del modelo** y guardan sus índices y sus
+  vértices nuevos. Copiar todos los vértices de cada pedazo cambia la Decisión 8.
+- **Cuota de 4 cortes por paso,** contada en pasos. Los que sobran se reparten en los
+  pasos de la pausa de impacto, o en el paso siguiente si no hay pausa. Esperan en un
+  almacenamiento propio del corte, no en la arena por frame, con un tope de 20. Antes de
+  emitir un pedido, el combate pregunta al corte si queda lugar (consulta directa hacia
+  abajo); si no queda, no lo emite y aplica él mismo el empuje. Un canal del corte hacia
+  el juego es un hallazgo. Los pedazos bajo el mínimo se descartan.
+- **Determinismo:** los identificadores se asignan en el orden de los triángulos, y las
+  tablas hash solo se consultan, nunca se recorren.
+- El TDD y la cobertura del corte no son de este tema: los audita `testing`.
+
 ## testing
 
-**ADRs:** 0011, 0015, 0016 y 0017 (reparto del TDD en la animación, la física y el
-cocinador de assets).
+**ADRs:** 0011, 0007, 0015, 0016 y 0017 (reparto del TDD en el corte, la animación, la
+física y el cocinador de assets).
 
 Qué mirar:
 
@@ -397,6 +505,40 @@ Qué mirar:
   fallar.
 - **TDD estricto** en la matemática, la memoria, los contenedores, el ECS y las
   funciones del corte. Código nuevo en esas zonas **sin test** es `bloqueante`.
+- **En el corte (ADR-0007),** el TDD y el 100 % de cobertura aplican a todo:
+  - clasificar, incluido un vértice exactamente sobre el plano;
+  - partir triángulos: el solitario de cada lado, conservando el sentido de giro, y el
+    caso de un vértice sobre el plano (queda un triángulo de área cero sin abrir el
+    pedazo);
+  - el índice soldado con una costura de UV, y su extensión a los vértices nuevos;
+  - encadenar contornos (uno abierto falla con un error, no se cuelga);
+  - cortar orejas, con agujeros, contornos invertidos, de área cero y puntos alineados;
+  - des-deformar (incluida una matriz casi singular y un hueso dominante con escala 0) y
+    cuantizar pesos;
+  - armar los pedazos, incluido un torso con hendidura que se une con las piernas por sus
+    huesos del lado de abajo;
+  - qué cápsulas se recortan;
+  - la hendidura (estados de los puntos, abanico, cuerda, cuña con 0 en el fondo y
+    signos opuestos en cada cara, y el contorno al que le falta un solo segmento);
+  - volver a cortar un pedazo ya cortado, incluida una herida abierta (ninguna arista de
+    la boca queda con más de dos caras).
+
+  Cada caso va calculado a mano (un cubo da 2 pedazos; una "U" con un hueso distinto en
+  cada pata, cortada a través de las dos patas, da 3; dos cubos superpuestos con el mismo
+  hueso dan 2). Además:
+  - invariantes de malla después de cada corte: cada pedazo cerrado y orientado, ninguna
+    arista con más de dos caras y ningún triángulo con índices repetidos. Los triángulos
+    de área cero solo se toleran en las tapas de contornos degenerados y al partir un
+    triángulo con un vértice sobre el plano, o tan cerca que el punto de corte coincide
+    con él. En los cortes completos, cada vértice
+    original queda del lado de su clasificación, cada vértice nuevo queda a menos de una
+    tolerancia explícita del plano, y el volumen se conserva (medido antes de descartar
+    pedazos chicos);
+  - un test de determinismo: el mismo `slice_request` dos veces da los mismos bytes;
+  - pruebas de propiedades con planos y rectas de detención al azar, incluidos planos que
+    pasan justo por vértices;
+  - fuzzing del corte: nunca lee fuera de un buffer, y una malla inválida da un error;
+  - las mallas de prueba se arman en el código de los tests, no son archivos.
 - **En la animación (ADR-0015),** el TDD y el 100 % de cobertura aplican al skinning de
   la CPU (va en la ruta del corte), a la IK de dos huesos, al recorrido de la jerarquía
   y al *nlerp*. Código nuevo en esas piezas sin test es `bloqueante`, como en las demás
@@ -415,7 +557,10 @@ Qué mirar:
   conversiones puras: la rotación de 180° sobre Y, fundir huesos y pesos, conservar los 4
   huesos de mayor peso, quitar canales constantes, alinear el hemisferio de las claves y
   el ajuste de cápsulas y primitivas (incluido que un hueso que no mueve vértices no
-  tiene cápsula). Viven en una biblioteca probada en
+  tiene cápsula). También lo que hace para el corte (ADR-0007): el índice soldado, las
+  cáscaras con sus huesos dominantes, la cuantización a `unorm8` que suma 255 y la
+  validación *manifold*, con casos que fallan el build (una arista abierta, una con tres
+  caras y dos caras vecinas con la misma orientación). Viven en una biblioteca probada en
   `tests/tools/`. Código nuevo ahí sin test es `bloqueante`. Cada propiedad va con casos
   calculados a mano: "rotar dos veces devuelve el original" solo no alcanza, porque no
   detecta un espejo (hace falta la normal de un triángulo). Además: fixtures `.gltf`

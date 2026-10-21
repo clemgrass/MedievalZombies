@@ -6,7 +6,9 @@ cambia a medida que se mide.
 
 **Cómo se cambia:** solo con un PR que trae la medición hecha con el protocolo del
 ADR-0020, y una línea nueva en el historial de abajo. Mientras un sistema no se haya
-medido, su número es una **hipótesis**.
+medido, su número es una **hipótesis**. Una nota que solo cita la decisión de un ADR
+aceptado, sin cambiar ninguna meta, se actualiza en el PR de ese ADR, con su línea en el
+historial y "Ninguna" en la columna de medición.
 
 **La medición de un spike:** los spikes no se mergean (ADR-0014), así que su medición
 queda en el issue del spike. Un PR `docs:` aparte, desde una rama normal, la pasa a este
@@ -72,7 +74,7 @@ cada byte se cuenta una sola vez: la RAM anónima del proceso más la memoria de
 | Mundo y ECS | 64 MiB | Hipótesis |
 | Pedazos, con un tope fijo | 32 MiB | Hipótesis |
 | Arena por frame | 16 MiB | Hipótesis |
-| Subida de geometría dinámica, por frame en vuelo | N × 8 MiB | Hipótesis. N, los frames en vuelo, lo fijan el ADR-0007 y el ADR-0010 (ADR-0005). Se supone N = 2 |
+| Subida de geometría dinámica, por frame en vuelo | N × 8 MiB | Hipótesis. N = 2 frames en vuelo (ADR-0007), así que son 2 × 8 MiB. Incluye las matrices de los huesos: 74 KB por frame con 50 zombies (ADR-0017). El tamaño por frame lo dimensiona el ADR-0010, con el peor caso de cortes, las matrices de los zombies y las de los ragdolls |
 | Audio | 64 MiB | Hipótesis |
 | Ejecutable, driver y reserva | el resto, hasta 1 GiB | — |
 
@@ -92,3 +94,4 @@ Cómo se implementan las arenas, los pools y los ring buffers lo decide el ADR-0
 | Fecha | Ticket | Cambio | Medición |
 |---|---|---|---|
 | 2026-10-19 | #34 | Reparto inicial (hipótesis) | Ninguna: todavía no hay código |
+| 2026-10-20 | #11 | N = 2 frames en vuelo, fijado por el ADR-0007, y las matrices de los huesos (74 KB por frame, ADR-0017) anotadas en la fila de subida. Ninguna meta cambia | Ninguna: es una decisión, no una medición |

@@ -9,6 +9,10 @@
   queda en medio de una cadena, la rótula une a sus hijos con el ancestro más cercano
   que tenga cápsula, y ese hueso se mueve rígido junto a él (ADR-0017). Se aclara en
   Consecuencias.
+- **Fe de erratas:** 2026-10-20 (#11): las cápsulas se recortan solo donde el corte
+  separa pedazos. Las que solo toca una hendidura, donde la hoja se detuvo dentro del
+  zombie (ADR-0007), no cambian, aunque en el mismo corte otra parte se separe. Se
+  acota en la Decisión 4 y se aclara en Consecuencias.
 
 ## Contexto y problema
 
@@ -285,7 +289,7 @@ contra el escenario y el golpe de la espada.
 | 1 | Propia o biblioteca | **Propia.** Jolt queda como referencia para leer, no como dependencia |
 | 2 | Alcance | Cuerpos rígidos **dinámicos: esferas y cápsulas**; **cajas solo estáticas** (el escenario); contactos con fricción; **uniones de rótula con límites** (ragdoll); dormir; **rayo y barrido de esfera**; controlador de personaje. Sin cajas dinámicas, casco convexo, física activa, cuerpos blandos, telas ni fluidos |
 | 3 | Solver | **Soft Step:** impulsos secuenciales con subpasos y restricciones blandas, como Box2D v3. Se construye primero con impulsos secuenciales y después se agregan los subpasos y lo blando |
-| 4 | Forma de los pedazos | **Las cápsulas de sus huesos.** Toda cápsula a menos de su radio del plano del corte (aunque su eje no lo cruce, como la tapa del hueso vecino en una articulación) se recorta en cada pedazo hacia su propio lado: el segmento se recorta al semiespacio con distancia al plano mayor o igual que el radio. Si no queda segmento, sobra una esfera en el extremo más lejano, de radio `min(r, dist)`, o nada si es muy chica. Un pedazo con varios huesos es un cuerpo compuesto |
+| 4 | Forma de los pedazos | **Las cápsulas de sus huesos.** Solo donde el corte separa pedazos (una hendidura no las cambia, ADR-0007), toda cápsula a menos de su radio del plano del corte (aunque su eje no lo cruce, como la tapa del hueso vecino en una articulación) se recorta en cada pedazo hacia su propio lado: el segmento se recorta al semiespacio con distancia al plano mayor o igual que el radio. Si no queda segmento, sobra una esfera en el extremo más lejano, de radio `min(r, dist)`, o nada si es muy chica. Un pedazo con varios huesos es un cuerpo compuesto |
 | 5 | Pedazos y zombies muertos | **Mixto.** El zombie muerto entero es un ragdoll: las mismas cápsulas, unidas con rótulas. Los pedazos son cuerpos rígidos. Hay un **tope de ragdolls activos**, y los más viejos se duermen o se congelan |
 | 6 | Personajes | **Controladores cinemáticos** que **se mueven y se sacan de lo que penetran:** el controlador avanza, y si su cápsula queda dentro de algo sólido, se empuja hacia afuera por la normal del contacto, lo que lo hace deslizar. Alcanza con pruebas de superposición, sin barridos. El empuje del tajo rápido se programa como un impulso sobre el controlador |
 | 7 | Detección del tajo | **Barrido en el plano del tajo:** el plano se congela al empezar el barrido. Entre dos pasos, la hoja barre un sector de anillo, armado con el centro del arco de ese paso, y hay golpe si la distancia del segmento de una cápsula al sector es menor o igual que su radio más lo que se movió el centro en el paso |
@@ -302,7 +306,13 @@ contra el escenario y el golpe de la espada.
   ajustadas a los vértices de cada hueso) lo decide el ADR-0017.
 - **Los huesos enmascarados no tienen cápsula activa** (ADR-0015): un segundo tajo no
   puede golpear el brazo que ya no está. En el pedazo vivo, las cápsulas que toca el
-  plano se recortan igual que en los pedazos.
+  plano se recortan igual que en los pedazos. Solo se recortan donde el corte separa
+  pedazos: una cápsula se recorta si los vértices que mueve su hueso quedan en pedazos
+  distintos, o si su hueso y el de una cápsula vecina que la toca quedan en pedazos
+  distintos. Las que solo toca una hendidura (la hoja se detuvo dentro del zombie,
+  ADR-0007) no cambian. Por ejemplo, si en un mismo corte cae el antebrazo y el torso
+  queda con una ranura, se recortan las cápsulas del antebrazo y no las del torso. Las
+  recorta el corte, y la física las lee del pedazo (ADR-0007).
 - **Los cuerpos unidos por una rótula no generan contactos entre sí.** Las cápsulas de
   dos huesos vecinos se superponen en la articulación, y si chocaran, el ragdoll se
   empujaría a sí mismo hasta explotar.

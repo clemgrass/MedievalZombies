@@ -1,0 +1,62 @@
+// Corte de una malla, nivel de proceso. Diagrama teórico: no existe código todavía.
+// DOT no puede importar estilos: la leyenda se repite en cada archivo.
+digraph corte {
+  rankdir = TB;
+  fontname = "sans-serif";
+  node [fontname = "sans-serif", fontsize = 11];
+  edge [style = dashed, color = "#475569"];
+
+  // Leyenda
+  node [shape = box, style = "rounded,filled", fillcolor = "#dbeafe", color = "#1d4ed8", fontcolor = "#0b1b3a"];
+  f1 [label = "1. classify_vertices()"];
+  f2 [label = "2. split_edges()"];
+  f3 [label = "3. split_triangles()"];
+  f4 [label = "4. build_contours()"];
+  f5 [label = "5. triangulate_cap()"];
+  f6 [label = "6. build_pieces()"];
+
+  node [shape = parallelogram, style = filled, fillcolor = "#f1f5f9", color = "#475569", fontcolor = "#0f172a"];
+  mesh [label = "malla\nvértices + índice soldado"];
+  d1 [label = "distancia con signo\npor vértice soldado"];
+  d2 [label = "puntos de corte\nuno por arista soldada"];
+  d3 [label = "triángulos de cada lado\n+ segmentos de contorno"];
+  d4 [label = "contornos cerrados"];
+  d5 [label = "triángulos de la tapa"];
+  d6 [label = "pedazos"];
+
+  node [shape = cds, style = filled, fillcolor = "#ffedd5", color = "#c2410c", fontcolor = "#431407"];
+  req [label = "slice_request\nplano + pose"];
+
+  node [shape = cylinder, style = filled, fillcolor = "#dcfce7", color = "#15803d", fontcolor = "#052e16"];
+  gpu [label = "índices por pedazo\n+ vértices nuevos"];
+
+  node [shape = note, style = filled, fillcolor = "#fef9c3", color = "#a16207", fontcolor = "#422006"];
+  e1 [label = "d = (−1, +1, +1)"];
+  e2 [label = "p01 = (1, 1, 0), p02 = (0, 1, 0)\nt = 0,5"];
+  e3 [label = "debajo: 1 triángulo\nencima: 2\ncontorno: p01–p02"];
+
+  req -> f1;
+  mesh -> f1;
+  f1 -> d1;
+  d1 -> f2;
+  f2 -> d2;
+  d2 -> f3;
+  f3 -> d3;
+  d3 -> f4;
+  f4 -> d4;
+  d4 -> f5;
+  f5 -> d5;
+  d3 -> f6;
+  d5 -> f6;
+  f6 -> d6;
+  d6 -> gpu;
+
+  // Ejemplos: línea sin flecha, en el mismo rango que su dato.
+  edge [style = solid, arrowhead = none, color = "#a16207"];
+  { rank = same; d1; e1; }
+  { rank = same; d2; e2; }
+  { rank = same; d3; e3; }
+  d1 -> e1;
+  d2 -> e2;
+  d3 -> e3;
+}

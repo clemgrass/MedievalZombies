@@ -1,0 +1,32 @@
+' Leyenda común del piloto: cada diagrama la incluye con `!include leyenda.iuml`.
+skinparam shadowing false
+skinparam defaultFontName sans-serif
+skinparam ArrowColor #475569
+
+skinparam rectangle<<func>> {
+  BackgroundColor #dbeafe
+  BorderColor #1d4ed8
+  FontColor #0b1b3a
+  RoundCorner 16
+}
+skinparam card<<data>> {
+  BackgroundColor #f1f5f9
+  BorderColor #475569
+  FontColor #0f172a
+}
+skinparam queue<<queue>> {
+  BackgroundColor #ffedd5
+  BorderColor #c2410c
+  FontColor #431407
+}
+skinparam database<<gpu>> {
+  BackgroundColor #dcfce7
+  BorderColor #15803d
+  FontColor #052e16
+}
+skinparam note {
+  BackgroundColor #fef9c3
+  BorderColor #a16207
+  FontColor #422006
+}
+hide stereotype

@@ -1,7 +1,8 @@
 # Temas de auditoría
 
-Cada tema es un auditor (`auditor-adr`) con sus ADRs, las rutas que lo activan y una
-guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
+Cada tema es una parte de la auditoría, con sus ADRs, las rutas que lo activan y una
+guía de qué mirar. Un solo auditor (`auditor-adr`) recorre los temas activos, uno a la
+vez. **La guía orienta, pero manda el texto del ADR.**
 
 ## Índice
 
@@ -11,14 +12,15 @@ guía de qué mirar. **La guía orienta, pero manda el texto del ADR.**
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
+| [memoria](#memoria) | 0010 | `engine/core/**`, `engine/gpu/**`, o código que reserve, libere o guarde memoria (arenas, pools, allocators, contenedores) |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
-| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
+| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers), 0010 (tamaño del *ring buffer*) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
 | [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0015, 0016 y 0017 (TDD en el corte, la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016 y 0017 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 
 ### Activación por contenido
 
@@ -34,6 +36,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Rasgos de C++ (excepciones, RTTI, punteros inteligentes, templates, `virtual`) | `cpp-y-convenciones` |
 | Tests, cobertura, bugs, TDD | `testing` |
 | Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) |
+| Memoria, arenas, pools, allocators, `malloc`, `mmap`, `std::pmr`, contenedores, handles, ASan, presupuestos de memoria | `memoria` |
 | Animación, skinning, esqueletos, huesos, clips, IK | `animacion` |
 | Física, colisiones, cuerpos rígidos, ragdoll, solver, cápsulas, controlador de personaje, la detección del tajo | `fisica` |
 | Assets, Blender, glTF, texturas, formatos de archivo, el cocinador, Git LFS | `assets` |
@@ -44,7 +47,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 hallazgo tres veces.
 
 **Mantenimiento:** cuando se acepta un ADR nuevo, se agrega a la fila y a la sección del
-tema que corresponda, o se crea un tema nuevo. El auditor `docs-y-adrs` avisa si un ADR
+tema que corresponda, o se crea un tema nuevo. El tema `docs-y-adrs` avisa si un ADR
 aceptado del índice de `docs/README.md` no aparece en ningún tema.
 
 ---
@@ -170,8 +173,8 @@ Qué mirar:
 - **ECS:** de *sparse sets* propio. La entidad es un handle con generación.
 - **Bucle:** paso fijo de 60 Hz con acumulador e interpolación, como mucho 8 pasos por
   frame y el frame recortado a 250 ms.
-- **Comunicación:** colas de eventos por frame, guardadas en la arena del frame, para
-  las órdenes que cambian el estado. Las consultas de solo lectura (rayos, barridos, el
+- **Comunicación:** colas de eventos entre sistemas, guardadas en la arena del paso
+  (fe de erratas del ADR-0012, por el ADR-0010), para las órdenes que cambian el estado. Las consultas de solo lectura (rayos, barridos, el
   barrido del tajo) son llamadas directas hacia abajo (fe de erratas del ADR-0012, por
   el ADR-0016).
 - **Un solo hilo** por ahora.
@@ -183,6 +186,56 @@ Qué mirar:
   `docs/` y `assets/` (la fuente de los assets, ADR-0017 y ADR-0019).
 - **El cocinador de assets** (`tools/`) enlaza solo `engine/core`. Nada de `engine/` ni
   de `game/` enlaza el cocinador ni sus dependencias (ADR-0017).
+
+## memoria
+
+**ADRs:** 0010 (estrategia de memoria). También las filas de memoria de
+`docs/performance/presupuestos.md`.
+
+Qué mirar:
+
+- **Regiones:** cada región tiene un sistema dueño, una sola vida, y cae en una fila de
+  `presupuestos.md`. Las que usa el frame (arenas, pools, pedazos, *ring buffer*) se
+  reservan al iniciar y se tocan enteras en ese momento: en la CPU, con `mmap` y
+  `MAP_POPULATE` a través de `platform::` (`engine/core` no llama al sistema operativo
+  directamente); en la GPU, con los bloques de `gpu::Allocator`. Pedir memoria al
+  sistema operativo o al driver dentro del paso o del render es un hallazgo. La memoria
+  que vive un nivel la decide el ADR-0028.
+- **`gpu::Allocator`:** bloques grandes por tiempo de vida (lineal para el nivel, el
+  *ring buffer* para el frame, el allocator de offsets para los pedazos). Una
+  asignación de Vulkan por recurso es un hallazgo.
+- **Arenas temporales:** la del paso se reinicia al terminar cada paso (ahí van las colas
+  de eventos), la del frame al terminar el frame (solo el render), y las dos *scratch*
+  vuelven a su marcador al salir de la función que las usó. Guardar en la arena del paso
+  algo que se lee en otro paso o en el render es un hallazgo: va en un componente.
+- **Las arenas no limpian:** quien pide memoria la inicializa (determinismo, ADR-0016).
+- **Objetos de tamaño fijo:** pools con lista libre y `handle<T>` con generación.
+- **Pedazos:** su geometría usa el allocator de offsets tipo TLSF, en la CPU y en la GPU.
+  Liberar un pedazo pasa por la cola de liberación por número de frame: reusar su lugar
+  antes de que terminen sus frames en vuelo es un hallazgo.
+- **Descartar pedazos es una decisión lógica:** se cuenta con la cantidad y los bytes
+  vivos contra un tope fijo, nunca con lo que liberó la GPU (las *fences* dependen del
+  tiempo real y romperían el determinismo).
+- **Contenedores:** propios y de capacidad fija, que nunca crecen. La arena se pasa como
+  parámetro explícito. **Sin `std::pmr`.** La regla de qué contenedores de la STL se
+  permiten en cada zona es de `cpp-y-convenciones`.
+- **Cuando se acaba:** las arenas y las tablas del engine abortan con el nombre de la
+  región y su pico, en todos los builds. Los pools que llena el juego (pedidos de corte,
+  pedazos, ragdolls) degradan con su regla, y el juego pregunta antes si hay lugar.
+  Devolver `nullptr` en silencio, o pedir al heap como respaldo, es un hallazgo.
+- **Revisiones de desarrollo, solo en Debug:** las arenas y los pools envenenan para
+  ASan lo que reinician o devuelven, con zonas rojas y asignaciones alineadas a 8 bytes
+  como mínimo; patrón de relleno, guardas, y comprobación al cerrar de que cada pool
+  quedó vacío. Que RelWithDebInfo las lleve es un hallazgo: es el build que mide el
+  ADR-0020. En todos los builds: uso y pico por región, generación de los handles y
+  abortar al quedarse sin memoria. Las flags de los sanitizers no son de este tema: las
+  audita `build-y-licencias`.
+- **El ECS** tiene capacidad fija, reservada al iniciar.
+- **Lo de la GPU que no es del allocator** (el *ring buffer* y su tamaño, los frames en
+  vuelo, las dos rutas de subida) lo audita `graficos`.
+- **Tests:** los casos que pide el ADR-0010 (arena, pool, allocator de offsets con prueba
+  de propiedades, cola de liberación, *ring buffer* y los *death tests* de ASan) los
+  revisa `testing`.
 
 ## build-y-licencias
 
@@ -212,7 +265,7 @@ Qué mirar:
 ## graficos
 
 **ADRs:** 0005 (API gráfica), 0007 (frames en vuelo y subida de los pedazos), 0008
-(proyección y buffers).
+(proyección y buffers), 0010 (el *ring buffer* dimensionado para el peor caso).
 
 Qué mirar:
 
@@ -226,8 +279,7 @@ Qué mirar:
   zombies y las de los ragdolls.
 - **Los pedazos viven en un pool, no en el *ring*** (ADR-0007): en la ruta dedicada se
   copian del *ring* al pool *device-local*, y en la integrada se escriben directo en el
-  pool. Reusar el lugar de un pedazo antes de que terminen sus frames en vuelo es un
-  hallazgo.
+  pool. Cuándo se libera su lugar (la cola por número de frame) lo audita `memoria`.
 - **Las dos rutas:** GPU dedicada e integrada.
 - **Validation layers** activas en los builds de desarrollo.
 - **Reverse-Z (ADR-0008):** el buffer de profundidad es `D32_SFLOAT`, se limpia a `0.0`
@@ -496,8 +548,8 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0015, 0016 y 0017 (reparto del TDD en el corte, la animación, la
-física y el cocinador de assets).
+**ADRs:** 0011, 0007, 0010, 0015, 0016 y 0017 (reparto del TDD en el corte, la memoria,
+la animación, la física y el cocinador de assets).
 
 Qué mirar:
 
@@ -505,6 +557,14 @@ Qué mirar:
   fallar.
 - **TDD estricto** en la matemática, la memoria, los contenedores, el ECS y las
   funciones del corte. Código nuevo en esas zonas **sin test** es `bloqueante`.
+- **En la memoria (ADR-0010):** la arena (alineación, marcador, reinicio, y que
+  quedarse sin espacio aborta, con un *death test*); el pool (reutiliza slots, y un
+  handle viejo se detecta por su generación); el allocator de offsets (pedir, devolver,
+  unir con cada vecino, fallar sin un bloque que alcance, y una prueba de propiedades:
+  ningún bloque se superpone y lo libre más lo usado suma el total); la cola de
+  liberación (nada se libera antes de que termine su frame); el *ring buffer* (da la
+  vuelta sin pisar una región en vuelo); y en Debug con ASan, un *death test* por cada
+  error: leer después de reiniciar, escribir pasado el final y usar un slot devuelto.
 - **En el corte (ADR-0007),** el TDD y el 100 % de cobertura aplican a todo:
   - clasificar, incluido un vértice exactamente sobre el plano;
   - partir triángulos: el solitario de cada lado, conservando el sentido de giro, y el

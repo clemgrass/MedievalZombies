@@ -8,6 +8,9 @@
   cambian el estado. Las consultas de solo lectura (por ejemplo, a la física) son
   llamadas directas hacia abajo (ADR-0016). Se aclara en la Decisión 4 y en
   Consecuencias.
+  2026-10-21 (#19): las colas de eventos viven en la arena del paso, que se reinicia al
+  terminar cada paso de simulación. La arena del frame queda para el render (ADR-0010).
+  Se corrige en el orden del frame, la Decisión 4 y Consecuencias.
 
 ## Contexto y problema
 
@@ -102,8 +105,9 @@ Orden propuesto dentro de un frame:
 1. platform: vaciar la cola de eventos → estado de input        (ADR-0004)
 2. mientras el acumulador ≥ paso fijo:
      simulación: gameplay → combate → corte → física → animación
+     reiniciar la arena del paso                                 (ADR-0010)
 3. render: interpolar el estado → grabar comandos → enviar a la GPU  (ADR-0005)
-4. fin de frame: reiniciar la arena por frame                    (ADR-0010)
+4. fin de frame: reiniciar la arena del frame                    (ADR-0010)
 ```
 
 ### 4. Comunicación entre sistemas
@@ -169,7 +173,7 @@ docs/      documentación
 | 1 | Modelo de entidades | **ECS propio y simple, con sparse sets.** La entidad es un `handle` con generación (ADR-0009) |
 | 2 | Módulos | **Capas estrictas** (`platform` → `core` → `gpu` → sistemas → `game`), que CMake hace cumplir: cada módulo es un target y solo enlaza con los de abajo |
 | 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo |
-| 4 | Comunicación | **Colas de eventos por frame entre sistemas** para las órdenes que cambian el estado, guardadas en la arena por frame. Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
+| 4 | Comunicación | **Colas de eventos entre sistemas** para las órdenes que cambian el estado, guardadas en la arena del paso (ADR-0010). Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
 | 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida |
 | 6 | Monorepo | `engine/`, `game/`, `tools/`, `shaders/`, `tests/`, `docs/` |
 
@@ -193,7 +197,8 @@ docs/      documentación
 - **La interpolación obliga a guardar el estado anterior** de lo que se dibuja (como
   mínimo, las transformaciones).
 - **Las colas de eventos** son tipadas (por ejemplo `slice_request`) y viven en la
-  arena por frame, así que desaparecen solas al terminar el frame.
+  arena del paso, así que desaparecen solas al terminar el paso. Lo que un paso le deja
+  al render va en componentes (ADR-0010).
 - **Las consultas no van por colas:** un sistema que necesita una respuesta en el momento
   (el combate preguntando qué tocó la espada, la cámara preguntando si hay una pared) la
   pide con una llamada directa a un módulo de abajo. Una consulta no cambia el estado,

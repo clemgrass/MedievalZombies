@@ -716,8 +716,8 @@ Qué mirar:
 - **Bajo el umbral, el tajo rebota** con aturdimiento y recuperación de energía más lenta.
   **El tajo rápido nunca se clava:** corta solo lo que atraviesa entero y, si no, empuja.
   Su plano es horizontal, por el pecho, en la dirección en que mira la caballera, y su
-  recta de detención va donde empieza la primera parte que no atraviesa, para no abrir
-  ninguna ranura.
+  recta de detención va un margen angular (configurable) antes de la primera parte que no
+  atraviesa, para no abrirle una ranura.
 - **El pedido de corte se emite al salir o detenerse la hoja,** uno por zombie y por tajo,
   después de preguntar al corte si queda lugar (ADR-0007). **La pausa de impacto es una
   por tajo,** empieza en ese paso, congela solo a la caballera y al zombie golpeado, y su
@@ -730,7 +730,8 @@ Qué mirar:
   dirección de la línea dibujada, y el centro del arco es el pecho. El punto apuntado es
   el primer impacto del rayo de la cámara contra las cápsulas, con un punto de reserva si
   no toca nada. Un plano que contenga el rayo de la cámara contradice la Decisión 6. El
-  90° del arco (ADR-0015) es la dirección del pecho al punto apuntado, dentro del plano.
+  90° del arco (ADR-0015) es la dirección del pecho al punto apuntado, sin su componente
+  sobre la línea.
 - **La espada clavada** es una secuencia: el zombie avanza por la hoja **con el esqueleto
   fijo en la pose del corte** (solo se mueve su raíz), los demás van a una escala de
   tiempo baja, y cada pulsación gasta energía. Terminar el corte es un `slice_request`

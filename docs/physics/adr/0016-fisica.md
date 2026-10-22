@@ -18,7 +18,11 @@
   demás siguen rígidos. El contacto entre un controlador y un pedazo es en un solo
   sentido: el pedazo se mueve y el controlador no se frena. El agarre usa una consulta
   de superposición de una esfera, que es un barrido de esfera de largo 0: el alcance no
-  cambia. Se corrige en las Decisiones 5 y 6 y en "Lo que se sacrifica".
+  cambia. Los pedazos nacen sin clasificar: la física crea sus cuerpos **en el paso
+  siguiente al corte,** cuando el gameplay ya decidió cuál sigue vivo, y la posición y
+  la velocidad salen de las dos poses que el pedazo heredó del zombie en el paso del
+  corte. Se corrige en las Decisiones 5 y 6, en "Lo que se sacrifica" y en el traspaso
+  desde la animación.
 
 ## Contexto y problema
 
@@ -327,7 +331,8 @@ contra el escenario y el golpe de la espada.
   - las matrices de los huesos y las cápsulas por hueso son componentes, que la física
     lee sin depender de `animation`;
   - el corte deja los pedazos como entidades con sus componentes de forma, y la física
-    crea los cuerpos en su turno;
+    crea los cuerpos en el paso siguiente, cuando el gameplay ya los clasificó
+    (ADR-0018);
   - el ragdoll escribe la pose en el mismo componente que lee el render.
 - **Las consultas de solo lectura son llamadas directas hacia abajo.** El barrido del
   tajo, el rayo, el barrido de esfera y el *move and slide* devuelven un resultado en el
@@ -348,9 +353,11 @@ contra el escenario y el golpe de la espada.
   acepta.
 - **El traspaso desde la animación (ADR-0015):** los cuerpos del ragdoll y de los
   pedazos nacen con la transformación de la última pose, y con la velocidad que sale de
-  la diferencia entre las dos últimas poses, más el impulso del tajo. Cuando la física
-  del paso N crea los cuerpos, las dos últimas poses son la N−1 y la N−2, porque la
-  animación corre después. La velocidad lineal es la del **centro de masa** del cuerpo,
+  la diferencia entre las dos últimas poses, más el impulso del tajo. Si el corte es del
+  paso N, esas poses son la N−1 y la N−2: las que el pedazo heredó del zombie, porque la
+  animación corre después del corte. El pedazo no se anima en el paso N, y la física
+  crea su cuerpo en el N+1, cuando el gameplay ya lo clasificó (ADR-0018), con esas
+  mismas dos poses. La velocidad lineal es la del **centro de masa** del cuerpo,
   `v = (com_{N−1} − com_{N−2}) / dt`, con el centro calculado en las dos poses: en un
   pedazo compuesto, ese centro puede quedar lejos del origen del hueso. La velocidad
   angular sale del cuaternión relativo `q_{N−1} · q_{N−2}⁻¹`, después de llevar los dos
@@ -403,16 +410,18 @@ contra el escenario y el golpe de la espada.
     ragdoll mientras quede lugar en el tope; si no, también caen rígidos, como una tabla
     (ADR-0018).
 - **Abierto:**
-  - si un pedazo con muchos huesos podría pasar a ragdoll (ADR-0018);
+  - si un pedazo con muchos huesos podría pasar a ragdoll (decidido en el ADR-0018);
   - qué pasa entre los controladores y los pedazos del suelo: si los empujan, los
-    ignoran o los frenan (ADR-0018);
+    ignoran o los frenan (decidido en el ADR-0018);
   - si un test de *replay* necesita un hash estable entre máquinas, para compararlo en
     la CI (ADR-0021 y ADR-0029);
   - cómo se separan los zombies de la horda entre sí (ADR-0023);
-  - qué decide que un zombie muera entero (ragdoll) o en pedazos (ADR-0018);
-  - la mecánica de los agarres (ADR-0018);
-  - qué otros golpes (los ataques de los enemigos) necesitan otra detección
-    (ADR-0018).
+  - qué decide que un zombie muera entero (ragdoll) o en pedazos (decidido en el
+    ADR-0018);
+  - la mecánica de los agarres (decidido en el ADR-0018);
+  - qué otros golpes (los ataques de los enemigos) necesitan otra detección (el agarre,
+    decidido en el ADR-0018; los ataques de los enemigos especiales quedan fuera del
+    corte vertical).
 
 ## Cómo lo defiendo
 

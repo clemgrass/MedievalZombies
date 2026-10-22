@@ -7,7 +7,7 @@
 - **Fe de erratas:** 2026-10-22 (#31): el ADR-0018 cambia el plano del tajo, que pasa
   por el pecho de la caballera y por el punto apuntado, y ya no contiene la dirección de
   la cámara. Por eso, el 90° del arco pasa a ser la dirección del pecho al punto apuntado,
-  dentro del plano. La duración del barrido baja con la carga, partiendo de 0,26 s, y el
+  sin su componente sobre la línea. La duración del barrido baja con la carga, partiendo de 0,26 s, y el
   tajo rápido tiene la suya. La pausa de impacto congela solo a la caballera y al zombie
   golpeado, así que congela el reloj de la animación de esos dos, no el de todo el juego.
   Se corrige en la Decisión 7 y en los valores de partida del tajo.
@@ -299,8 +299,8 @@ recompilar (ADR-0021):
 
 Los ángulos del arco se miden dentro del plano del tajo, desde el pecho de la caballera:
 **0° apunta al extremo de la línea hacia donde va el filo** (la flecha), **90° apunta
-del pecho al punto apuntado** (dentro del plano, ADR-0018), y el ángulo crece de la
-flecha hacia adelante. Así, 195°
+del pecho al punto apuntado, sin su componente sobre la línea** (ADR-0018), y el ángulo
+crece de la flecha hacia adelante. Así, 195°
 queda detrás y del lado opuesto a la flecha, y −25° pasa un poco más allá de la flecha.
 Los valores se escriben en grados para ajustarlos a mano, y se convierten a radianes al
 cargarlos (ADR-0008).
@@ -357,9 +357,10 @@ cargarlos (ADR-0008).
     0,5 m a la izquierda de la caballera y más arriba. En algunos ángulos, el arco queda
     lejos del pecho y los brazos no llegan (el prototipo lo mide). Cómo se resuelve
     (mover el centro del arco, un paso lateral o limitar los ángulos) lo deciden el
-    ADR-0018 y el ajuste del combate;
+    ADR-0018 y el ajuste del combate (decidido en el ADR-0018: el plano pasa por el
+    pecho, que es siempre el centro del arco);
   - el traspaso de la pose al ragdoll y los cuerpos físicos de los pedazos (ADR-0016);
-  - qué partes definen cada estado del zombie mutilado (ADR-0018);
+  - qué partes definen cada estado del zombie mutilado (decidido en el ADR-0018);
   - cómo se asignan los pesos de los vértices nuevos: interpolar (simple, con un error
     fuera del plano del corte) o des-deformar (exacto), y qué hacer cuando pasan de 4
     huesos (ADR-0007);

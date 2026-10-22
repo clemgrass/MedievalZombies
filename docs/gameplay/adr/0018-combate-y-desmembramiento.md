@@ -526,8 +526,10 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   no toca nada, se toma el punto del rayo a la distancia del alcance de la hoja.
 - **El plano del tajo rápido,** que no apunta: horizontal, por el pecho de la caballera,
   en la dirección en que mira. Como corta solo lo que atraviesa entero, **su recta de
-  detención se pone donde empieza la primera parte que no atraviesa:** así esa parte
-  queda fuera de la región barrida y el corte no abre ninguna ranura (ADR-0007).
+  detención se pone un margen angular antes de la primera parte que no atraviesa:** así
+  esa parte queda fuera de la región barrida y el corte no le abre una ranura (ADR-0007).
+  El margen (configurable) cubre la malla que queda fuera de la cápsula, que el
+  cocinador ajusta al percentil 90 de los vértices.
 - **El tiempo propio por entidad:** la pausa local y el foco de la espada clavada piden
   que la caballera, el zombie golpeado y el resto avancen a ritmos distintos. Cada
   personaje lleva una **escala de tiempo** (1 normal, 0 congelado, entre 0 y 1 lento) que

@@ -35,7 +35,7 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 | Sistema | Meta | Estado |
 |---|---|---|
 | Gameplay e IA (50 zombies) | 1,3 ms | Hipótesis |
-| Combate y corte (hasta 4 cortes en un paso) | 2,0 ms | Hipótesis |
+| Combate y corte (hasta 4 cortes en un paso) | 2,0 ms | Hipótesis. El gasto de la fuerza del ADR-0018 midió ~60 µs por zombie en todo el barrido, en un prototipo sin optimizar |
 | Física (zombies y ~100 pedazos) | 1,5 ms | Hipótesis |
 | Animación (50 esqueletos) | 1,2 ms | Hipótesis |
 | **Total por paso** | **6,0 ms** | |
@@ -102,3 +102,4 @@ cambian recién con una medición.
 | 2026-10-19 | #34 | Reparto inicial (hipótesis) | Ninguna: todavía no hay código |
 | 2026-10-20 | #11 | N = 2 frames en vuelo, fijado por el ADR-0007, y las matrices de los huesos (74 KB por frame, ADR-0017) anotadas en la fila de subida. Ninguna meta cambia | Ninguna: es una decisión, no una medición |
 | 2026-10-21 | #19 | Las filas de pedazos, arenas temporales y subida pasan a ser regiones del ADR-0010; la memoria que vive un nivel queda para el ADR-0028. La arena por frame se vuelve "arenas temporales" (paso, frame y *scratch*), y las cuentas del ADR-0010 quedan anotadas en las filas de pedazos y de subida. Ninguna meta cambia | Ninguna: son una decisión y cuentas, no una medición del protocolo |
+| 2026-10-22 | #31 | El costo del combate del ADR-0018 (~60 µs por zombie y por tajo) queda anotado en la fila de combate y corte. Ninguna meta cambia | Ninguna: prototipo de laboratorio, fuera del protocolo |

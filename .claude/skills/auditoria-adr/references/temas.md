@@ -20,8 +20,9 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
 | [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016 y 0017 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets; tests después en el combate) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
+| [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 
 ### Activación por contenido
 
@@ -43,6 +44,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Assets, Blender, glTF, texturas, formatos de archivo, el cocinador, Git LFS | `assets` |
 | Corte de mallas, tapas, pedazos, hendidura, `slice_request`, índice soldado | `corte` |
 | Diagramas, D2, la leyenda, SVG, Mermaid, PlantUML, Graphviz | `diagramas` |
+| Combate, la fuerza o la carga del tajo, armadura, juntas, rebote, la espada clavada, agarres, energía, pausa de impacto, vivo o muerto, tipos de zombie | `gameplay` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -381,11 +383,16 @@ Qué mirar:
   `min(r, dist)`, o nada. **Solo donde el corte separa pedazos:** las cápsulas que solo
   toca una hendidura no cambian (fe de erratas del ADR-0016, por el ADR-0007). Las
   recorta el corte, y la física las lee del pedazo.
-- **El zombie muerto entero es un ragdoll, y los pedazos son cuerpos rígidos,** con un
-  tope propio de ragdolls activos. Los cuerpos unidos por una rótula no chocan entre sí.
+- **El zombie muerto entero es un ragdoll, y los pedazos son cuerpos rígidos,** salvo los
+  de más de N huesos (configurable), que pasan a ragdoll mientras quede lugar en el tope
+  propio de ragdolls activos (fe de erratas del ADR-0016, por el ADR-0018). Los cuerpos
+  unidos por una rótula no chocan entre sí.
 - **Los personajes son controladores cinemáticos** que se mueven y se sacan de lo que
   penetran, con pruebas de superposición, no con barridos ni como cuerpos dinámicos. El
-  empuje es un impulso programado. El avance por paso queda muy por debajo del radio de
+  empuje es un impulso programado. **Contra los pedazos, el contacto es en un solo
+  sentido:** el pedazo se mueve y el controlador no se frena (fe de erratas del ADR-0016,
+  por el ADR-0018). La consulta de superposición del agarre es un barrido de esfera de
+  largo 0, no una consulta nueva. El avance por paso queda muy por debajo del radio de
   la cápsula: los movimientos rápidos (esquive, empuje) se recortan o se subdividen.
 - **El tajo se detecta con el barrido en su plano:** hay golpe si la distancia del
   segmento de una cápsula al sector de anillo es menor o igual que su radio (inflado con
@@ -550,8 +557,8 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016 y 0017 (reparto del TDD en el corte, la memoria,
-la animación, la física y el cocinador de assets).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (reparto del TDD en el corte, la
+memoria, la animación, la física y el cocinador de assets; los tests del combate).
 
 Qué mirar:
 
@@ -628,6 +635,13 @@ Qué mirar:
   detecta un espejo (hace falta la normal de un triángulo). Además: fixtures `.gltf`
   chicos en `tests/tools/fixtures/`, un test de que cocinar dos veces da los mismos
   bytes, y fuzzing del cargador del binario.
+- **En el combate (ADR-0018),** el gameplay lleva tests después, no TDD, y la sensación
+  se prueba jugando. Las reglas son funciones puras con casos calculados a mano: el área
+  de una cápsula perpendicular a la hoja, el umbral con el ángulo y con la junta, la
+  curva de carga, la fuerza que sobra entre dos zombies y la regla de vivo o muerto sobre
+  máscaras de huesos armadas a mano. La espada clavada y el agarre tienen tests de
+  *replay*. Al ticket del corte se suma un caso: volver a cortar una herida abierta con
+  el mismo plano y la misma pose, que pasa justo por el fondo de la ranura.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -677,3 +691,75 @@ Qué mirar:
 - **Lo que los verificadores no ven** es justo lo que mira este tema: si el diagrama
   describe bien lo que pasa dentro de cada función, si las etiquetas describen bien sus
   datos y si las ramas que el test no recorre están dibujadas.
+
+## gameplay
+
+**ADRs:** 0018 (combate y desmembramiento). También la visión (`docs/vision/README.md`),
+que el ADR-0018 actualizó a su versión 3.
+
+Qué mirar:
+
+- **Modelo de fuerza D:** la fuerza se gasta **por área cortada**, por la resistencia del
+  material, en el orden en que la hoja alcanza cada parte, y lo que sobra sigue al zombie
+  siguiente. **La carne no tiene umbral de entrada; el metal sí.** Un umbral por zombie
+  (todo o nada), un costo fijo por parte o la armadura como cáscara cambian la Decisión 1.
+- **El combate decide con las cápsulas, nunca con la malla** (también lo pide el
+  ADR-0007). El material es por cápsula, en una tabla por tipo de zombie. El umbral del
+  metal se divide por `max(|dirección del hueso · normal del plano|, piso)`. Una parte es
+  **junta** si el plano cruza su eje cerca de una articulación; juntas como esferas en el
+  espacio contradicen la Decisión 2.
+- **La carga** sube rápido al principio y cada vez más lento. Si la energía llega a 0
+  cargando, la carga se cancela y la caballera entra en recuperación: un golpe debilitado
+  contradice la Decisión 1. **La fuerza sale solo de la carga.** La duración del barrido
+  baja con la carga, pero la velocidad no suma fuerza; contarla en el gasto es un
+  hallazgo. El tajo rápido tiene su propia duración, corta.
+- **Bajo el umbral, el tajo rebota** con aturdimiento y recuperación de energía más lenta.
+  **El tajo rápido nunca se clava:** corta solo lo que atraviesa entero y, si no, empuja.
+  Su plano es horizontal, por el pecho, en la dirección en que mira la caballera, y su
+  recta de detención va un margen angular (configurable) antes de la primera parte que no
+  atraviesa, para no abrirle una ranura.
+- **El pedido de corte se emite al salir o detenerse la hoja,** uno por zombie y por tajo,
+  después de preguntar al corte si queda lugar (ADR-0007). **La pausa de impacto es una
+  por tajo,** empieza en ese paso, congela solo a la caballera y al zombie golpeado, y su
+  duración es configurable (0 la apaga).
+- **Escala de tiempo por personaje:** la aplican el gameplay, el combate, la IA y la
+  animación. Los cuerpos dinámicos (pedazos y ragdolls) siguen el tiempo global; frenarlos
+  dentro del solver es un hallazgo. Un zombie con un pedido de corte en la cola queda con
+  escala 0 hasta que se procese.
+- **El plano del tajo** pasa por el pecho de la caballera y por el punto apuntado, con la
+  dirección de la línea dibujada, y el centro del arco es el pecho. El punto apuntado es
+  el primer impacto del rayo de la cámara contra las cápsulas, con un punto de reserva si
+  no toca nada. Un plano que contenga el rayo de la cámara contradice la Decisión 6. El
+  90° del arco (ADR-0015) es la dirección del pecho al punto apuntado, sin su componente
+  sobre la línea.
+- **La espada clavada** es una secuencia: el zombie avanza por la hoja **con el esqueleto
+  fijo en la pose del corte** (solo se mueve su raíz), los demás van a una escala de
+  tiempo baja, y cada pulsación gasta energía. Terminar el corte es un `slice_request`
+  **completo con el mismo plano y la misma pose** sobre la herida abierta. Si el zombie
+  llega o la energía llega a 0, pasa al agarre. En la cabeza, el zombie muere y la hoja
+  queda libre; en un pedazo del suelo, la hoja no se clava.
+- **Vivo o muerto** corre en el gameplay del paso siguiente al corte, sobre las máscaras
+  de huesos de los pedazos: vive el pedazo con la cabeza completa que conserva el torso
+  o el segmento superior de un brazo o de una pierna. Esa regla dentro del corte es un
+  hallazgo (el corte no sabe de vivos ni muertos, ADR-0012). **Los pedazos nacen sin
+  clasificar:** en el paso del corte, la física no les crea cuerpo y la animación no los
+  evalúa; un cuerpo creado antes de la clasificación es un hallazgo. La cabeza, el torso
+  y los segmentos de cada extremidad se declaran en la tabla del tipo de zombie, no en
+  el cocinador.
+- **Los pedazos del suelo se cortan.** Dos reglas conviven para los pedazos chicos: el
+  combate no emite el pedido si la parte que se separaría es más delgada que la hoja
+  (medido con las cápsulas), y el corte sigue descartando los pedazos bajo su mínimo
+  (ADR-0007). Pasa a ragdoll el pedazo con más de N huesos (N configurable). Los
+  personajes empujan los pedazos sin frenarse.
+- **El agarre** se detecta con una consulta de superposición al final del ataque del
+  zombie, que necesita un brazo útil. Es en tiempo real para todos, se resuelve
+  presionando rápido y con eventos, y al zafarse libera de todos. Si la agarran cargando,
+  hay un margen para soltar el tajo. **Accesibilidad:** la secuencia y el agarre tienen
+  una alternativa de mantener en las opciones; que falte es `importante`.
+- **Todos los números del combate se ajustan sin recompilar** (materiales, curva, piso
+  del ángulo, radio de junta, pausa, aturdimiento, escalas de tiempo, N de los ragdolls,
+  mínimo de zombies para la cámara del tajo). Un número del combate fijo en el código es
+  un hallazgo.
+- **Determinismo:** ninguna regla usa azar ni el reloj; la secuencia lee el input por
+  paso.
+- Los tests del combate no son de este tema: los audita `testing`.

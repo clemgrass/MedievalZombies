@@ -1,7 +1,8 @@
 # Visión del juego
 
-- **Versión:** 2 (2026-10-20): se suma la hoja que queda clavada (#11). Versión 1:
-  2026-10-18.
+- **Versión:** 3 (2026-10-22): la espada clavada como secuencia, el agarre, el
+  cansancio que cancela la carga y la regla de vivo o muerto (#31). Versión 2
+  (2026-10-20): se suma la hoja que queda clavada (#11). Versión 1: 2026-10-18.
 - **Ticket:** #13 (`modo:dirigido`: las ideas son del autor y Claude las redacta)
 - **Qué es este documento:** el diseño del juego. **No es un ADR.** Les da a las
   decisiones técnicas los números y las prioridades que necesitan (por ejemplo, cuántos
@@ -85,18 +86,30 @@ algo de tragicomedia.
   fuerza *hasta dónde* llega.
 - **La hoja puede quedar clavada.** Si la fuerza alcanza para entrar pero no para
   atravesar, la hoja se detiene dentro del zombie: puede cortar solo un brazo, o llegar
-  hasta la mitad del torso y quedarse clavada. Entonces la caballera tiene que sacarla,
-  y eso gasta energía. Donde se detuvo queda una herida abierta, en la que se ve el
-  interior. Bajo el umbral de corte, el tajo no entra: empuja o rebota. Las reglas
-  exactas las fija el ADR-0018, y la geometría de la herida, el ADR-0007.
+  hasta la mitad del torso y quedarse clavada. Donde se detuvo queda una herida abierta,
+  en la que se ve el interior (la geometría la fija el ADR-0007).
+- **La espada clavada es una secuencia de *quick time*.** El jugador presiona rápido y
+  responde a eventos para terminar de cortar, y cada pulsación gasta energía. Mientras
+  tanto, el zombie avanza ensartado por la espada hacia la caballera. Solo ellos dos van
+  en tiempo real; los demás zombies quedan muy lentos o congelados, para que el jugador
+  le dé todo el foco y no lo agarre otro, lo que sería injusto. Si termina, el zombie
+  queda partido. Si el zombie la alcanza, o se queda sin energía, pasa a un agarre.
+- **La carne no frena la entrada, el metal sí.** Bajo el umbral de una armadura, el tajo
+  **rebota:** la caballera queda aturdida un momento y la energía se recupera más lento
+  por un rato. Contra la armadura importa el ángulo: un tajo que cruza el hueso de
+  costado entra mejor que uno que corre a lo largo de él. Cuando falla, la imagen y el
+  sonido lo tienen que dejar claro. Las reglas exactas las fija el ADR-0018.
 - **Mientras se carga, se puede corregir el ángulo, pero cuesta energía.** El costo es
   proporcional a cuánto se gira: un ajuste de 5° casi no cuesta, y uno de 90° vacía la
   energía. Además, **la línea gira más lento mientras se carga**, por el peso de la
   espada.
 - **Cargar tiene costo:** gasta energía y deja vulnerable a la caballera. **No se puede
   esquivar mientras se carga.**
-- **Cansancio:** si la energía llega a 0 mientras se carga, la caballera se cansa y **el
-  golpe pierde fuerza**.
+- **La carga sube rápido al principio y cada vez más lento:** un tajo corto alcanza
+  contra los zombies que no piden tanta fuerza, y llegar a la carga máxima cuesta.
+- **Cansancio:** si la energía llega a 0 mientras se carga, **la carga se cancela:** la
+  caballera sale de la postura de corte y entra en recuperación, sin golpe. El jugador
+  tiene que conocer bien sus tiempos.
 
 ### Alcance del tajo
 
@@ -109,29 +122,38 @@ algo de tragicomedia.
 
 Sin apuntar, el ataque es un **tajo rápido sin carga**. A veces ni siquiera corta: solo
 **empuja** al zombie. Cumple el papel de una patada, que el juego no tiene. **El empuje
-no hace daño real:** solo abre espacio.
+no hace daño real:** solo abre espacio. Corta solo lo que alcanza a atravesar entero
+(por ejemplo, un brazo), y **nunca queda clavado.**
 
 ### Energía
 
-Un solo recurso para todo: **cargar, corregir el ángulo, trotar y soltarse de un
-agarre** la gastan, y se recupera sola cuando no se usa. Correr y cargar compiten.
+Un solo recurso para todo: **cargar, corregir el ángulo, trotar, terminar un corte con
+la espada clavada y soltarse de un agarre** la gastan, y se recupera sola cuando no se
+usa. Correr y cargar compiten.
 
 ### Daño y derrota
 
 - **La caballera no tiene barra de vida: su vida es la energía.** Los zombies no la
   golpean hasta matarla. **La agarran.**
 - **Agarre:** un zombie que la alcanza la sujeta, y ella tiene que **sacudirse** para
-  soltarse, lo que gasta energía. **Si la energía llega a 0 antes de soltarse, muere.**
+  soltarse, presionando rápido y respondiendo a eventos, lo que gasta energía. **Si la
+  energía llega a 0 antes de soltarse, muere.** Al soltarse, da un paso atrás y empuja.
+  Si tenía la espada clavada en ese zombie, la hoja sale deslizándose y el zombie queda
+  con la herida abierta, sin partir.
+- **El agarre es en tiempo real para todos:** los otros zombies siguen atacando. Un
+  zombie con espada podría cortar al que la agarra, y a ella también.
 - **Varios zombies pueden agarrarla a la vez,** y cada uno más hace que la energía baje
-  más rápido. Por eso las masas son peligrosas, aunque cada zombie por separado no lo
-  sea.
+  más rápido y que soltarse cueste más. Si lo logra, se libera de todos. Por eso las
+  masas son peligrosas, aunque cada zombie por separado no lo sea.
+- **El agarre cancela la carga,** pero si la caballera estaba cargando tiene un margen
+  corto para soltar el tajo.
 - **Los enemigos especiales usan sus propios ataques** (el soldado con espada, los
   perros, el mago…), definidos para cada uno.
 - **El equilibrio:** si carga y se posiciona bien, la caballera mata casi cualquier cosa
   de un solo golpe. El peligro está en no tener tiempo ni espacio para hacerlo.
 - **Al morir, se vuelve al último checkpoint.**
-- *Queda para el ADR-0018:* cómo se sacude exactamente (por ejemplo, alternar el stick
-  o presionar repetidamente) y si se puede cargar mientras la agarran.
+- **Accesibilidad:** presionar rápido y los eventos de *quick time* tienen en las opciones
+  una alternativa de mantener.
 
 ### Moverse
 
@@ -145,11 +167,11 @@ Es la prioridad absoluta del juego.
 
 | Recurso | Qué hace | Cuándo |
 |---|---|---|
-| **Pausa de impacto** (*hit-stop*) | El juego se congela de 50 a 80 ms al tocar al zombie. Casi no se nota, pero da peso al golpe | En cada golpe que conecta, más larga cuanto más fuerte |
-| **Cámara del tajo** | Cámara lenta, y la cámara acompaña a la hoja mientras atraviesa el cuerpo. Se ve el interior: carne y hueso. Es el equivalente a la vista de rayos X de *Sniper Elite* | **Solo en los cortes especiales**, para que no aburra: varios zombies en un tajo, una junta de armadura acertada, el golpe final al mago |
+| **Pausa de impacto** (*hit-stop*) | La caballera y el zombie golpeado se congelan de 50 a 80 ms, como en *Monster Hunter*; el resto sigue. Casi no se nota, pero da peso al golpe. La duración se configura, y en 0 se apaga si queda mejor sin ella | Una vez por tajo, más larga cuanto más fuerte |
+| **Cámara del tajo** | Cámara lenta, y la cámara acompaña a la hoja mientras atraviesa el cuerpo. Se ve el interior: carne y hueso. Es el equivalente a la vista de rayos X de *Sniper Elite* | **Solo en los cortes especiales**, para que no aburra: muchos zombies en un tajo y el golpe final al mago. Se puede apagar en las opciones |
 | **Salpicadura roja** | Sangre roja saturada al cortar | En cada corte |
 | **Sacudida de cámara** | Proporcional a la fuerza | En los golpes cargados |
-| **Pedazos con física** | Las mitades caen, y la de arriba se arrastra | En cada corte |
+| **Pedazos con física** | Las mitades caen, y la de arriba se arrastra. Los pedazos del suelo se pueden volver a cortar, y los personajes los empujan sin trabarse | En cada corte |
 | **Sonido del corte** | La mitad de la sensación, como en *Sniper Elite*. No es secundario | En cada corte |
 
 **Posibilidad: frames de impacto estilo anime.** Son 2 o 3 frames de imagen invertida o
@@ -177,13 +199,16 @@ alternativas y fija las reglas exactas.
 
 - **Todo se resuelve con cortes.** No hay vida acumulable: varios tajos que solo empujan
   no matan a nadie.
-- **Umbral de corte:** cada zombie tiene un umbral de fuerza para partirlo. Bajo ese
-  umbral, el tajo no entra: lo empuja o rebota.
+- **La fuerza se gasta al cruzar el cuerpo:** cuanto más hay en el camino de la hoja,
+  más fuerza hace falta. La carne no frena la entrada y la armadura sí: bajo su umbral,
+  el tajo rebota.
 - **Cualquier corte en la cabeza lo mata.** Como los zombies se mueven, acertarle a la
   cabeza es difícil.
-- **Regla general para el resto:** mientras conserve **la cabeza completa y al menos un
-  brazo o una pierna**, el zombie sigue: se arrastra, cojea o se defiende con lo que le
-  queda. Las zonas exactas se calculan en el ADR-0018.
+- **Regla general para el resto:** mientras conserve **la cabeza completa, y siga unida
+  al torso o conserve al menos un brazo o una pierna**, el zombie sigue: camina, cojea,
+  se arrastra o se retuerce con lo que le queda. Si el jugador se pone creativo y le
+  corta las piernas y los brazos, sigue vivo; también si le queda la cabeza con un brazo
+  y casi nada de torso. Las reglas exactas las fija el ADR-0018.
 - **La armadura va por partes** (yelmo, peto, grebas…), cada una con su umbral. **Las
   juntas lo bajan:** quien apunta bien necesita menos fuerza.
 - **Un zombie partido sigue vivo** si cumple la regla anterior: si se corta por la

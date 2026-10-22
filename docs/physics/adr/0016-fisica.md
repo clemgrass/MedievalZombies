@@ -13,6 +13,16 @@
   separa pedazos. Las que solo toca una hendidura, donde la hoja se detuvo dentro del
   zombie (ADR-0007), no cambian, aunque en el mismo corte otra parte se separe. Se
   acota en la Decisión 4 y se aclara en Consecuencias.
+- **Fe de erratas:** 2026-10-22 (#31): el ADR-0018 decide lo que este ADR dejó abierto.
+  Los pedazos con más de N huesos (configurable) pasan a ragdoll, dentro del tope; los
+  demás siguen rígidos. El contacto entre un controlador y un pedazo es en un solo
+  sentido: el pedazo se mueve y el controlador no se frena. El agarre usa una consulta
+  de superposición de una esfera, que es un barrido de esfera de largo 0: el alcance no
+  cambia. Los pedazos nacen sin clasificar: la física crea sus cuerpos **en el paso
+  siguiente al corte,** cuando el gameplay ya decidió cuál sigue vivo, y la posición y
+  la velocidad salen de las dos poses que el pedazo heredó del zombie en el paso del
+  corte. Se corrige en las Decisiones 5 y 6, en "Lo que se sacrifica" y en el traspaso
+  desde la animación.
 
 ## Contexto y problema
 
@@ -290,8 +300,8 @@ contra el escenario y el golpe de la espada.
 | 2 | Alcance | Cuerpos rígidos **dinámicos: esferas y cápsulas**; **cajas solo estáticas** (el escenario); contactos con fricción; **uniones de rótula con límites** (ragdoll); dormir; **rayo y barrido de esfera**; controlador de personaje. Sin cajas dinámicas, casco convexo, física activa, cuerpos blandos, telas ni fluidos |
 | 3 | Solver | **Soft Step:** impulsos secuenciales con subpasos y restricciones blandas, como Box2D v3. Se construye primero con impulsos secuenciales y después se agregan los subpasos y lo blando |
 | 4 | Forma de los pedazos | **Las cápsulas de sus huesos.** Solo donde el corte separa pedazos (una hendidura no las cambia, ADR-0007), toda cápsula a menos de su radio del plano del corte (aunque su eje no lo cruce, como la tapa del hueso vecino en una articulación) se recorta en cada pedazo hacia su propio lado: el segmento se recorta al semiespacio con distancia al plano mayor o igual que el radio. Si no queda segmento, sobra una esfera en el extremo más lejano, de radio `min(r, dist)`, o nada si es muy chica. Un pedazo con varios huesos es un cuerpo compuesto |
-| 5 | Pedazos y zombies muertos | **Mixto.** El zombie muerto entero es un ragdoll: las mismas cápsulas, unidas con rótulas. Los pedazos son cuerpos rígidos. Hay un **tope de ragdolls activos**, y los más viejos se duermen o se congelan |
-| 6 | Personajes | **Controladores cinemáticos** que **se mueven y se sacan de lo que penetran:** el controlador avanza, y si su cápsula queda dentro de algo sólido, se empuja hacia afuera por la normal del contacto, lo que lo hace deslizar. Alcanza con pruebas de superposición, sin barridos. El empuje del tajo rápido se programa como un impulso sobre el controlador |
+| 5 | Pedazos y zombies muertos | **Mixto.** El zombie muerto entero es un ragdoll: las mismas cápsulas, unidas con rótulas. Los pedazos son cuerpos rígidos, salvo los de más de N huesos, que pasan a ragdoll (ADR-0018). Hay un **tope de ragdolls activos**, y los más viejos se duermen o se congelan |
+| 6 | Personajes | **Controladores cinemáticos** que **se mueven y se sacan de lo que penetran:** el controlador avanza, y si su cápsula queda dentro de algo sólido, se empuja hacia afuera por la normal del contacto, lo que lo hace deslizar. Alcanza con pruebas de superposición, sin barridos. El empuje del tajo rápido se programa como un impulso sobre el controlador. Contra los pedazos, el contacto es en un solo sentido: el pedazo se mueve y el controlador no se frena (ADR-0018) |
 | 7 | Detección del tajo | **Barrido en el plano del tajo:** el plano se congela al empezar el barrido. Entre dos pasos, la hoja barre un sector de anillo, armado con el centro del arco de ese paso, y hay golpe si la distancia del segmento de una cápsula al sector es menor o igual que su radio más lo que se movió el centro en el paso |
 | 8 | Fase amplia | **Fuerza bruta** (medida en ~22 µs para 150 cuerpos). Si el profiler lo pide, una grilla uniforme |
 
@@ -321,7 +331,8 @@ contra el escenario y el golpe de la espada.
   - las matrices de los huesos y las cápsulas por hueso son componentes, que la física
     lee sin depender de `animation`;
   - el corte deja los pedazos como entidades con sus componentes de forma, y la física
-    crea los cuerpos en su turno;
+    crea los cuerpos en el paso siguiente, cuando el gameplay ya los clasificó
+    (ADR-0018);
   - el ragdoll escribe la pose en el mismo componente que lee el render.
 - **Las consultas de solo lectura son llamadas directas hacia abajo.** El barrido del
   tajo, el rayo, el barrido de esfera y el *move and slide* devuelven un resultado en el
@@ -342,9 +353,11 @@ contra el escenario y el golpe de la espada.
   acepta.
 - **El traspaso desde la animación (ADR-0015):** los cuerpos del ragdoll y de los
   pedazos nacen con la transformación de la última pose, y con la velocidad que sale de
-  la diferencia entre las dos últimas poses, más el impulso del tajo. Cuando la física
-  del paso N crea los cuerpos, las dos últimas poses son la N−1 y la N−2, porque la
-  animación corre después. La velocidad lineal es la del **centro de masa** del cuerpo,
+  la diferencia entre las dos últimas poses, más el impulso del tajo. Si el corte es del
+  paso N, esas poses son la N−1 y la N−2: las que el pedazo heredó del zombie, porque la
+  animación corre después del corte. El pedazo no se anima en el paso N, y la física
+  crea su cuerpo en el N+1, cuando el gameplay ya lo clasificó (ADR-0018), con esas
+  mismas dos poses. La velocidad lineal es la del **centro de masa** del cuerpo,
   `v = (com_{N−1} − com_{N−2}) / dt`, con el centro calculado en las dos poses: en un
   pedazo compuesto, ese centro puede quedar lejos del origen del hueso. La velocidad
   angular sale del cuaternión relativo `q_{N−1} · q_{N−2}⁻¹`, después de llevar los dos
@@ -392,19 +405,23 @@ contra el escenario y el golpe de la espada.
   - la robustez probada de Jolt, a cambio de aprender y controlar el costo;
   - el casco convexo, las mallas de triángulos y las cajas dinámicas;
   - la física activa (ADR-0015);
-  - **los pedazos grandes caen rígidos:** un cuerpo sin cabeza o un tren inferior con las
-    dos piernas es un cuerpo compuesto rígido, y cae como una tabla.
+  - **los pedazos con pocos huesos caen rígidos:** un pedazo de hasta N huesos es un
+    cuerpo compuesto rígido. Los de más de N huesos, como un cuerpo sin cabeza, pasan a
+    ragdoll mientras quede lugar en el tope; si no, también caen rígidos, como una tabla
+    (ADR-0018).
 - **Abierto:**
-  - si un pedazo con muchos huesos podría pasar a ragdoll (ADR-0018);
+  - si un pedazo con muchos huesos podría pasar a ragdoll (decidido en el ADR-0018);
   - qué pasa entre los controladores y los pedazos del suelo: si los empujan, los
-    ignoran o los frenan (ADR-0018);
+    ignoran o los frenan (decidido en el ADR-0018);
   - si un test de *replay* necesita un hash estable entre máquinas, para compararlo en
     la CI (ADR-0021 y ADR-0029);
   - cómo se separan los zombies de la horda entre sí (ADR-0023);
-  - qué decide que un zombie muera entero (ragdoll) o en pedazos (ADR-0018);
-  - la mecánica de los agarres (ADR-0018);
-  - qué otros golpes (los ataques de los enemigos) necesitan otra detección
-    (ADR-0018).
+  - qué decide que un zombie muera entero (ragdoll) o en pedazos (decidido en el
+    ADR-0018);
+  - la mecánica de los agarres (decidido en el ADR-0018);
+  - qué otros golpes (los ataques de los enemigos) necesitan otra detección (el agarre,
+    decidido en el ADR-0018; los ataques de los enemigos especiales quedan fuera del
+    corte vertical).
 
 ## Cómo lo defiendo
 

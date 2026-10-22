@@ -4,6 +4,13 @@
 - **Fecha:** 2026-10-19
 - **Ticket:** #28
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-22 (#31): el ADR-0018 cambia el plano del tajo, que pasa
+  por el pecho de la caballera y por el punto apuntado, y ya no contiene la dirección de
+  la cámara. Por eso, el 90° del arco pasa a ser la dirección del pecho al punto apuntado,
+  sin su componente sobre la línea. La duración del barrido baja con la carga, partiendo de 0,26 s, y el
+  tajo rápido tiene la suya. La pausa de impacto congela solo a la caballera y al zombie
+  golpeado, así que congela el reloj de la animación de esos dos, no el de todo el juego.
+  Se corrige en la Decisión 7 y en los valores de partida del tajo.
 
 ## Contexto y problema
 
@@ -262,7 +269,7 @@ mezcla de clips se sale del arco: eso define la sensación del juego.
 | 4 | Corte y pedazos | **Mixto.** El pedazo que sigue vivo (con la cabeza, según el ADR-0018) conserva **el esqueleto completo**, con los huesos que perdió enmascarados, y sigue animado con los mismos clips. Los pedazos muertos quedan rígidos o pasan a ragdoll (ADR-0016) |
 | 5 | El tajo | **Mixto.** La punta recorre un arco en el plano del tajo, los dos brazos alcanzan la empuñadura con IK analítica de dos huesos, el torso gira siguiendo la punta, y un clip da el peso del cuerpo (el paso adelante y la carga) |
 | 6 | Zombie mutilado | **Un clip por estado** (cojear, arrastrarse con dos brazos o con uno…), con los huesos perdidos enmascarados |
-| 7 | En el frame | La pose se evalúa **en cada paso de simulación** (ADR-0012), después del corte: el combate y el corte usan la pose con que terminó el paso anterior. El render interpola con *nlerp* (revisando el hemisferio), y la pausa de impacto congela el reloj de la animación |
+| 7 | En el frame | La pose se evalúa **en cada paso de simulación** (ADR-0012), después del corte: el combate y el corte usan la pose con que terminó el paso anterior. El render interpola con *nlerp* (revisando el hemisferio), y la pausa de impacto congela el reloj de la animación de los personajes que congela (ADR-0018) |
 
 ### Lo que la animación le garantiza al corte (ADR-0007)
 
@@ -284,7 +291,7 @@ recompilar (ADR-0021):
 
 | Parámetro | Valor |
 |---|---|
-| Duración del barrido | 0,26 s |
+| Duración del barrido | 0,26 s de partida; baja a medida que sube la carga, y el tajo rápido tiene la suya (ADR-0018) |
 | Paso adelante | 0,35 m |
 | Giro del torso hacia la punta | 60 % |
 | Giro de la línea mientras se carga | 120 °/s |
@@ -292,7 +299,8 @@ recompilar (ADR-0021):
 
 Los ángulos del arco se miden dentro del plano del tajo, desde el pecho de la caballera:
 **0° apunta al extremo de la línea hacia donde va el filo** (la flecha), **90° apunta
-hacia donde mira la cámara**, y el ángulo crece de la flecha hacia adelante. Así, 195°
+del pecho al punto apuntado, sin su componente sobre la línea** (ADR-0018), y el ángulo
+crece de la flecha hacia adelante. Así, 195°
 queda detrás y del lado opuesto a la flecha, y −25° pasa un poco más allá de la flecha.
 Los valores se escriben en grados para ajustarlos a mano, y se convierten a radianes al
 cargarlos (ADR-0008).
@@ -349,9 +357,10 @@ cargarlos (ADR-0008).
     0,5 m a la izquierda de la caballera y más arriba. En algunos ángulos, el arco queda
     lejos del pecho y los brazos no llegan (el prototipo lo mide). Cómo se resuelve
     (mover el centro del arco, un paso lateral o limitar los ángulos) lo deciden el
-    ADR-0018 y el ajuste del combate;
+    ADR-0018 y el ajuste del combate (decidido en el ADR-0018: el plano pasa por el
+    pecho, que es siempre el centro del arco);
   - el traspaso de la pose al ragdoll y los cuerpos físicos de los pedazos (ADR-0016);
-  - qué partes definen cada estado del zombie mutilado (ADR-0018);
+  - qué partes definen cada estado del zombie mutilado (decidido en el ADR-0018);
   - cómo se asignan los pesos de los vértices nuevos: interpolar (simple, con un error
     fuera del plano del corte) o des-deformar (exacto), y qué hacer cuando pasan de 4
     huesos (ADR-0007);

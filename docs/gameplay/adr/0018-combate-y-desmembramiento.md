@@ -1,6 +1,6 @@
 # ADR-0018: Reglas de combate y desmembramiento
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-22
 - **Ticket:** #31
 - **Reemplaza / Reemplazado por:** —
@@ -619,7 +619,29 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
 
 ## Cómo lo defiendo
 
-<!-- Lo escribe el autor: preguntas que haría un evaluador, respondidas con sus palabras. -->
+**¿Por qué la fuerza se gasta por área, y no con un umbral por zombie, que es más
+simple?**
+Para que pueda pasar que la espada quede clavada. Con un umbral, el tajo atraviesa todo o
+rebota, y la hoja nunca se detiene a mitad del cuerpo.
+
+**¿Por qué la carne no tiene umbral de entrada y el metal sí?**
+Porque sería raro que la hoja rebotara en la carne. En el metal, en cambio, se espera
+que un golpe sin fuerza suficiente rebote.
+
+**¿Por qué las juntas se deciden por el eje de cada parte, y no como zonas en el
+espacio?**
+Para medir mejor el ángulo de entrada y que el tajo entre de verdad en el zombie. El eje
+de cada parte es el mismo que uso para el ángulo, y como zonas en el espacio las juntas
+casi no cambiaban nada.
+
+**¿Por qué el plano pasa por el pecho de la caballera y no contiene el rayo de la cámara,
+si así el corte se aparta un poco de la línea dibujada?**
+Porque tiene más sentido con lo que el jugador siente y observa: la espada sale del
+pecho, y el corte pasa por el punto que apuntó.
+
+**¿Por qué la espada clavada pone lentos o congela a los demás zombies, y el agarre no?**
+Porque sería demasiado injusto y raro que otros zombies pudieran atacar en ese momento.
+El agarre, en cambio, es el peligro de la horda, y ahí todo sigue en tiempo real.
 
 ## Referencias
 

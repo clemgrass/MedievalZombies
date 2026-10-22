@@ -1,6 +1,6 @@
 ---
 name: auditoria-adr
-description: Audita los cambios de una rama de MedievalZombies contra los ADRs aceptados, con un solo agente auditor que recorre en secuencia los temas que tocan (proceso, docs, C++, arquitectura, memoria, build y licencias, gráficos, matemática, animación, física, assets, corte, testing), y presenta los hallazgos para decidirlos con el autor. Úsala siempre antes de abrir un PR, al terminar un ticket y antes de dar los comandos de commit/push/`gh pr create`, y también cuando el autor pida auditar, revisar contra los ADRs, verificar que algo cumple lo decidido, o escriba /auditoria-adr, aunque no diga "auditoría".
+description: Audita los cambios de una rama de MedievalZombies contra los ADRs aceptados, con un solo agente auditor que recorre en secuencia los temas que tocan (proceso, docs, C++, arquitectura, memoria, build y licencias, gráficos, matemática, animación, física, assets, corte, testing, diagramas, gameplay), y presenta los hallazgos para decidirlos con el autor. Úsala siempre antes de abrir un PR, al terminar un ticket y antes de dar los comandos de commit/push/`gh pr create`, y también cuando el autor pida auditar, revisar contra los ADRs, verificar que algo cumple lo decidido, o escriba /auditoria-adr, aunque no diga "auditoría".
 ---
 
 # Auditoría de un PR contra los ADRs

@@ -63,7 +63,9 @@ llevan modo.
   Tamaño, y su ADR
   relacionado (si aplica) está `Aceptado`.
 - **Hecho:** cumple los criterios de aceptación, está mergeado con `Closes #N`, y (si
-  es feature o tarea) el autor respondió "Qué debo poder explicar".
+  es feature o tarea) el autor respondió "Qué debo poder explicar", recorriendo el
+  diagrama del flujo cuando lo hay. Si el ticket cambia un flujo dibujado, o le da
+  comportamiento a un sistema nuevo, su diagrama está al día (ADR-0030).
 
 ## Cómo hago…
 

@@ -24,6 +24,8 @@ Basada en la guía de revisión de código de Google, en orden de importancia.
 - [ ] **Estilo:** `clang-format` y `clang-tidy` sin avisos.
 - [ ] **Documentación:** los docs, el `CHANGELOG.md` y "Qué debo poder explicar" del
       ticket están al día.
+- [ ] **Diagramas:** si el PR cambia un flujo dibujado, o le da comportamiento a un
+      sistema nuevo, su diagrama está al día y los verificadores pasan.
 
 ## Rendimiento
 

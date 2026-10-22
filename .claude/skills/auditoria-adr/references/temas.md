@@ -21,6 +21,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
 | [testing](#testing) | 0011, 0007, 0010, 0015, 0016 y 0017 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 
 ### Activación por contenido
 
@@ -41,6 +42,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Física, colisiones, cuerpos rígidos, ragdoll, solver, cápsulas, controlador de personaje, la detección del tajo | `fisica` |
 | Assets, Blender, glTF, texturas, formatos de archivo, el cocinador, Git LFS | `assets` |
 | Corte de mallas, tapas, pedazos, hendidura, `slice_request`, índice soldado | `corte` |
+| Diagramas, D2, la leyenda, SVG, Mermaid, PlantUML, Graphviz | `diagramas` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -635,3 +637,38 @@ Qué mirar:
   del issue. Lleva `WILL_FAIL` mientras el bug está abierto, y se le quita en el PR que
   lo arregla.
 - **Los tests corren en el preset Debug**, con ASan y UBSan.
+
+## diagramas
+
+**ADRs:** 0030 (diagramas técnicos).
+
+Qué mirar:
+
+- **Solo D2.** Un diagrama técnico nuevo en Mermaid, PlantUML, Graphviz o una
+  herramienta visual cambia la Decisión 1. La excepción es el piloto guardado como
+  historial en `docs/research/diagramas-piloto/`.
+- **Cada `.d2` tiene su SVG al lado**, con el mismo nombre, generado con
+  `--dark-theme`. Un `.d2` cambiado con su SVG sin regenerar es un hallazgo. Se revisa
+  el `.d2`, no el diff del SVG.
+- **Cada diagrama importa la leyenda** de `docs/diagramas/leyenda.d2` y usa sus clases.
+  Estilos sueltos que repiten o contradicen la leyenda son un hallazgo. Cada diagrama
+  tiene título, y todo elemento tiene su propio relleno.
+- **Nombres reales:** las funciones van con `()` y el nombre del código. El id de cada
+  dato es el nombre de su tipo en `snake_case`, un tipo por dato.
+- **Ubicación y niveles:** el frame y lo transversal en `docs/diagramas/`; los sistemas
+  y procesos de un área en `docs/<área>/diagramas/`. Cada carpeta tiene un `README.md`
+  que muestra sus SVG y enlaza al nivel de arriba y a los de abajo. Un link roto es un
+  hallazgo.
+- **Ejemplos:** en los diagramas de proceso, el ejemplo lo calcula un test y el diagrama
+  importa su fragmento `<diagrama>.ejemplo.d2`. Números escritos a mano en un diagrama
+  de proceso son un hallazgo.
+- **Cuándo:** un PR que le da comportamiento a un sistema nuevo trae su diagrama; un PR
+  que cambia un flujo dibujado (el orden de las llamadas, una función nueva, borrada o
+  renombrada, o un dato que cambia de tipo) actualiza el diagrama en el mismo PR.
+  Faltar a esto es `importante`. Un sistema vacío no lleva diagrama.
+- **Verificadores:** cuando existan, el PR los corre y pasan: nombres, SVG, leyenda,
+  links, ejemplos, orden estático, tipos, orden dinámico y paso nuevo. La macro de traza
+  solo existe en el build de tests.
+- **Lo que los verificadores no ven** es justo lo que mira este tema: si el diagrama
+  describe bien lo que pasa dentro de cada función, si las etiquetas describen bien sus
+  datos y si las ramas que el test no recorre están dibujadas.

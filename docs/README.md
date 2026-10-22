@@ -16,6 +16,7 @@ docs/
 ├── plans/           planes de implementación derivados de las specs
 ├── adr/             ADRs transversales y plantilla (template.md)
 ├── research/        notas de investigación de los ADRs transversales
+├── diagramas/       diagramas técnicos transversales (el frame) y la leyenda común
 ├── graphics/        renderer: README, adr/, research/
 ├── slicing/         corte de mallas: README, adr/, research/
 ├── animation/       animación: README, adr/, research/
@@ -24,7 +25,9 @@ docs/
 ```
 
 Las carpetas de área nuevas (`ai/`, `audio/`, etc.) se crean cuando
-les toca su primer ADR y tienen la misma forma que `graphics/`.
+les toca su primer ADR y tienen la misma forma que `graphics/`. Cuando un área tiene
+código, suma una carpeta `diagramas/` con los diagramas de sus sistemas y procesos
+(ADR-0030).
 
 `performance/` no es una carpeta de área: guarda documentos vivos, que cambian con cada
 medición. Su ADR (el ADR-0020) vive en `adr/`, porque es transversal.
@@ -71,3 +74,4 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0017](adr/0017-pipeline-de-assets.md) | Pipeline de assets (Blender, glTF, binario cocinado en el build) | Transversal | Aceptado |
 | [ADR-0019](adr/0019-licencias.md) | Licencias (código MIT, docs y assets CC BY 4.0) | Transversal | Aceptado |
 | [ADR-0020](adr/0020-requisitos-y-presupuestos-de-rendimiento.md) | Requisitos y presupuestos de rendimiento (UHD 620, 60 fps, 640×360) | Transversal | Aceptado |
+| [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |

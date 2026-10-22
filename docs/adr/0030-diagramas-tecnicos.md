@@ -1,6 +1,6 @@
 # ADR-0030: Diagramas técnicos del engine
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-21
 - **Ticket:** #60
 - **Reemplaza / Reemplazado por:** —
@@ -250,9 +250,9 @@ y además me gusta cómo se ve.
 | 1 | Formato | **D2, como único formato**, con la versión fijada y el layout ELK |
 | 2 | Dónde se ven | **SVG generado y commiteado** junto a su `.d2`, con el mismo nombre, con los temas claro y oscuro dentro (`--dark-theme`). Un chequeo regenera cada SVG y falla si no coincide con el commiteado |
 | 3 | Tipos de diagrama | **Flujo de datos y secuencia** como base. **Estado y layout de memoria** solo cuando un sistema los pida. La **estructura de módulos se genera** desde el build (`cmake --graphviz`), convertida a D2 con la misma leyenda |
-| 4 | Leyenda | **La leyenda propia del piloto**, más las reglas de notación del C4: cada diagrama con título; cada elemento con su tipo; líneas de una sola dirección, con etiquetas específicas; el color repite lo que dice la forma, y todo elemento lleva su propio relleno. Vive en un solo archivo, `docs/diagramas/leyenda.d2`, que todos los diagramas importan |
+| 4 | Leyenda | **La leyenda propia del piloto**, más las reglas de notación del C4: cada diagrama con título; cada elemento con su tipo; líneas de una sola dirección, con etiquetas específicas; el color repite lo que dice la forma, y todo elemento lleva su propio relleno. Vive en un solo archivo, `docs/diagramas/leyenda.d2`, que todos los diagramas importan. **El id de cada dato es el nombre de su tipo** en `snake_case` (`signed_distances` para `SignedDistances`), y su etiqueta lo describe en español: un tipo por dato |
 | 5 | Niveles y ubicación | **Frame, sistema y proceso.** El nivel de función, solo donde el código no alcance para entenderla. Los diagramas transversales (el frame) van en `docs/diagramas/`; los de cada área, en `docs/<área>/diagramas/`. Cada carpeta tiene un `README.md` que muestra sus SVG y enlaza al nivel de arriba y a los de abajo |
-| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029): (a) cada `nombre()` de un diagrama está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test |
+| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029). Sobre el diagrama: (a) cada `nombre()` está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test. Sobre la **forma del flujo**: (f) **orden estático**, las llamadas dentro de la función del proceso, leídas del AST de Clang, siguen el orden numerado; (g) **tipos**, cada flecha función → dato es el tipo que devuelve la función, y cada flecha dato → función, uno de sus parámetros; (h) **orden dinámico**, la traza del test del ejemplo sigue el mismo orden, con una macro que anota cada función dibujada y que solo existe en el build de tests; (i) **paso nuevo**, la función del proceso no llama a ninguna función del proyecto que el diagrama no tenga |
 | 7 | Ejemplos | **En los diagramas de proceso, calculados por un test** (ADR-0011). El test escribe un fragmento `<diagrama>.ejemplo.d2`, y el diagrama lo importa. En los demás niveles, el ejemplo se escribe a mano |
 | 8 | Cuándo y quién | **Un sistema nace con su diagrama en el primer PR que le da comportamiento** (un sistema vacío no lleva diagrama). Desde ahí, todo PR que cambia un flujo dibujado actualiza su diagrama. El diagrama al día entra en la **definición de Hecho**, y **"Qué debo poder explicar" se responde recorriendo el diagrama**. Claude dibuja y actualiza; el autor revisa y pide cambios (ADR-0014) |
 
@@ -263,7 +263,9 @@ y además me gusta cómo se ve.
 - **Cada proceso se puede explicar con un dibujo que es verdad:** nombra funciones
   reales, sigue el orden real y muestra valores calculados por el código.
 - **Un diagrama desactualizado rompe el chequeo**, en vez de engañar en silencio. Los
-  verificadores cubren nombres, SVG, leyenda, links y ejemplos.
+  verificadores cubren nombres, SVG, leyenda, links y ejemplos, y también la forma del
+  flujo: el orden de las llamadas, en el código y en la ejecución, los tipos de los
+  datos y los pasos nuevos.
 - **La misma leyenda en todos los diagramas**, porque la importan desde un solo archivo.
 
 ### Lo que se sacrifica
@@ -275,12 +277,29 @@ y además me gusta cómo se ve.
 - **Una herramienta más:** D2 (licencia MPL-2.0) se suma al toolchain de la
   documentación. El engine no la enlaza, y los SVG que genera son documentación bajo
   CC BY 4.0 (ADR-0019).
-- **Ningún verificador detecta un orden equivocado o una flecha que falta.** Eso queda
-  para la revisión del autor y la auditoría.
+- **Una convención y una macro más en el código:** cada dato dibujado necesita su propio
+  tipo, y cada función dibujada lleva la macro de traza (vacía fuera del build de
+  tests).
+- **Lo que ningún verificador ve:** lo que pasa dentro de una función, si una etiqueta
+  describe bien su dato, una rama que el test no recorre y qué instancia de un dato
+  viaja. Eso queda para la revisión del autor y la auditoría.
 
 ### Cambios en el repo
 
-<!-- Se completa al aceptar el ADR. -->
+- **`docs/diagramas/`**, nueva: la leyenda (`leyenda.d2`) y un `README.md` con los
+  niveles, la leyenda y las reglas de cada diagrama. Ahí irá el diagrama del frame.
+- **`docs/README.md`:** `diagramas/` en el mapa, la carpeta `diagramas/` de cada área y
+  la fila de este ADR en el índice.
+- **`.github/pull_request_template.md`:** la lista de revisión pregunta por los
+  diagramas.
+- **`docs/process/tickets.md`:** la definición de Hecho incluye el diagrama al día, y
+  "Qué debo poder explicar" se responde recorriéndolo.
+- **`CLAUDE.md`:** `docs/` incluye los diagramas.
+- **Auditoría:** tema nuevo `diagramas` en `.claude/skills/auditoria-adr/references/temas.md`.
+- **El piloto** queda en `docs/research/diagramas-piloto/` como historial, en sus cuatro
+  formatos. El diagrama real del corte nace con su código, en `docs/slicing/diagramas/`.
+- **Los verificadores y el comando que los corre** llegan con el primer código: no hay
+  nada que verificar todavía.
 
 ### Lo que queda abierto
 
@@ -288,6 +307,9 @@ y además me gusta cómo se ve.
   (ADR-0006, ADR-0029).
 - **El índice de símbolos del verificador (a):** clangd o universal-ctags. Se decide
   cuando exista el código.
+- **La macro de traza del verificador (h):** su nombre, dónde vive y cómo se activa en
+  el build de tests (ADR-0006, ADR-0011). Las herramientas de profiling (ADR-0021)
+  podrían compartirla, pero eso lo decide su ADR.
 - **Cómo escribe un test su fragmento de ejemplo:** se diseña con el primer diagrama de
   proceso, dentro de la estrategia de testing (ADR-0011).
 - **Un sitio de documentación** (por ejemplo, GitHub Pages) puede llegar más adelante,
@@ -310,7 +332,10 @@ Son más flexibles para lo que estamos haciendo. El C4 lo uso solo como inspirac
 Me aseguro de que el ejemplo es algo que ocurre realmente en un test.
 
 **¿Qué errores de un diagrama no detectan tus verificadores, y cómo los cubres?**
-<!-- Pendiente: respuesta del autor. -->
+Lo que realmente ocurre dentro de una función: podría cambiar y dejar de ser lo que se
+entiende del flujo. Tampoco detectan una etiqueta que no describa bien un dato, una rama
+que el test no recorre ni qué instancia de un dato viaja. Esos errores los cubro
+revisando siempre manualmente.
 
 ## Referencias
 

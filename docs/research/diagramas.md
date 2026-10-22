@@ -118,7 +118,53 @@ ser verdadero por construcción, y si el algoritmo cambia, el diagrama cambia co
 | Mermaid | no: haría falta un script que reescriba el bloque dentro del Markdown |
 | Graphviz | no de forma nativa: haría falta un preprocesador |
 
-## 7. Otras observaciones
+## 7. Verificar la forma del flujo
+
+Los chequeos de las secciones anteriores detectan lo que **dejó de existir** (un nombre,
+un SVG viejo). No detectan un paso que **cambió de lugar**. La pregunta fue si se puede
+observar quién llama a quién y compararlo con el diagrama.
+
+**Qué se probó:** un script de 100 líneas en Python sobre un C++ de juguete con la forma
+del corte (`cut_mesh()` llama a las seis funciones del piloto, y cada dato tiene su
+propio tipo: `SignedDistances`, `EdgeCrossings`…). En el diagrama, **el id de cada dato
+es el nombre de su tipo** en `snake_case` (`signed_distances`), y la etiqueta sigue en
+español. Tres chequeos:
+
+| Chequeo | Cómo lo observa | Qué compara |
+|---|---|---|
+| **Orden estático** | El AST de Clang (`-ast-dump=json`): las llamadas dentro de `cut_mesh()`, en orden de código | Con el orden numerado del diagrama |
+| **Tipos de los datos** | Las firmas del AST: qué devuelve y qué recibe cada función | Cada flecha función → dato es su tipo de retorno; cada flecha dato → función, uno de sus parámetros |
+| **Orden dinámico** | Una macro de traza en cada función, activa solo en el build del test, que anota `__func__` al entrar | La traza de la ejecución real con el orden del diagrama |
+
+**Resultados:**
+
+| Caso | Orden estático | Tipos | Orden dinámico |
+|---|---|---|---|
+| Código fiel al diagrama | pasa | pasa | pasa |
+| Código con `build_contours()` y `triangulate_cap()` invertidos | **falla** | pasa | **falla** |
+| Diagrama que le entrega a `split_triangles()` las distancias en vez de los puntos de corte | pasa | **falla** | pasa |
+
+Cada caso tardó ~2 s, casi todo en que Clang lea los headers.
+
+**Lo que todavía no ven:**
+
+- **El orden estático es orden de código, no de ejecución:** un bucle, un `if` o una
+  función que se pasa como parámetro pueden cambiar el orden real. Para eso está el
+  orden dinámico.
+- **El orden dinámico solo ve el camino que recorre el test:** una rama que el test no
+  ejecuta no aparece en la traza.
+- **Los tipos no ven qué instancia viaja:** en el caso de los pasos invertidos, los tipos
+  pasaron, porque `triangulate_cap()` igual recibía unos `ClosedContours` (vacíos).
+- **Un tipo usado para dos datos distintos** vuelve ambiguo el chequeo de tipos. La
+  convención exige un tipo por dato del diagrama.
+- **Lo que pasa dentro de una función** y **lo que dice una etiqueta** siguen siendo
+  cosa de la revisión.
+
+Con la misma lista de llamadas del AST se puede agregar un cuarto chequeo: avisar si la
+función del proceso llama a una función **del proyecto** que el diagrama no tiene (un
+**paso nuevo** que nadie dibujó). No se probó, pero usa los mismos datos.
+
+## 8. Otras observaciones
 
 - **Layout:** D2 con ELK dio el diagrama más ordenado y las notas mejor ubicadas. Mermaid
   parte las etiquetas en líneas muy cortas. PlantUML dio el más compacto. Graphviz dio

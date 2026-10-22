@@ -153,9 +153,10 @@ probaron, y Mermaid los desactiva por seguridad.
 | **+ verificador de nombres** | Un chequeo de CI: cada `nombre()` de un diagrama tiene que estar definido en el código. Prototipo en la investigación: 50 líneas, 0,17 s | Funciones renombradas o borradas | Un script; usar un índice de símbolos real (clangd o universal-ctags) |
 | **+ partes generadas** | Lo que el código o el build ya saben se genera: las dependencias entre módulos (`cmake --graphviz`), el orden de los sistemas del paso | Todo lo generado, por construcción | Un generador por tipo de dato; solo sirve para lo estructural |
 | **+ SVG verificado** | Si hay SVG commiteado, la CI lo regenera y falla si no coincide | Texto cambiado sin regenerar | Solo aplica a formatos con SVG |
+| **+ forma del flujo** | Se observa quién llama a quién: el **orden estático** (las llamadas en el AST de Clang), los **tipos** (cada dato del diagrama tiene el nombre de su tipo, y se comparan con las firmas) y el **orden dinámico** (una traza de la ejecución del test). Prototipo en la investigación, sección 7 | Pasos invertidos, una flecha de datos equivocada y, con la misma lista de llamadas, un paso nuevo que no se dibujó | Una convención (un tipo por dato) y una macro de traza en las funciones dibujadas, activa solo en el build de tests |
 
-Las capas se suman: ninguna detecta un orden equivocado o una flecha que falta, eso
-siempre queda para la revisión.
+Las capas se suman. Ninguna ve lo que pasa dentro de una función, una rama que el test
+no recorre ni si una etiqueta describe bien su dato: eso siempre queda para la revisión.
 
 ### 7. Ejemplos concretos
 
@@ -200,6 +201,9 @@ en GitHub en tema claro y oscuro:
   reescribe entero el SVG de D2 y el de PlantUML. El SVG no se revisa; se revisa el
   texto.
 - **Verificador de nombres:** detectó la función renombrada en los cuatro formatos.
+- **Forma del flujo:** sobre un C++ de juguete, el orden estático (AST de Clang) y el
+  orden dinámico (una traza del test) detectaron dos pasos invertidos, y la comparación
+  de tipos detectó una flecha de datos equivocada.
 - **Ejemplo generado:** un programa C++ calculó el corte del triángulo y D2 importó los
   valores en las notas del diagrama.
 
@@ -292,7 +296,9 @@ y además me gusta cómo se ve.
 ## Cómo lo defiendo
 
 **¿Por qué D2 y no Mermaid, si GitHub dibuja Mermaid sin hacer nada?**
-Por su mejor estética visual.
+Por su mejor estética visual, y sobre todo porque calza con las verificaciones que
+queremos: D2 importa la leyenda desde un solo archivo y el ejemplo que calcula un test.
+Mermaid no puede importar nada.
 
 **¿Cómo sabes que un diagrama no está desactualizado?**
 Lo revisamos con diferentes tests, usando técnicas de *docs as code*.

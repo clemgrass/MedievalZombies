@@ -17,8 +17,8 @@ Hay que decidir:
 
 **El tajo**
 
-1. el **modelo de fuerza:** cómo la carga se vuelve fuerza y cómo se gasta esa fuerza al
-   cruzar el cuerpo;
+1. el **modelo de fuerza:** cómo la carga se vuelve fuerza, si cuenta la velocidad del
+   tajo, y cómo se gasta esa fuerza al cruzar el cuerpo;
 2. la **resistencia de cada parte:** carne, cota y placa, y cómo se reconoce que el tajo
    acertó una junta;
 3. qué pasa **cuando la fuerza no alcanza** para entrar (empuja o rebota) y cómo funciona
@@ -446,7 +446,7 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
 
 | # | Dimensión | Elección |
 |---|---|---|
-| 1 | Modelo de fuerza | **D: área + umbral de entrada.** La carne no tiene umbral; el metal sí. La fuerza que sobra sigue al zombie siguiente. **Curva de carga rápida al principio** y cada vez más lenta. **Si la energía llega a 0 cargando, se cancela la carga:** la caballera sale de la postura de corte y entra en recuperación, sin golpe |
+| 1 | Modelo de fuerza | **D: área + umbral de entrada.** La carne no tiene umbral; el metal sí. La fuerza que sobra sigue al zombie siguiente. **La fuerza sale solo de la carga.** **Curva de carga rápida al principio** y cada vez más lenta. **La velocidad es consecuencia de la carga:** un tajo más cargado barre más rápido, pero la velocidad no suma fuerza. **Si la energía llega a 0 cargando, se cancela la carga:** la caballera sale de la postura de corte y entra en recuperación, sin golpe |
 | 2 | Resistencia y juntas | **Material por cápsula,** en una tabla por tipo de zombie. **El ángulo** entre el plano y el hueso multiplica el umbral de entrada del metal (dividido por el seno, con un piso). **Juntas por eje:** si el plano cruza el eje de una parte cerca de una articulación, esa parte es junta |
 | 3 | Fuerza insuficiente y tajo rápido | **Bajo el umbral, rebota con retroceso:** un aturdimiento corto y la energía que se recupera más lento por un momento. En la carne no hay umbral: un tajo débil entra y se clava. **El tajo rápido corta solo lo que atraviesa entero;** si no atraviesa la primera parte, empuja. Nunca se clava |
 | 4 | Hoja clavada | **Una secuencia de *quick time*.** Presionar rápido y responder a los eventos termina el corte, y cada pulsación gasta energía. El zombie avanza ensartado por la hoja; la caballera y él van en tiempo real, y los demás, muy lentos o congelados. **Si el zombie la alcanza o la energía llega a 0, pasa al agarre.** Al zafarse, la espada sale y el zombie queda con la herida abierta. La espada no se suelta |
@@ -468,10 +468,21 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
             umbral de entrada (material, junta, ángulo) → gasto por área en subpasos
             → si la hoja sale o se detiene en un zombie: ¿queda lugar? → slice_request
             → la pausa, si es la primera del tajo
-  corte:    ADR-0007
+  corte:    ADR-0007 → pedazos sin clasificar
+  física y animación: no los tocan todavía
   gameplay (paso siguiente): vivo o muerto con las máscaras de huesos de los pedazos
+            → el vivo se anima; los muertos reciben su cuerpo (rígido o ragdoll)
   ```
 
+- **La velocidad del barrido sale de la carga:** la duración del barrido baja a medida
+  que sube la carga, con una curva configurable que parte de los 0,26 s del ADR-0015.
+  La velocidad no entra en el gasto: la fuerza es solo la de la carga, así que no se
+  cuenta dos veces. **El tajo rápido tiene su propia duración, corta:** con su fuerza
+  baja, la curva lo haría el más lento, y es otro movimiento. Queda registrado en el
+  ADR-0015 como fe de erratas. Un barrido más rápido recorre más grados por paso; la
+  detección del ADR-0016 prueba todo el sector barrido, así que no hay túnel, y un
+  zombie se cruza en menos pasos: los pedidos de corte pueden juntarse más por paso,
+  dentro del tope de 4 del ADR-0007.
 - **El gasto por área, en el engine:** el barrido del ADR-0016 dice qué cápsulas toca la
   hoja en cada paso. El combate integra solo esas, en subpasos de ~1° (medido: el mismo
   resultado que a 0,25°, con un error de 0,23° de media en el punto donde se detiene la
@@ -505,10 +516,18 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   línea en el punto apuntado y se corre unos 4 píxeles (8 en el p90) a 15 cm de
   profundidad de él. **El centro del arco es siempre el pecho,** así que se cierra el
   problema de alcance que el ADR-0015 dejó abierto. El plano se sigue congelando al
-  empezar el barrido (ADR-0016).
+  empezar el barrido (ADR-0016). **Los ángulos del arco del ADR-0015** se siguen midiendo
+  dentro del plano, desde el pecho: 0° apunta a la flecha de la línea, y **90° pasa a ser
+  la dirección del pecho al punto apuntado** sin su componente sobre la línea (antes era
+  "hacia donde mira la cámara", que con el plano nuevo ya no está en el plano). Queda
+  registrado en el ADR-0015 como fe de erratas.
 - **El punto apuntado** es el primer impacto del rayo central de la cámara contra las
-  cápsulas de los zombies y de los pedazos (una consulta del ADR-0016). Si el rayo no toca
-  nada, se toma el punto del rayo a la distancia del alcance de la hoja.
+  cápsulas de los zombies y de los pedazos (la consulta de rayo del ADR-0016). Si el rayo
+  no toca nada, se toma el punto del rayo a la distancia del alcance de la hoja.
+- **El plano del tajo rápido,** que no apunta: horizontal, por el pecho de la caballera,
+  en la dirección en que mira. Como corta solo lo que atraviesa entero, **su recta de
+  detención se pone donde empieza la primera parte que no atraviesa:** así esa parte
+  queda fuera de la región barrida y el corte no abre ninguna ranura (ADR-0007).
 - **El tiempo propio por entidad:** la pausa local y el foco de la espada clavada piden
   que la caballera, el zombie golpeado y el resto avancen a ritmos distintos. Cada
   personaje lleva una **escala de tiempo** (1 normal, 0 congelado, entre 0 y 1 lento) que
@@ -516,8 +535,12 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   controladores cinemáticos (ADR-0016), basta con escalar lo que avanzan. **Los cuerpos
   dinámicos (pedazos y ragdolls) siguen el tiempo global:** frenar algunos cuerpos dentro
   del solver lo complicaría. La simulación sigue corriendo pasos durante la pausa, así
-  que los cortes que sobran se reparten en ella (ADR-0007). La escala la fijan las
-  reglas del paso, así que la partida grabada se repite igual.
+  que los cortes que sobran se reparten en ella (ADR-0007). **Un zombie con un pedido en
+  la cola queda con escala 0 hasta que se procese:** el corte usa la pose guardada en el
+  pedido, y si el zombie siguiera moviéndose se vería un salto. La escala la fijan las
+  reglas del paso, así que la partida grabada se repite igual. **La animación de los
+  personajes congelados se detiene con ellos:** la pausa ya no congela el reloj de la
+  animación de todo el juego (fe de erratas del ADR-0015).
 - **La pausa de impacto es una por tajo,** y empieza en el paso en que se emite el primer
   pedido. Con la hoja cruzando un zombie en 2 o 3 pasos y los zombies uno después de
   otro, los pedidos salen de a 1 o 2 por paso, lejos del tope de 4 del ADR-0007. Si la
@@ -526,10 +549,15 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   1. la hoja se detiene dentro de un zombie vivo: se emite el `slice_request` con la
      recta (la hendidura del ADR-0007) y empieza la secuencia;
   2. el zombie avanza por la hoja hacia la caballera, a lo largo de la recta de la hoja
-     (que en el espacio del zombie queda dentro de la ranura). Los demás personajes
-     pasan a una escala de tiempo baja, configurable (0 los congela);
+     (que en el espacio del zombie queda dentro de la ranura). **Su esqueleto queda fijo
+     en la pose del corte, y solo avanza su transformación raíz:** si la pose cambiara,
+     la ranura se deformaría con los huesos y el plano del paso 3 ya no pasaría por su
+     fondo. La sensación de forcejeo sale de efectos que no mueven huesos (la cámara, el
+     sonido, la espada que tiembla). Los demás personajes pasan a una escala de tiempo
+     baja, configurable (0 los congela);
   3. **si el jugador completa la secuencia,** se termina el corte: un `slice_request`
-     **completo, con el mismo plano** en el espacio del zombie, sobre la herida abierta.
+     **completo, con el mismo plano** en el espacio del zombie y con la misma pose,
+     sobre la herida abierta.
      El ADR-0007 ya admite volver a cortar una herida abierta. El plano pasa justo por el
      fondo de la ranura, un caso casi degenerado que cubren el desempate simbólico y los
      triángulos de área cero que ya tolera; **se suma como caso de test al ticket del
@@ -541,7 +569,8 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
      libre: no hay secuencia. **En un pedazo del suelo no se clava:** corta lo que
      atraviesa y se detiene, como el tajo rápido.
 - **El agarre:** cuando la animación de agarre de un zombie llega a su punto, una consulta
-  de superposición (una esfera frente a él, del ADR-0016) busca a la caballera. Agarra
+  de superposición busca a la caballera en una esfera frente a él. Es un barrido de esfera
+  de largo 0, la consulta que ya tiene el ADR-0016 (fe de erratas del ADR-0016). Agarra
   solo si conserva al menos un brazo útil. Mientras dura, todo sigue en tiempo real. La
   energía baja más rápido con cada zombie que agarra, y zafarse pide más progreso con
   cada uno. **Al zafarse,** la caballera da un paso atrás y empuja a todos; si tenía la
@@ -553,32 +582,43 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   opciones una alternativa de **mantener** con la misma duración, sin cambiar la
   mecánica.
 - **Vivo o muerto** se decide en el gameplay del paso siguiente al corte, con la máscara
-  de huesos que el corte escribe en cada pedazo (ADR-0007). La diferencia es de un paso
-  (16,7 ms) y no se ve. Las reglas:
-  - **la cabeza** son los huesos que el rig marca como cabeza (`Head` en el de
-    Quaternius). Si un corte la reparte entre dos pedazos, o la hoja queda clavada en
-    ella, el zombie muere. El rig marca esos huesos en el cocinador, igual que las mallas
-    que se cortan (ADR-0007): cómo, lo decide su ticket;
-  - **sigue vivo** el pedazo con la cabeza completa que conserva `spine_03` (el torso) o
-    el segmento superior de un brazo o de una pierna. Todo lo demás muere;
+  de huesos que el corte escribe en cada pedazo (ADR-0007). **Los pedazos nacen sin
+  clasificar:** en el paso del corte, la física no les crea cuerpo y la animación no los
+  evalúa, así que conservan la pose heredada del zombie (ADR-0015). En el paso
+  siguiente, el gameplay los clasifica: el pedazo vivo sigue animado, y la física crea
+  el cuerpo de los muertos (rígido o ragdoll). Así se respeta el orden del ADR-0012 sin
+  que el corte conozca la regla. La diferencia es de un paso (16,7 ms) y no se ve. Las
+  reglas:
+  - **la cabeza, el torso y los dos segmentos de cada extremidad** se declaran en la
+    tabla de cada tipo de zombie, junto a sus materiales: son datos del gameplay,
+    ajustables sin recompilar. En el rig de Quaternius, la cabeza es `Head` y el torso
+    `spine_03`. El cocinador no conoce nombres de huesos (ADR-0017). Si un corte reparte
+    la cabeza entre dos pedazos, o la hoja queda clavada en ella, el zombie muere;
+  - **sigue vivo** el pedazo con la cabeza completa que conserva el torso o el segmento
+    superior de un brazo o de una pierna. Todo lo demás muere;
   - **los estados del zombie vivo** salen de sus extremidades útiles (una extremidad es
     útil si conserva sus dos segmentos): caminar (2 piernas), cojear (1), arrastrarse
     con dos brazos o con uno (0 piernas), y **retorcerse** (ninguna extremidad útil, que
     R2 deja vivo). Sin brazos útiles, no agarra. Las animaciones de cada estado las
     hacen el ADR-0015 y los tickets de contenido;
-  - **la regla vive en datos del gameplay,** no en el corte: el corte no sabe de vivos ni
+  - **la regla vive en el gameplay,** no en el corte: el corte no sabe de vivos ni
     muertos (ADR-0012).
 - **Los pedazos del suelo se cortan:** el barrido prueba también sus cápsulas, hasta los
   100 pedazos del ADR-0020. Cada corte suma pedazos y, como dice la visión, los más
-  viejos desaparecen. **El mínimo de un pedazo** que el ADR-0007 dejó para fijar
-  midiendo queda atado al grosor de la hoja: un corte que dejaría una parte más delgada
-  que la hoja no se hace, y la hoja empuja ese pedazo.
+  viejos desaparecen. **Dos reglas conviven para los pedazos chicos:**
+  1. **el filtro del combate,** con las cápsulas: si el tramo de la parte que se
+     separaría, medido sobre la hoja en el plano, es más delgado que el grosor de la
+     hoja, no se emite el pedido y la hoja empuja ese pedazo;
+  2. **el descarte del ADR-0007,** que sigue igual: después de cortar, el corte descarta
+     los pedazos bajo su mínimo (medido por volumen o por triángulos), como red de
+     seguridad para lo que las cápsulas no ven.
 - **Ragdoll con más de N huesos:** valor de partida, más de 4. Una pierna entera (4
   huesos) cae rígida; un torso pasa a ragdoll. Si el tope de ragdolls del ADR-0016 está
   lleno, el pedazo cae rígido. **Los personajes empujan los pedazos:** el contacto entre
   un controlador y un pedazo solo mueve al pedazo, y el controlador no se frena. Son
   pares de contacto nuevos para la física (hasta 50 controladores contra 100 pedazos), que
-  pasan por su fase amplia.
+  pasan por su fase amplia. Las dos cosas quedan registradas en el ADR-0016 como fe de
+  erratas.
 - **Rebote:** la caballera pierde el resto del barrido y queda aturdida un instante, y la
   energía se recupera más lento durante un rato. Los dos tiempos son configurables. La
   imagen y el sonido del rebote (chispa, metal) son la forma de leer el ángulo y el
@@ -609,13 +649,13 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
     aturdimiento del rebote, la escala de tiempo de la secuencia, el ritmo del zombie
     ensartado, el margen para soltar el tajo al ser agarrado, N de los ragdolls y el
     mínimo de zombies para la cámara del tajo;
-  - el grosor de la hoja, que fija el mínimo de un pedazo y probablemente el ancho de la
-    cuña del ADR-0007;
+  - el grosor de la hoja, que fija el filtro de los pedazos chicos y probablemente el
+    ancho de la cuña del ADR-0007;
+  - la curva de la duración del barrido según la carga, y la duración del tajo rápido;
   - el diseño exacto de la secuencia de *quick time* (qué teclas, cuántos eventos), con
     playtest;
   - si los ataques de los zombies con espada cortan a otros zombies con el mismo sistema
-    del tajo: quedan fuera del corte vertical (visión);
-  - cómo el rig marca los huesos de la cabeza (el ticket del cocinador, ADR-0017).
+    del tajo: quedan fuera del corte vertical (visión).
 
 ## Cómo lo defiendo
 
@@ -623,6 +663,10 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
 simple?**
 Para que pueda pasar que la espada quede clavada. Con un umbral, el tajo atraviesa todo o
 rebota, y la hoja nunca se detiene a mitad del cuerpo.
+
+**¿La velocidad del tajo cuenta para cortar?**
+La fuerza sale solo de la carga. Pero un tajo con más fuerza va más rápido que uno menos
+fuerte: la velocidad es una consecuencia de la carga, no una fuente de fuerza aparte.
 
 **¿Por qué la carne no tiene umbral de entrada y el metal sí?**
 Porque sería raro que la hoja rebotara en la carne. En el metal, en cambio, se espera

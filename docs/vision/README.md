@@ -199,8 +199,9 @@ alternativas y fija las reglas exactas.
 
 - **Todo se resuelve con cortes.** No hay vida acumulable: varios tajos que solo empujan
   no matan a nadie.
-- **Umbral de corte:** cada zombie tiene un umbral de fuerza para partirlo. Bajo ese
-  umbral, el tajo no entra: lo empuja o rebota.
+- **La fuerza se gasta al cruzar el cuerpo:** cuanto más hay en el camino de la hoja,
+  más fuerza hace falta. La carne no frena la entrada y la armadura sí: bajo su umbral,
+  el tajo rebota.
 - **Cualquier corte en la cabeza lo mata.** Como los zombies se mueven, acertarle a la
   cabeza es difícil.
 - **Regla general para el resto:** mientras conserve **la cabeza completa, y siga unida

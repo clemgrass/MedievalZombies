@@ -163,6 +163,32 @@ baja menos, porque el resto de las partes que cruza el plano siguen blindadas. *
 la junta valga, el tajo tiene que cruzar pocas partes:** el cuello sin los hombros, el
 codo sin el torso.
 
+### El ángulo
+
+Medido después de que el autor eligiera combinar el ángulo con las juntas por eje. **El
+ángulo** es el que forma el plano del tajo con el hueso: su seno es
+`|dirección del hueso · normal del plano|`. Vale 1 si el tajo cruza el hueso de forma
+perpendicular (un brazo cortado de lado a lado), y 0 si el plano corre a lo largo del
+hueso. **La regla:** el umbral de entrada del metal se divide por ese seno, con un piso
+que limita cuánto puede crecer.
+
+Con la puntería al azar del prototipo, el seno del primer contacto con la armadura tiene
+mediana 0,53 (p10 0,13, p90 0,92): **el 47 % de los primeros contactos forman menos de
+30° con el hueso.** Muchos son los brazos, que el zombie lleva adelante. Armadura
+completa, modelo D, juntas por eje, en % de 2000 tajos:
+
+| Piso del seno | Carga 0,25: rebota | Carga 0,5: rebota | Carga 0,75: rebota | Carga 1,0: rebota | Carga 1,0: atraviesa |
+|---|---|---|---|---|---|
+| Sin ángulo | 93,5 | 0 | 0 | 0 | 25,2 |
+| 0,5 (umbral hasta 2×) | 93,5 | 59,4 | 0 | 0 | 20,4 |
+| 0,3 (umbral hasta 3,3×) | 93,5 | 59,4 | 41,7 | 27,3 | 14,2 |
+
+**Con un piso de 0,5, la carga máxima nunca rebota,** pero media carga rebota en más de la
+mitad de los tajos mal orientados. Con un piso de 0,3, hasta la carga máxima rebota en uno
+de cada cuatro. En la carne, el ángulo no necesita una regla propia: un corte oblicuo
+cruza una sección más larga (una elipse en vez de un círculo), y el modelo por área ya lo
+cobra.
+
 ### Costo del cálculo
 
 Todo el barrido (220°) contra un zombie, modelo D, en la máquina de referencia del

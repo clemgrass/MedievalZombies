@@ -21,6 +21,7 @@ docs/
 ├── slicing/         corte de mallas: README, adr/, research/
 ├── animation/       animación: README, adr/, research/
 ├── physics/         física: README, adr/, research/
+├── gameplay/        reglas del juego (combate, desmembramiento): README, adr/, research/
 └── performance/     rendimiento: README y presupuestos por sistema (documento vivo)
 ```
 

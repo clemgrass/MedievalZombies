@@ -3,9 +3,9 @@
 Material de investigación del ADR-0030: **un solo diagrama, el del corte de una malla**,
 dibujado en cuatro formatos para compararlos en GitHub.
 
-> **Diagrama teórico.** Todavía no existe código: los nombres de funciones y datos son
-> ilustrativos (salen del ADR-0007) y no son una API decidida. Cuando exista el código
-> del corte, este diagrama se reemplaza por uno fiel a ese código.
+> **Diagrama teórico, guardado como historial.** Cuando se hizo no existía código: los
+> nombres de funciones y datos son ilustrativos (salen del ADR-0007) y no son una API
+> decidida. El diagrama real del corte nace con su código, en `docs/slicing/diagramas/`.
 
 ## El ejemplo que recorre el diagrama
 

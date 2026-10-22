@@ -19,9 +19,9 @@ seguir siendo verdad cuando el código cambia.
 
 Este ADR decide **el sistema que produce y mantiene los diagramas técnicos**, no los
 diagramas en sí. Todavía no existe código: el primer diagrama fiel llega con el
-esqueleto andante (ADR-0014). Mientras tanto hay un piloto teórico, el del corte de una
-malla ([`diagramas-piloto/`](../research/diagramas-piloto/README.md)), que se reemplaza
-cuando exista ese código.
+esqueleto andante (ADR-0014). La investigación usó un piloto teórico, el del corte de una
+malla ([`diagramas-piloto/`](../research/diagramas-piloto/README.md)). Queda en
+`research/` como historial, y el diagrama real del corte nace con su código.
 
 ### Qué hay que decidir
 
@@ -238,15 +238,73 @@ de una sola dirección y con etiquetas específicas, y colores consistentes que 
 
 ## Decisión
 
-<!-- Lo escribe el autor: qué se elige y por qué, con sus palabras. -->
+Elijo D2 porque calza con todos los tipos de tests y verificaciones que queremos hacer,
+y además me gusta cómo se ve.
+
+| # | Dimensión | Elección |
+|---|---|---|
+| 1 | Formato | **D2, como único formato**, con la versión fijada y el layout ELK |
+| 2 | Dónde se ven | **SVG generado y commiteado** junto a su `.d2`, con el mismo nombre, con los temas claro y oscuro dentro (`--dark-theme`). Un chequeo regenera cada SVG y falla si no coincide con el commiteado |
+| 3 | Tipos de diagrama | **Flujo de datos y secuencia** como base. **Estado y layout de memoria** solo cuando un sistema los pida. La **estructura de módulos se genera** desde el build (`cmake --graphviz`), convertida a D2 con la misma leyenda |
+| 4 | Leyenda | **La leyenda propia del piloto**, más las reglas de notación del C4: cada diagrama con título; cada elemento con su tipo; líneas de una sola dirección, con etiquetas específicas; el color repite lo que dice la forma, y todo elemento lleva su propio relleno. Vive en un solo archivo, `docs/diagramas/leyenda.d2`, que todos los diagramas importan |
+| 5 | Niveles y ubicación | **Frame, sistema y proceso.** El nivel de función, solo donde el código no alcance para entenderla. Los diagramas transversales (el frame) van en `docs/diagramas/`; los de cada área, en `docs/<área>/diagramas/`. Cada carpeta tiene un `README.md` que muestra sus SVG y enlaza al nivel de arriba y a los de abajo |
+| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029): (a) cada `nombre()` de un diagrama está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test |
+| 7 | Ejemplos | **En los diagramas de proceso, calculados por un test** (ADR-0011). El test escribe un fragmento `<diagrama>.ejemplo.d2`, y el diagrama lo importa. En los demás niveles, el ejemplo se escribe a mano |
+| 8 | Cuándo y quién | **Un sistema nace con su diagrama en el primer PR que le da comportamiento** (un sistema vacío no lleva diagrama). Desde ahí, todo PR que cambia un flujo dibujado actualiza su diagrama. El diagrama al día entra en la **definición de Hecho**, y **"Qué debo poder explicar" se responde recorriendo el diagrama**. Claude dibuja y actualiza; el autor revisa y pide cambios (ADR-0014) |
 
 ## Consecuencias
 
-<!-- Claude y autor: qué se gana, qué se sacrifica y qué queda abierto. -->
+### Lo que se gana
+
+- **Cada proceso se puede explicar con un dibujo que es verdad:** nombra funciones
+  reales, sigue el orden real y muestra valores calculados por el código.
+- **Un diagrama desactualizado rompe el chequeo**, en vez de engañar en silencio. Los
+  verificadores cubren nombres, SVG, leyenda, links y ejemplos.
+- **La misma leyenda en todos los diagramas**, porque la importan desde un solo archivo.
+
+### Lo que se sacrifica
+
+- **GitHub no dibuja D2 desde el texto:** cada cambio necesita regenerar el SVG. Si se
+  olvida, el chequeo (b) lo detecta.
+- **El diff del SVG no se puede revisar:** un cambio de una línea reescribe el SVG
+  entero. La revisión se hace sobre el `.d2`.
+- **Una herramienta más:** D2 (licencia MPL-2.0) se suma al toolchain de la
+  documentación. El engine no la enlaza, y los SVG que genera son documentación bajo
+  CC BY 4.0 (ADR-0019).
+- **Ningún verificador detecta un orden equivocado o una flecha que falta.** Eso queda
+  para la revisión del autor y la auditoría.
+
+### Cambios en el repo
+
+<!-- Se completa al aceptar el ADR. -->
+
+### Lo que queda abierto
+
+- **Cómo se instala D2** en la máquina del autor y en la CI, y cómo se fija su versión
+  (ADR-0006, ADR-0029).
+- **El índice de símbolos del verificador (a):** clangd o universal-ctags. Se decide
+  cuando exista el código.
+- **Cómo escribe un test su fragmento de ejemplo:** se diseña con el primer diagrama de
+  proceso, dentro de la estrategia de testing (ADR-0011).
+- **Un sitio de documentación** (por ejemplo, GitHub Pages) puede llegar más adelante,
+  sin cambiar el formato.
 
 ## Cómo lo defiendo
 
-<!-- Lo escribe el autor: preguntas que haría un evaluador, respondidas con sus palabras. -->
+**¿Por qué D2 y no Mermaid, si GitHub dibuja Mermaid sin hacer nada?**
+Por su mejor estética visual.
+
+**¿Cómo sabes que un diagrama no está desactualizado?**
+Lo revisamos con diferentes tests, usando técnicas de *docs as code*.
+
+**¿Por qué tus niveles son frame, sistema y proceso, y no los del modelo C4?**
+Son más flexibles para lo que estamos haciendo. El C4 lo uso solo como inspiración.
+
+**¿Qué ganas con que el ejemplo del diagrama lo calcule un test?**
+Me aseguro de que el ejemplo es algo que ocurre realmente en un test.
+
+**¿Qué errores de un diagrama no detectan tus verificadores, y cómo los cubres?**
+<!-- Pendiente: respuesta del autor. -->
 
 ## Referencias
 

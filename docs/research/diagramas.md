@@ -6,8 +6,8 @@ se midió con el piloto, para poder repetirlo.
 Fecha: 2026-10-21. El piloto es **un solo diagrama teórico, el del corte de una malla**
 (nivel de proceso, con el triángulo de ejemplo recorriéndolo), dibujado en cuatro
 formatos: [`diagramas-piloto/`](diagramas-piloto/README.md). Todavía no existe código,
-así que los nombres de funciones son ilustrativos. Cuando exista el código del corte,
-ese diagrama se reemplaza por uno fiel a él.
+así que los nombres de funciones son ilustrativos. El piloto queda aquí como historial:
+el diagrama real del corte nace con su código, en `docs/slicing/diagramas/`.
 
 Herramientas usadas, todas instaladas fuera del sistema (en una carpeta temporal):
 

@@ -87,8 +87,8 @@ Cada tipo responde una pregunta distinta:
 
 | Tipo | Pregunta que responde | Ejemplo en este engine |
 |---|---|---|
-| **Flujo de datos** | ¿Qué dato crea cada paso y quién lo consume? | El corte: distancias → puntos de corte → triángulos → contornos → tapa → pedazos |
-| **Secuencia** | ¿Quién llama a quién, y en qué orden? | Un paso de simulación: combate → cola `slice_request` → sistema de corte → render |
+| **Flujo de datos** | ¿Qué dato crea cada paso y quién lo consume? | El corte (ADR-0007): pose → distancias → contornos → triángulos partidos → tapas → pedazos |
+| **Secuencia** | ¿Quién llama a quién, y en qué orden? | Un frame: combate → cola `slice_request` → sistema de corte, dentro del paso; después de los pasos, el render |
 | **Estado** | ¿En qué estados puede estar algo y qué lo hace cambiar? | La hoja que se atasca y se saca con energía (ADR-0007) |
 | **Layout de memoria** | ¿Cómo están los bytes? | Un vértice de 4 pesos `unorm8` (ADR-0007), las arenas del paso (ADR-0010) |
 | **Estructura** | ¿Qué módulo depende de cuál? | Las capas `platform → core → gpu → sistemas → game` (ADR-0012) |
@@ -153,7 +153,7 @@ probaron, y Mermaid los desactiva por seguridad.
 | **+ verificador de nombres** | Un chequeo de CI: cada `nombre()` de un diagrama tiene que estar definido en el código. Prototipo en la investigación: 50 líneas, 0,17 s | Funciones renombradas o borradas | Un script; usar un índice de símbolos real (clangd o universal-ctags) |
 | **+ partes generadas** | Lo que el código o el build ya saben se genera: las dependencias entre módulos (`cmake --graphviz`), el orden de los sistemas del paso | Todo lo generado, por construcción | Un generador por tipo de dato; solo sirve para lo estructural |
 | **+ SVG verificado** | Si hay SVG commiteado, la CI lo regenera y falla si no coincide | Texto cambiado sin regenerar | Solo aplica a formatos con SVG |
-| **+ forma del flujo** | Se observa quién llama a quién: el **orden estático** (las llamadas en el AST de Clang), los **tipos** (cada dato del diagrama tiene el nombre de su tipo, y se comparan con las firmas) y el **orden dinámico** (una traza de la ejecución del test). Prototipo en la investigación, sección 7 | Pasos invertidos, una flecha de datos equivocada y, con la misma lista de llamadas, un paso nuevo que no se dibujó | Una convención (un tipo por dato) y una macro de traza en las funciones dibujadas, activa solo en el build de tests |
+| **+ forma del flujo** | Se observa quién llama a quién: el **orden estático** (las llamadas en el AST de Clang), los **tipos** (cada dato del diagrama tiene el nombre de su tipo, y se comparan con las firmas) y el **orden dinámico** (una traza de la ejecución del test). Prototipo en la investigación, sección 7 | Pasos invertidos, una flecha de datos equivocada y, con la misma lista de llamadas, un paso nuevo que no se dibujó | Una convención (un tipo por dato) y una macro de traza en las funciones dibujadas, activa solo donde corren los tests |
 
 Las capas se suman. Ninguna ve lo que pasa dentro de una función, una rama que el test
 no recorre ni si una etiqueta describe bien su dato: eso siempre queda para la revisión.
@@ -250,9 +250,9 @@ y además me gusta cómo se ve.
 | 1 | Formato | **D2, como único formato**, con la versión fijada y el layout ELK |
 | 2 | Dónde se ven | **SVG generado y commiteado** junto a su `.d2`, con el mismo nombre, con los temas claro y oscuro dentro (`--dark-theme`). Un chequeo regenera cada SVG y falla si no coincide con el commiteado |
 | 3 | Tipos de diagrama | **Flujo de datos y secuencia** como base. **Estado y layout de memoria** solo cuando un sistema los pida. La **estructura de módulos se genera** desde el build (`cmake --graphviz`), convertida a D2 con la misma leyenda |
-| 4 | Leyenda | **La leyenda propia del piloto**, más las reglas de notación del C4: cada diagrama con título; cada elemento con su tipo; líneas de una sola dirección, con etiquetas específicas; el color repite lo que dice la forma, y todo elemento lleva su propio relleno. Vive en un solo archivo, `docs/diagramas/leyenda.d2`, que todos los diagramas importan. **El id de cada dato es el nombre de su tipo** en `snake_case` (`signed_distances` para `SignedDistances`), y su etiqueta lo describe en español: un tipo por dato |
+| 4 | Leyenda | **La leyenda propia del piloto, más dos clases:** el **sistema del ECS** (un contenedor que agrupa sus funciones) y el **módulo**, el target de CMake (un rectángulo con doble borde). Se suman las reglas de notación del C4: cada diagrama con título; cada elemento con su tipo; líneas de una sola dirección, con etiquetas específicas cuando la flecha no se explica sola (en un flujo función → dato → función, la explica el dato); el color repite lo que dice la forma, y todo elemento lleva su propio relleno. Vive en un solo archivo, `docs/diagramas/leyenda.d2`, que todos los diagramas importan. **El id de cada dato es el nombre de su tipo** (`signed_distances`, en `snake_case` como todo tipo, ADR-0013), y su etiqueta lo describe en español: un tipo por dato |
 | 5 | Niveles y ubicación | **Frame, sistema y proceso.** El nivel de función, solo donde el código no alcance para entenderla. Los diagramas transversales (el frame) van en `docs/diagramas/`; los de cada área, en `docs/<área>/diagramas/`. Cada carpeta tiene un `README.md` que muestra sus SVG y enlaza al nivel de arriba y a los de abajo |
-| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029). Sobre el diagrama: (a) cada `nombre()` está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test. Sobre la **forma del flujo**: (f) **orden estático**, las llamadas dentro de la función del proceso, leídas del AST de Clang, siguen el orden numerado; (g) **tipos**, cada flecha función → dato es el tipo que devuelve la función, y cada flecha dato → función, uno de sus parámetros; (h) **orden dinámico**, la traza del test del ejemplo sigue el mismo orden, con una macro que anota cada función dibujada y que solo existe en el build de tests; (i) **paso nuevo**, la función del proceso no llama a ninguna función del proyecto que el diagrama no tenga |
+| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029). Sobre el diagrama: (a) cada `nombre()` está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test. Sobre la **forma del flujo**: (f) **orden estático**, las llamadas dentro de la función del proceso, leídas del AST de Clang, siguen el orden numerado; (g) **tipos**, cada flecha función → dato es el tipo que devuelve la función, y cada flecha dato → función, uno de sus parámetros; (h) **orden dinámico**, la traza del test del ejemplo sigue el mismo orden, con una macro que anota cada función dibujada, activa solo donde corren los tests y nunca en RelWithDebInfo ni en Release; (i) **paso nuevo**, la función del proceso no llama a ninguna función del proyecto que el diagrama no tenga |
 | 7 | Ejemplos | **En los diagramas de proceso, calculados por un test** (ADR-0011). El test escribe un fragmento `<diagrama>.ejemplo.d2`, y el diagrama lo importa. En los demás niveles, el ejemplo se escribe a mano |
 | 8 | Cuándo y quién | **Un sistema nace con su diagrama en el primer PR que le da comportamiento** (un sistema vacío no lleva diagrama). Desde ahí, todo PR que cambia un flujo dibujado actualiza su diagrama. El diagrama al día entra en la **definición de Hecho**, y **"Qué debo poder explicar" se responde recorriendo el diagrama**. Claude dibuja y actualiza; el autor revisa y pide cambios (ADR-0014) |
 
@@ -278,8 +278,8 @@ y además me gusta cómo se ve.
   documentación. El engine no la enlaza, y los SVG que genera son documentación bajo
   CC BY 4.0 (ADR-0019).
 - **Una convención y una macro más en el código:** cada dato dibujado necesita su propio
-  tipo, y cada función dibujada lleva la macro de traza (vacía fuera del build de
-  tests).
+  tipo, y cada función dibujada lleva la macro de traza (vacía en RelWithDebInfo y en
+  Release, así que no altera las mediciones de rendimiento del ADR-0020).
 - **Lo que ningún verificador ve:** lo que pasa dentro de una función, si una etiqueta
   describe bien su dato, una rama que el test no recorre y qué instancia de un dato
   viaja. Eso queda para la revisión del autor y la auditoría.
@@ -293,7 +293,8 @@ y además me gusta cómo se ve.
 - **`.github/pull_request_template.md`:** la lista de revisión pregunta por los
   diagramas.
 - **`docs/process/tickets.md`:** la definición de Hecho incluye el diagrama al día, y
-  "Qué debo poder explicar" se responde recorriéndolo.
+  "Qué debo poder explicar" se responde recorriéndolo. Los formularios de feature y de
+  tarea lo dicen en ese campo.
 - **`CLAUDE.md`:** `docs/` incluye los diagramas.
 - **Auditoría:** tema nuevo `diagramas` en `.claude/skills/auditoria-adr/references/temas.md`.
 - **El piloto** queda en `docs/research/diagramas-piloto/` como historial, en sus cuatro
@@ -307,9 +308,14 @@ y además me gusta cómo se ve.
   (ADR-0006, ADR-0029).
 - **El índice de símbolos del verificador (a):** clangd o universal-ctags. Se decide
   cuando exista el código.
-- **La macro de traza del verificador (h):** su nombre, dónde vive y cómo se activa en
-  el build de tests (ADR-0006, ADR-0011). Las herramientas de profiling (ADR-0021)
-  podrían compartirla, pero eso lo decide su ADR.
+- **La macro de traza del verificador (h):** su nombre (en mayúsculas, ADR-0013), dónde
+  vive y cómo se activa donde corren los tests. Eso todavía no es una configuración: hay
+  tres presets (ADR-0006), y los tests corren en Debug (ADR-0011). Hay tres salidas:
+  una definición del preset Debug, que también la activa en el juego en Debug; una
+  definición solo en los targets de test, que obliga a compilar el engine dos veces; o
+  un preset nuevo, que cambia el ADR-0006 y, si ya existe código, necesita su propio
+  ADR. Las herramientas de profiling (ADR-0021) podrían compartir la macro, pero eso lo
+  decide su ADR.
 - **Cómo escribe un test su fragmento de ejemplo:** se diseña con el primer diagrama de
   proceso, dentro de la estrategia de testing (ADR-0011).
 - **Un sitio de documentación** (por ejemplo, GitHub Pages) puede llegar más adelante,

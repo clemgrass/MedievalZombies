@@ -31,6 +31,8 @@ Vive en [`leyenda.d2`](leyenda.d2), y todos los diagramas la importan.
 | Dato en la CPU | paralelogramo | `data` | gris |
 | Cola de eventos | cola (cilindro horizontal) | `queue` | naranjo |
 | Recurso de la GPU | cilindro | `gpu` | verde |
+| Sistema del ECS | contenedor que agrupa sus funciones | `system` | violeta |
+| Módulo (target de CMake) | rectángulo con doble borde | `module` | turquesa |
 | Ejemplo concreto | página | `example` | amarillo |
 | Dato que entra o sale de una función | flecha punteada | `flow` | — |
 | Ejemplo de un dato | línea sin flecha | `note` | — |
@@ -40,10 +42,10 @@ Vive en [`leyenda.d2`](leyenda.d2), y todos los diagramas la importan.
 - **Título** con el tipo y el alcance (por ejemplo, "Corte de una malla, nivel de
   proceso").
 - **Líneas de una sola dirección**, con etiquetas específicas cuando la flecha no se
-  explica sola.
+  explica sola. En un flujo función → dato → función, la flecha la explica el dato.
 - **Todo elemento lleva su propio relleno**, para que se lea en tema claro y oscuro.
-- **El id de cada dato es el nombre de su tipo** en `snake_case` (`signed_distances`
-  para `SignedDistances`), y su etiqueta lo describe en español. Un tipo por dato.
+- **El id de cada dato es el nombre de su tipo** (`signed_distances`), y su etiqueta lo
+  describe en español. Un tipo por dato.
 - **Las funciones se nombran como en el código**, con `()`.
 - **El `.d2` es la fuente y el SVG, su derivado.** Se revisa el `.d2`; el SVG se
   regenera con:

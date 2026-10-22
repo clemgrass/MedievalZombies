@@ -5,7 +5,10 @@ dibujado en cuatro formatos para compararlos en GitHub.
 
 > **Diagrama teórico, guardado como historial.** Cuando se hizo no existía código: los
 > nombres de funciones y datos son ilustrativos (salen del ADR-0007) y no son una API
-> decidida. El diagrama real del corte nace con su código, en `docs/slicing/diagramas/`.
+> decidida. Además **simplifica el proceso**: omite el skinning en la CPU y la
+> des-deformación de los vértices nuevos, y parte los triángulos antes de armar los
+> contornos. El camino real es el del ADR-0007 ("El camino de un corte"). El diagrama
+> real del corte nace con su código, en `docs/slicing/diagramas/`.
 
 ## El ejemplo que recorre el diagrama
 

@@ -647,14 +647,18 @@ Qué mirar:
 - **Solo D2.** Un diagrama técnico nuevo en Mermaid, PlantUML, Graphviz o una
   herramienta visual cambia la Decisión 1. La excepción es el piloto guardado como
   historial en `docs/research/diagramas-piloto/`.
-- **Cada `.d2` tiene su SVG al lado**, con el mismo nombre, generado con
+- **Cada diagrama `.d2` tiene su SVG al lado** (la leyenda y los fragmentos
+  `.ejemplo.d2` no lo llevan, porque solo se importan), con el mismo nombre, generado con
   `--dark-theme`. Un `.d2` cambiado con su SVG sin regenerar es un hallazgo. Se revisa
   el `.d2`, no el diff del SVG.
 - **Cada diagrama importa la leyenda** de `docs/diagramas/leyenda.d2` y usa sus clases.
   Estilos sueltos que repiten o contradicen la leyenda son un hallazgo. Cada diagrama
-  tiene título, y todo elemento tiene su propio relleno.
+  tiene título, y todo elemento tiene su propio relleno. Un sistema del ECS es un
+  contenedor `system` con sus funciones dentro, y un módulo usa `module`. Una línea
+  lleva etiqueta cuando no se explica sola; en un flujo función → dato → función, la
+  explica el dato.
 - **Nombres reales:** las funciones van con `()` y el nombre del código. El id de cada
-  dato es el nombre de su tipo en `snake_case`, un tipo por dato.
+  dato es el nombre de su tipo, tal cual (`signed_distances`), un tipo por dato.
 - **Ubicación y niveles:** el frame y lo transversal en `docs/diagramas/`; los sistemas
   y procesos de un área en `docs/<área>/diagramas/`. Cada carpeta tiene un `README.md`
   que muestra sus SVG y enlaza al nivel de arriba y a los de abajo. Un link roto es un
@@ -668,7 +672,8 @@ Qué mirar:
   Faltar a esto es `importante`. Un sistema vacío no lleva diagrama.
 - **Verificadores:** cuando existan, el PR los corre y pasan: nombres, SVG, leyenda,
   links, ejemplos, orden estático, tipos, orden dinámico y paso nuevo. La macro de traza
-  solo existe en el build de tests.
+  se activa solo donde corren los tests: activa en RelWithDebInfo o en Release es un
+  hallazgo, porque altera las mediciones de rendimiento.
 - **Lo que los verificadores no ven** es justo lo que mira este tema: si el diagrama
   describe bien lo que pasa dentro de cada función, si las etiquetas describen bien sus
   datos y si las ramas que el test no recorre están dibujadas.

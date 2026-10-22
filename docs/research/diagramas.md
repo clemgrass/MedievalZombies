@@ -127,8 +127,10 @@ observar quién llama a quién y compararlo con el diagrama.
 **Qué se probó:** un script de 100 líneas en Python sobre un C++ de juguete con la forma
 del corte (`cut_mesh()` llama a las seis funciones del piloto, y cada dato tiene su
 propio tipo: `SignedDistances`, `EdgeCrossings`…). En el diagrama, **el id de cada dato
-es el nombre de su tipo** en `snake_case` (`signed_distances`), y la etiqueta sigue en
-español. Tres chequeos:
+es el nombre de su tipo** pasado a `snake_case` (`signed_distances`), y la etiqueta sigue
+en español. El C++ de juguete usó tipos en PascalCase, que el ADR-0013 no permite: con
+su convención, el tipo ya se llama `signed_distances`, y el id es el nombre tal cual,
+sin convertir nada. Tres chequeos:
 
 | Chequeo | Cómo lo observa | Qué compara |
 |---|---|---|

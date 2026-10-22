@@ -37,6 +37,6 @@ body:
     id: explicar
     attributes:
       label: Qué debo poder explicar
-      description: Preguntas que haría un evaluador sobre este trabajo. La tarea no se cierra hasta que el autor pueda responderlas.
+      description: Preguntas que haría un evaluador sobre este trabajo. La tarea no se cierra hasta que el autor pueda responderlas. Si el flujo tiene diagrama (ADR-0030), se responden recorriéndolo.
     validations:
       required: true

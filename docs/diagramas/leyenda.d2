@@ -1,0 +1,36 @@
+# Leyenda común de los diagramas técnicos (ADR-0030).
+# Cada diagrama la importa con `...@leyenda`, o con la ruta relativa desde su carpeta
+# (por ejemplo `...@../../diagramas/leyenda` desde `docs/slicing/diagramas/`).
+classes: {
+  func: {
+    style: {fill: "#dbeafe"; stroke: "#1d4ed8"; font-color: "#0b1b3a"; border-radius: 8}
+  }
+  data: {
+    shape: parallelogram
+    style: {fill: "#f1f5f9"; stroke: "#475569"; font-color: "#0f172a"}
+  }
+  queue: {
+    shape: queue
+    style: {fill: "#ffedd5"; stroke: "#c2410c"; font-color: "#431407"}
+  }
+  gpu: {
+    shape: cylinder
+    style: {fill: "#dcfce7"; stroke: "#15803d"; font-color: "#052e16"}
+  }
+  system: {
+    style: {fill: "#ede9fe"; stroke: "#6d28d9"; font-color: "#2e1065"}
+  }
+  module: {
+    style: {fill: "#ccfbf1"; stroke: "#0f766e"; font-color: "#042f2e"; double-border: true}
+  }
+  example: {
+    shape: page
+    style: {fill: "#fef9c3"; stroke: "#a16207"; font-color: "#422006"}
+  }
+  flow: {
+    style: {stroke-dash: 4}
+  }
+  note: {
+    style: {stroke-dash: 0}
+  }
+}

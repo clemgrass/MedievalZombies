@@ -1,0 +1,42 @@
+@startuml corte-plantuml
+' Corte de una malla, nivel de proceso. Diagrama teórico: no existe código todavía.
+!pragma layout smetana
+!include leyenda.iuml
+top to bottom direction
+
+queue "slice_request\nplano + pose" as req <<queue>>
+card "malla\nvértices + índice soldado" as mesh <<data>>
+rectangle "1. classify_vertices()" as f1 <<func>>
+card "distancia con signo\npor vértice soldado" as d1 <<data>>
+rectangle "2. split_edges()" as f2 <<func>>
+card "puntos de corte\nuno por arista soldada" as d2 <<data>>
+rectangle "3. split_triangles()" as f3 <<func>>
+card "triángulos de cada lado\n+ segmentos de contorno" as d3 <<data>>
+rectangle "4. build_contours()" as f4 <<func>>
+card "contornos cerrados" as d4 <<data>>
+rectangle "5. triangulate_cap()" as f5 <<func>>
+card "triángulos de la tapa" as d5 <<data>>
+rectangle "6. build_pieces()" as f6 <<func>>
+card "pedazos" as d6 <<data>>
+database "índices por pedazo\n+ vértices nuevos" as gpu <<gpu>>
+
+req ..> f1
+mesh ..> f1
+f1 ..> d1
+d1 ..> f2
+f2 ..> d2
+d2 ..> f3
+f3 ..> d3
+d3 ..> f4
+f4 ..> d4
+d4 ..> f5
+f5 ..> d5
+d3 ..> f6
+d5 ..> f6
+f6 ..> d6
+d6 ..> gpu
+
+note right of d1 : d = (−1, +1, +1)
+note right of d2 : p01 = (1, 1, 0), p02 = (0, 1, 0)\nt = 0,5
+note right of d3 : debajo: 1 triángulo\nencima: 2\ncontorno: p01–p02
+@enduml

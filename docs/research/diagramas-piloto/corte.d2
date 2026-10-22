@@ -1,0 +1,44 @@
+# Corte de una malla, nivel de proceso. Diagrama teórico: no existe código todavía.
+...@leyenda
+
+direction: down
+
+req: "slice_request\nplano + pose" {class: queue}
+mesh: "malla\nvértices + índice soldado" {class: data}
+f1: "1. classify_vertices()" {class: func}
+d1: "distancia con signo\npor vértice soldado" {class: data}
+f2: "2. split_edges()" {class: func}
+d2: "puntos de corte\nuno por arista soldada" {class: data}
+f3: "3. split_triangles()" {class: func}
+d3: "triángulos de cada lado\n+ segmentos de contorno" {class: data}
+f4: "4. build_contours()" {class: func}
+d4: "contornos cerrados" {class: data}
+f5: "5. triangulate_cap()" {class: func}
+d5: "triángulos de la tapa" {class: data}
+f6: "6. build_pieces()" {class: func}
+d6: "pedazos" {class: data}
+gpu: "índices por pedazo\n+ vértices nuevos" {class: gpu}
+
+e1: "d = (−1, +1, +1)" {class: example}
+e2: "p01 = (1, 1, 0), p02 = (0, 1, 0)\nt = 0,5" {class: example}
+e3: "debajo: 1 triángulo\nencima: 2\ncontorno: p01–p02" {class: example}
+
+req -> f1: {class: flow}
+mesh -> f1: {class: flow}
+f1 -> d1: {class: flow}
+d1 -> f2: {class: flow}
+f2 -> d2: {class: flow}
+d2 -> f3: {class: flow}
+f3 -> d3: {class: flow}
+d3 -> f4: {class: flow}
+f4 -> d4: {class: flow}
+d4 -> f5: {class: flow}
+f5 -> d5: {class: flow}
+d3 -> f6: {class: flow}
+d5 -> f6: {class: flow}
+f6 -> d6: {class: flow}
+d6 -> gpu: {class: flow}
+
+d1 -- e1: {class: note}
+d2 -- e2: {class: note}
+d3 -- e3: {class: note}

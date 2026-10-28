@@ -35,7 +35,7 @@ jobs:
     if: needs.cambios.outputs.codigo == 'true'
     runs-on: ubuntu-24.04
     steps:
-      - run: echo "acá iría el build"
+      - run: echo "build que falla a propósito" && exit 1
 
   ci-ok:
     needs: [cambios, build]

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Lo mismo que corre la CI, en un solo comando. Uso: ./ci.sh <job>
+# Cada job deja su duración al final, para comparar entornos.
 set -euo pipefail
 cd "$(dirname "$0")"
 job="${1:?job: format | tidy | debug-clang | debug-gcc | coverage | reuse}"

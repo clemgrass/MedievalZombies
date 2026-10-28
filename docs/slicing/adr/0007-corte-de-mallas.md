@@ -4,6 +4,9 @@
 - **Fecha:** 2026-10-20
 - **Ticket:** #11
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide cómo se ajusta sin recompilar
+  el ancho máximo de la cuña: es una CVar, constante en Release. Su valor sigue
+  abierto. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -657,8 +660,8 @@ va a ser gruesa, como la Matadragones de *Berserk*, así que la herida se va a n
   - los modelos de terceros con defectos, que hay que arreglar antes de usarlos;
   - el interior volumétrico: la tapa es una superficie, no un volumen de tetraedros.
 - **Abierto:**
-  - el ancho máximo de la cuña, probablemente atado al grosor de la hoja (ADR-0021 para
-    ajustarlo);
+  - el ancho máximo de la cuña, probablemente atado al grosor de la hoja (decidido en el
+    ADR-0021 cómo se ajusta: es una CVar; su valor sigue abierto);
   - la mecánica de la espada clavada: cuánta energía cuesta sacarla, qué hace el zombie
     mientras tanto y si se puede soltar la espada (ADR-0018). Su animación (ADR-0015 y
     ADR-0018);

@@ -23,6 +23,12 @@
   la velocidad salen de las dos poses que el pedazo heredó del zombie en el paso del
   corte. Se corrige en las Decisiones 5 y 6, en "Lo que se sacrifica" y en el traspaso
   desde la animación.
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide el punto abierto del hash entre
+  máquinas. Por ahora, el hash del estado se compara solo en la misma máquina: en la CI,
+  un test de *replay* compara dos ejecuciones en el mismo proceso. Con las banderas del
+  ADR-0008, Clang y GCC dan los mismos bits; lo que cambia entre máquinas es la libm.
+  Las dos salidas para comparar contra un hash guardado (funciones trascendentales
+  propias o una CI con la misma glibc) quedan para el ADR-0029. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -414,7 +420,7 @@ contra el escenario y el golpe de la espada.
   - qué pasa entre los controladores y los pedazos del suelo: si los empujan, los
     ignoran o los frenan (decidido en el ADR-0018);
   - si un test de *replay* necesita un hash estable entre máquinas, para compararlo en
-    la CI (ADR-0021 y ADR-0029);
+    la CI (decidido en el ADR-0021: por ahora no; lo retoma el ADR-0029);
   - cómo se separan los zombies de la horda entre sí (ADR-0023);
   - qué decide que un zombie muera entero (ragdoll) o en pedazos (decidido en el
     ADR-0018);

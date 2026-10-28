@@ -4,6 +4,14 @@
 - **Fecha:** 2026-10-21
 - **Ticket:** #60
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide cómo se activa la macro de
+  traza del verificador (h). Es la misma macro de zona del profiling, definida en el
+  preset Debug (la primera de las tres salidas). En RelWithDebInfo alimenta a Tracy, y
+  la traza no está. La macro tiene dos variantes: una de zona y traza para las funciones
+  normales, y otra solo de traza para las que corren por elemento (por vértice, por
+  triángulo), vacía en RelWithDebInfo. Las dos anotan la función para el verificador.
+  Se corrige en la Decisión 6 (h), en Consecuencias ("Una convención y una macro más en
+  el código") y en "Lo que queda abierto".
 
 ## Contexto y problema
 
@@ -252,7 +260,7 @@ y además me gusta cómo se ve.
 | 3 | Tipos de diagrama | **Flujo de datos y secuencia** como base. **Estado y layout de memoria** solo cuando un sistema los pida. La **estructura de módulos se genera** desde el build (`cmake --graphviz`), convertida a D2 con la misma leyenda |
 | 4 | Leyenda | **La leyenda propia del piloto, más dos clases:** el **sistema del ECS** (un contenedor que agrupa sus funciones) y el **módulo**, el target de CMake (un rectángulo con doble borde). Se suman las reglas de notación del C4: cada diagrama con título; cada elemento con su tipo; líneas de una sola dirección, con etiquetas específicas cuando la flecha no se explica sola (en un flujo función → dato → función, la explica el dato); el color repite lo que dice la forma, y todo elemento lleva su propio relleno. Vive en un solo archivo, `docs/diagramas/leyenda.d2`, que todos los diagramas importan. **El id de cada dato es el nombre de su tipo** (`signed_distances`, en `snake_case` como todo tipo, ADR-0013), y su etiqueta lo describe en español: un tipo por dato |
 | 5 | Niveles y ubicación | **Frame, sistema y proceso.** El nivel de función, solo donde el código no alcance para entenderla. Los diagramas transversales (el frame) van en `docs/diagramas/`; los de cada área, en `docs/<área>/diagramas/`. Cada carpeta tiene un `README.md` que muestra sus SVG y enlaza al nivel de arriba y a los de abajo |
-| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029). Sobre el diagrama: (a) cada `nombre()` está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test. Sobre la **forma del flujo**: (f) **orden estático**, las llamadas dentro de la función del proceso, leídas del AST de Clang, siguen el orden numerado; (g) **tipos**, cada flecha función → dato es el tipo que devuelve la función, y cada flecha dato → función, uno de sus parámetros; (h) **orden dinámico**, la traza del test del ejemplo sigue el mismo orden, con una macro que anota cada función dibujada, activa solo donde corren los tests y nunca en RelWithDebInfo ni en Release; (i) **paso nuevo**, la función del proceso no llama a ninguna función del proyecto que el diagrama no tenga |
+| 6 | Fidelidad | **El diagrama se actualiza en el mismo PR que cambia el código**, la plantilla de PR lo pregunta y la auditoría lo revisa. Además, **verificadores automáticos**, que corren con un solo comando y en la CI (ADR-0029). Sobre el diagrama: (a) cada `nombre()` está definido en el código, según un índice de símbolos; (b) cada SVG coincide con su `.d2` regenerado; (c) cada diagrama importa la leyenda; (d) los links entre niveles llevan a un archivo que existe; (e) cada fragmento de ejemplo coincide con el que escribe su test. Sobre la **forma del flujo**: (f) **orden estático**, las llamadas dentro de la función del proceso, leídas del AST de Clang, siguen el orden numerado; (g) **tipos**, cada flecha función → dato es el tipo que devuelve la función, y cada flecha dato → función, uno de sus parámetros; (h) **orden dinámico**, la traza del test del ejemplo sigue el mismo orden, con una macro que anota cada función dibujada; la traza se activa solo donde corren los tests y nunca en RelWithDebInfo ni en Release (en RelWithDebInfo, la misma macro es una zona de Tracy, salvo su variante para las funciones que corren por elemento, que queda vacía, ADR-0021); (i) **paso nuevo**, la función del proceso no llama a ninguna función del proyecto que el diagrama no tenga |
 | 7 | Ejemplos | **En los diagramas de proceso, calculados por un test** (ADR-0011). El test escribe un fragmento `<diagrama>.ejemplo.d2`, y el diagrama lo importa. En los demás niveles, el ejemplo se escribe a mano |
 | 8 | Cuándo y quién | **Un sistema nace con su diagrama en el primer PR que le da comportamiento** (un sistema vacío no lleva diagrama). Desde ahí, todo PR que cambia un flujo dibujado actualiza su diagrama. El diagrama al día entra en la **definición de Hecho**, y **"Qué debo poder explicar" se responde recorriendo el diagrama**. Claude dibuja y actualiza; el autor revisa y pide cambios (ADR-0014) |
 
@@ -278,8 +286,11 @@ y además me gusta cómo se ve.
   documentación. El engine no la enlaza, y los SVG que genera son documentación bajo
   CC BY 4.0 (ADR-0019).
 - **Una convención y una macro más en el código:** cada dato dibujado necesita su propio
-  tipo, y cada función dibujada lleva la macro de traza (vacía en RelWithDebInfo y en
-  Release, así que no altera las mediciones de rendimiento del ADR-0020).
+  tipo, y cada función dibujada lleva la macro de traza. Está vacía en Release. En
+  RelWithDebInfo es una zona de Tracy y la traza no está (ADR-0021), así que no altera
+  las mediciones de rendimiento del ADR-0020 más allá del costo medido de una zona. Las
+  funciones que corren por elemento (por vértice, por triángulo) usan la variante solo de
+  traza, vacía también en RelWithDebInfo.
 - **Lo que ningún verificador ve:** lo que pasa dentro de una función, si una etiqueta
   describe bien su dato, una rama que el test no recorre y qué instancia de un dato
   viaja. Eso queda para la revisión del autor y la auditoría.
@@ -314,8 +325,9 @@ y además me gusta cómo se ve.
   una definición del preset Debug, que también la activa en el juego en Debug; una
   definición solo en los targets de test, que obliga a compilar el engine dos veces; o
   un preset nuevo, que cambia el ADR-0006 y, si ya existe código, necesita su propio
-  ADR. Las herramientas de profiling (ADR-0021) podrían compartir la macro, pero eso lo
-  decide su ADR.
+  ADR. **Decidido en el ADR-0021:** es la misma macro de zona del profiling, y se activa
+  con una definición del preset Debug, la primera salida. En RelWithDebInfo esa macro
+  alimenta a Tracy, no a la traza. Su nombre y dónde vive siguen abiertos.
 - **Cómo escribe un test su fragmento de ejemplo:** se diseña con el primer diagrama de
   proceso, dentro de la estrategia de testing (ADR-0011).
 - **Un sitio de documentación** (por ejemplo, GitHub Pages) puede llegar más adelante,

@@ -4,6 +4,12 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #10
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 agrega dos cosas a los presets.
+  RelWithDebInfo se compila con `-fno-omit-frame-pointer`, para que `perf` arme las pilas
+  con *frame pointers*. Y cada preset fija en `CMakePresets.json` qué herramientas de
+  depuración compila, con una macro por herramienta. Además, Dear ImGui y Tracy entran
+  con `FetchContent` y una versión fijada, solo en Debug y RelWithDebInfo. Se corrige en
+  las Decisiones 5 y 7.
 
 ## Contexto y problema
 
@@ -136,9 +142,9 @@ generado.
 | 2 | Generador | **Ninja** |
 | 3 | Compilador y linker | **Clang** como principal, **GCC** como secundario, linker **`lld`** |
 | 4 | Módulos o headers | **Headers con `#pragma once`.** Los módulos se reevalúan cuando `import std` deje de ser experimental |
-| 5 | Dependencias | **SDL3:** opción de CMake para elegir entre el paquete del sistema (por defecto) y una copia con versión fijada vía `FetchContent`. **Vulkan:** siempre del sistema (`find_package(Vulkan)`) |
+| 5 | Dependencias | **SDL3:** opción de CMake para elegir entre el paquete del sistema (por defecto) y una copia con versión fijada vía `FetchContent`. **Vulkan:** siempre del sistema (`find_package(Vulkan)`). **Dear ImGui y Tracy** (ADR-0021): `FetchContent` con versión fijada, solo en Debug y RelWithDebInfo |
 | 6 | Compilador de shaders | **`glslc`**, con validación con `spirv-val` en Debug |
-| 7 | Configuraciones | **Debug** (ASan + UBSan + validation layers), **RelWithDebInfo** y **Release**, definidas en `CMakePresets.json` |
+| 7 | Configuraciones | **Debug** (ASan + UBSan + validation layers), **RelWithDebInfo** (con `-fno-omit-frame-pointer`, ADR-0021) y **Release**, definidas en `CMakePresets.json`. Cada preset fija qué herramientas de depuración compila (ADR-0021) |
 
 ## Consecuencias
 

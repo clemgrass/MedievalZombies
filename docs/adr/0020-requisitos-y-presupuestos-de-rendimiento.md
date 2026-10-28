@@ -4,6 +4,11 @@
 - **Fecha:** 2026-10-19
 - **Ticket:** #34
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide dos puntos abiertos. El input
+  se graba por paso de simulación, como pedía este ADR. Y los frames de recuperación
+  después de un tirón externo se marcan en el registro por frame y se reportan aparte:
+  R1 se da con y sin ellos, con su cantidad, y nunca se descartan. Se corrige en el
+  protocolo (punto 7) y en Abierto.
 
 ## Contexto y problema
 
@@ -301,7 +306,8 @@ picos que todavía no se conocen.
 6. **Repeticiones:** al menos 5 ejecuciones por escenario.
 7. **Qué se reporta:** p50, p99, p99,9 y el máximo de R1 y R2, más R3 y R4, por
    ejecución. El resumen es la mediana entre ejecuciones, con un intervalo de confianza
-   del 95 % calculado con *bootstrap*, sin suponer normalidad.
+   del 95 % calculado con *bootstrap*, sin suponer normalidad. R1 se reporta con y sin
+   los frames de recuperación de un tirón externo, y se dice cuántos hubo (ADR-0021).
 8. **Cómo se compara:** un cambio mejora o empeora solo si los intervalos no se
    superponen.
 9. **Dónde:** en la máquina de referencia.
@@ -344,12 +350,14 @@ picos que todavía no se conocen.
   terminar el frame (ADR-0012). Necesitan un almacenamiento propio del sistema de corte,
   con un tope, que se diseña con el ADR-0010.
 - **Abierto:**
-  - **la grabación guarda el input por paso de simulación, no por frame** (ADR-0021).
+  - **la grabación guarda el input por paso de simulación, no por frame** (decidido en
+    el ADR-0021).
     El ADR-0012 lee el input una vez por frame, antes de los pasos. Si se grabara por
     frame, la cantidad de pasos de cada frame cambiaría entre ejecuciones, y la
     reproducción dejaría de dar los mismos cortes;
   - cómo cuentan para R1 los frames de recuperación después de un tirón externo: con 5
-    pasos o más pasan de 33,3 ms (ticket del game loop o ADR-0021);
+    pasos o más pasan de 33,3 ms (decidido en el ADR-0021: se marcan y se reportan
+    aparte, nunca se descartan);
   - el ruido del vsync cerca de 59,98 Hz, que puede hacer alternar frames de 0 y 2 pasos
     durante un rato. Tyler Glaiel describe cómo evitarlo ajustando el `dt` al período
     del refresco (ticket del game loop);

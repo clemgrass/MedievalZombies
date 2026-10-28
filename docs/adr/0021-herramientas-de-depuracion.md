@@ -1,6 +1,6 @@
 # ADR-0021: Herramientas de depuración, profiling y logging
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-28
 - **Ticket:** #43
 - **Reemplaza / Reemplazado por:** —
@@ -334,11 +334,147 @@ Lo que mostró, además de los números:
 
 ## Decisión
 
-<!-- Lo escribe el autor: qué se elige y por qué, con sus palabras. -->
+Elijo las herramientas estándar de la industria para medir y depurar: Dear ImGui para la
+interfaz, Tracy y `perf` para el profiling, y RenderDoc y las validation layers para la
+GPU. La mayoría de estas elecciones no necesitan una razón más profunda: son lo que se
+usa, están probadas y son gratis. Lo que me importa es medir bien lo que construyo. Si
+escribo mis propias herramientas de medición y quedan mal hechas, no van a medir el
+engine correctamente, y no voy a saber si el error está en el engine o en la
+herramienta. Además, crear demasiadas cosas desde cero es otro proyecto, y compite con
+el corte de mallas.
+
+Lo que sí escribo es lo que es propio de este engine y ninguna herramienta trae: la
+frontera que esconde las dependencias, el registro por frame del protocolo, el dibujo de
+depuración del corte, los valores ajustables y el *replay* determinista.
+
+| # | Dimensión | Elección |
+|---|---|---|
+| 1 | Interfaz | **Dear ImGui, dibujado por el renderer propio.** Sin sus backends de SDL3 ni de Vulkan: el input llega desde `platform::` (ADR-0004), y sus listas de vértices se dibujan con un pipeline propio, el atlas de la fuente como textura y los datos por el *ring buffer* (ADR-0005). Sus asignaciones van a la región de depuración, con `ImGui::SetAllocatorFunctions` |
+| 2 | CPU | **Tracy detrás de una macro de zona propia, con `TRACY_ON_DEMAND` siempre.** El engine no nombra a Tracy fuera de un solo módulo. **`perf`** para el muestreo |
+| 3 | GPU | **Timestamps propios** para el registro por frame, **zonas de GPU de Tracy** para diagnosticar y **RenderDoc en XWayland**, con una tecla que dispara la captura por su API *in-app*. Las validation layers, como ya decidieron el ADR-0005 y el ADR-0006 |
+| 4 | R1 a R4 | **Un registro por frame propio**, que no depende de Tracy, para el protocolo. Tracy, para entender un pico. **Los frames de recuperación se marcan y se reportan aparte, nunca se descartan** |
+| 5 | Logging | **Cinco niveles** (error, aviso, info, debug, traza) y **una categoría por módulo**. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, que se vacía a un archivo una vez por frame y siempre ante un error fatal. Sin formato diferido y sin spdlog. Lo que no corresponde a cada preset se elimina al compilar |
+| 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame |
+| 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante** |
+| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el escenario, la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **solo en la misma máquina**. En los builds de desarrollo, un *ring buffer* graba siempre los últimos 5 minutos. Controles de tiempo: pausa, avance de un paso y cámara lenta |
+| 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. El pico del proceso (`VmHWM`) y el uso de `VK_EXT_memory_budget` en el registro por frame. `TracyAllocN` solo para el pool de pedazos |
+| 10 | Presets | **Una macro por herramienta**, con la combinación de cada preset fijada en `CMakePresets.json`. La macro de zona alimenta a Tracy en `relwithdebinfo` y a la traza del verificador del ADR-0030 en `debug` |
 
 ## Consecuencias
 
-<!-- Claude y autor: qué se gana, qué se sacrifica y qué queda abierto. -->
+- **Qué tiene cada preset:**
+
+  | Herramienta | `debug` | `relwithdebinfo` | `release` |
+  |---|---|---|---|
+  | Macro de zona | Alimenta la traza del ADR-0030 | Alimenta a Tracy, *on demand* | No existe |
+  | Registro por frame | Sí | Sí | No |
+  | Interfaz (ImGui) | Sí | Sí, oculta al medir | No |
+  | Dibujo de depuración | Sí | Sí, apagado al medir | No |
+  | Valores ajustables | Editables | Editables | Constantes |
+  | Grabar y reproducir *replays* | Sí (los tests de *replay* corren aquí, ADR-0011) | Sí (los escenarios del protocolo) | No |
+  | Niveles de log compilados | Los cinco | Hasta info | Error y aviso |
+  | Contadores de memoria | Sí | Sí | Sí |
+  | Validation layers | Sí (ADR-0006) | No | No |
+
+  Release no compila ninguna herramienta, salvo los contadores de memoria y el log de
+  errores y avisos: es el criterio 2. Los nombres de las macros (en mayúsculas,
+  ADR-0013) se fijan con el código.
+- **Las dos dependencias nuevas, Dear ImGui (MIT) y Tracy (BSD-3), son solo de
+  desarrollo:** no se compilan en Release. Ninguna está en los repositorios oficiales de
+  Arch, así que entran con `FetchContent` y una versión fijada (ADR-0006). La versión
+  fijada importa además porque el cliente y el servidor de Tracy tienen que hablar la
+  misma versión del protocolo. Las dos se agregan a `CREDITS.md` (ADR-0019) en el ticket
+  que las suma al build.
+- **Una frontera para cada dependencia:** solo un módulo incluye `imgui.h`, y solo uno
+  incluye `Tracy.hpp`. El resto del engine usa la macro de zona propia y una interfaz
+  propia para los paneles. Si un día se cambia Tracy por otra cosa, cambia un módulo. Dónde
+  viven esos módulos dentro de las capas del ADR-0012 lo decide su ticket.
+- **El servidor de Tracy se compila** desde el código de la misma versión, con CMake (unos
+  6 minutos en esta máquina). `tracy-capture` graba sin GUI.
+- **Una región nueva de memoria, la de depuración** (ADR-0010): su dueño son las
+  herramientas, vive todo el programa y existe solo en `debug` y `relwithdebinfo`. Guarda
+  el buffer del dibujo de depuración (que se vacía después del render), el *ring buffer*
+  del log, las asignaciones de ImGui, el registro por frame y el *ring buffer* del
+  *replay*. Como el protocolo mide en `relwithdebinfo`, esta región cuenta en R4 al medir.
+  Su tamaño es una hipótesis (`presupuestos.md`) hasta medirla.
+- **El protocolo mide con las herramientas compiladas, pero apagadas:** Tracy sin servidor
+  cuesta 4,6 ns por zona y no guarda nada; la interfaz está oculta y el dibujo de
+  depuración, apagado. Con `TRACY_ON_DEMAND` siempre activo, la acumulación sin tope del
+  prototipo (640 MB por 10 M de zonas) no puede ocurrir.
+- **`relwithdebinfo` se compila con `-fno-omit-frame-pointer`,** para que `perf` arme las
+  pilas con *frame pointers* (+9 % al muestrear, contra +15 % y 46 MB con DWARF). Como el
+  protocolo mide ese mismo preset, el costo del registro que se pierde queda dentro de la
+  medición. **Fe de erratas del ADR-0006** (Decisión 7).
+- **R3 se mide en Wayland, y RenderDoc corre en XWayland.** El primer píxel de
+  `VK_EXT_present_timing` solo está en Wayland, y RenderDoc no expone la superficie de
+  Wayland. SDL3 elige el driver al arrancar (`SDL_VIDEO_DRIVER=x11`), así que no hace
+  falta nada nuevo en `platform::`. El registro por frame anota el driver con el que se
+  midió. `VK_KHR_present_wait2` es el respaldo si no hay present timing.
+- **Los tiempos de presentación llegan tarde:** `vkGetPastPresentationTimingEXT` devuelve
+  frames ya presentados, varios frames después. El registro guarda cada frame con su
+  *present id* y completa R3 cuando llega el reporte.
+- **Los frames de recuperación** (resuelve un punto abierto del ADR-0020): el registro
+  guarda, por frame, cuántos pasos corrió y cuánto tardó cada uno. Un frame con varios
+  pasos después de un hueco en el que el engine no trabajó se marca como recuperación de
+  un tirón externo. El resumen del protocolo reporta R1 con y sin esos frames, y cuántos
+  hubo. **Fe de erratas del ADR-0020** (Abierto).
+- **El log en el frame:** formatear cuesta ~450 ns por línea, así que el código de cada
+  frame loguea poco. Vaciar el *ring buffer* al archivo es un costo por frame, al
+  terminar el frame. Un error fatal vacía todo antes de abortar; se diseña junto con las
+  macros de `assert` (ADR-0009).
+- **El dibujo de depuración cruza los pasos:** la simulación escribe primitivas durante
+  sus pasos (de 0 a 8 por frame), el render las dibuja una vez y la región se vacía
+  después. Una primitiva con duración en pasos sobrevive a ese vaciado hasta que se le
+  acaba la duración. Así, pausar la simulación no borra lo que se está mirando.
+- **Las CVars y el determinismo:** cada CVar declara si afecta la simulación. El *replay*
+  guarda todas en su encabezado y graba como evento cualquier cambio de una que afecta la
+  simulación. Reproducirlo aplica los mismos cambios en los mismos pasos.
+- **Las CVars en Release son constantes:** un valor ajustado en el archivo de cambios
+  pasa al código (su valor por defecto) con un PR antes de valer en Release. Las
+  opciones que ve el jugador (cámara, controles) no son CVars: su guardado lo decide el
+  ADR-0028.
+- **El hash entre máquinas** (resuelve el punto abierto del ADR-0016): por ahora, solo en
+  la misma máquina. Con las banderas del ADR-0008, Clang y GCC en -O0, -O2 y -O3 dan los
+  mismos bits; lo que no está garantizado es la libm de otra máquina. En la CI, un test de
+  *replay* compara dos ejecuciones en el mismo proceso, como ya pide el ADR-0016. Las
+  dos salidas para comparar contra un hash guardado (funciones trascendentales propias o
+  una CI con la misma glibc) quedan medidas para el ADR-0029. **Fe de erratas del
+  ADR-0016** (Abierto).
+- **Si un día se agrega `-march`** (el ADR-0008 lo permite si el profiler lo pide), hay
+  que agregar también `-ffp-contract=off`: con FMA, los *replays* grabados divergen desde
+  el primer paso.
+- **El input por paso** necesita una regla en el game loop: qué parte del input del frame
+  ve cada paso (por ejemplo, el movimiento del mouse lo consume el primero o se reparte).
+  El *replay* graba el resultado, sea cual sea la regla.
+- **Un *replay* para cada bug:** el *ring buffer* de 5 minutos (~430 KB) se puede volcar
+  a un archivo y adjuntar a un reporte de bug (ADR-0011). Así, un bug del corte se
+  reproduce exacto, paso por paso.
+- **La traza del ADR-0030 queda resuelta** (su punto abierto h): es la misma macro de
+  zona, y se activa con una definición del preset `debug`, la primera de las tres salidas
+  que listó ese ADR. Una sola instrumentación sirve para el profiling y para verificar
+  los diagramas. **Fe de erratas del ADR-0030** (Consecuencias).
+- **Lo que se gana:** herramientas que la industria usa y que un evaluador reconoce,
+  mediciones en las que puedo confiar porque las herramientas no son mías, y el esfuerzo
+  propio puesto donde el juego lo necesita: ver el corte por dentro y repetir una
+  partida exacta.
+- **Lo que se sacrifica:**
+  - dos dependencias externas en los builds de desarrollo, y un servidor de Tracy que hay
+    que compilar;
+  - RenderDoc obliga a correr en XWayland;
+  - el determinismo entre máquinas no está garantizado;
+  - los *frame pointers* cuestan un registro en `relwithdebinfo`.
+- **Abierto:**
+  - los nombres y el prefijo de las macros, y dónde viven los módulos de ImGui y de Tracy
+    (sus tickets);
+  - el formato del archivo de CVars, sin una dependencia nueva (su ticket);
+  - dónde viven en el repo los escenarios grabados del protocolo (su ticket);
+  - la regla del input por paso (ticket del game loop);
+  - con qué se calculan los percentiles y el *bootstrap* a partir del registro (su
+    ticket o el ADR-0029);
+  - el hash entre máquinas para la CI (ADR-0029);
+  - el tamaño de la región de depuración, que se mide;
+  - el editor de cápsulas del ADR-0017 y las demás herramientas de assets: tienen
+    interfaz (ImGui), pero cada una necesita su ticket.
 
 ## Cómo lo defiendo
 

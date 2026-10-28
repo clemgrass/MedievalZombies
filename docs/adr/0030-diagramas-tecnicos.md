@@ -4,6 +4,10 @@
 - **Fecha:** 2026-10-21
 - **Ticket:** #60
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide cómo se activa la macro de
+  traza del verificador (h). Es la misma macro de zona del profiling, definida en el
+  preset Debug (la primera de las tres salidas). En RelWithDebInfo alimenta a Tracy, y
+  la traza no está. Se corrige en "Lo que queda abierto".
 
 ## Contexto y problema
 
@@ -314,8 +318,9 @@ y además me gusta cómo se ve.
   una definición del preset Debug, que también la activa en el juego en Debug; una
   definición solo en los targets de test, que obliga a compilar el engine dos veces; o
   un preset nuevo, que cambia el ADR-0006 y, si ya existe código, necesita su propio
-  ADR. Las herramientas de profiling (ADR-0021) podrían compartir la macro, pero eso lo
-  decide su ADR.
+  ADR. **Decidido en el ADR-0021:** es la misma macro de zona del profiling, y se activa
+  con una definición del preset Debug, la primera salida. En RelWithDebInfo esa macro
+  alimenta a Tracy, no a la traza. Su nombre y dónde vive siguen abiertos.
 - **Cómo escribe un test su fragmento de ejemplo:** se diseña con el primer diagrama de
   proceso, dentro de la estrategia de testing (ADR-0011).
 - **Un sitio de documentación** (por ejemplo, GitHub Pages) puede llegar más adelante,

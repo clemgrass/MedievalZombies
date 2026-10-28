@@ -23,6 +23,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets; tests después en el combate) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
+| [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 
 ### Activación por contenido
 
@@ -37,7 +38,8 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | ECS, capas, módulos, SDL, input, el bucle de juego | `arquitectura` |
 | Rasgos de C++ (excepciones, RTTI, punteros inteligentes, templates, `virtual`) | `cpp-y-convenciones` |
 | Tests, cobertura, bugs, TDD | `testing` |
-| Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) |
+| Rendimiento, presupuestos, benchmarks, tiempo de frame, profiling | `arquitectura` (por el reparto del frame) y `herramientas` (por cómo se mide) |
+| Logging, Dear ImGui, Tracy, `perf`, RenderDoc, dibujo de depuración, CVars, valores ajustables, *replay*, grabación del input | `herramientas` |
 | Memoria, arenas, pools, allocators, `malloc`, `mmap`, `std::pmr`, contenedores, handles, ASan, presupuestos de memoria | `memoria` |
 | Animación, skinning, esqueletos, huesos, clips, IK | `animacion` |
 | Física, colisiones, cuerpos rígidos, ragdoll, solver, cápsulas, controlador de personaje, la detección del tajo | `fisica` |
@@ -250,7 +252,11 @@ Qué mirar:
 Qué mirar:
 
 - **CMake + Ninja**, con Clang como compilador principal, GCC como secundario y `lld`.
-- **Presets:** Debug (ASan + UBSan + validation layers), RelWithDebInfo y Release.
+- **Presets:** Debug (ASan + UBSan + validation layers), RelWithDebInfo (con
+  `-fno-omit-frame-pointer`, fe de erratas del ADR-0006 por el ADR-0021) y Release.
+- **Dear ImGui y Tracy** (ADR-0021) entran con `FetchContent` y una versión fijada, y
+  solo en `debug` y `relwithdebinfo`. Si Release los compila o los enlaza, es
+  `bloqueante`.
 - **Flags:** `-Werror` y la lista ampliada de warnings del ADR-0013, sin `-Weverything`.
   `-fno-exceptions` y `-fno-rtti` (ADR-0009). **Sin `-ffast-math` y sin `-march`**
   (ADR-0008).
@@ -686,8 +692,10 @@ Qué mirar:
   Faltar a esto es `importante`. Un sistema vacío no lleva diagrama.
 - **Verificadores:** cuando existan, el PR los corre y pasan: nombres, SVG, leyenda,
   links, ejemplos, orden estático, tipos, orden dinámico y paso nuevo. La macro de traza
-  se activa solo donde corren los tests: activa en RelWithDebInfo o en Release es un
-  hallazgo, porque altera las mediciones de rendimiento.
+  es la macro de zona del profiling (fe de erratas del ADR-0030, por el ADR-0021): en
+  Debug alimenta la traza, y en RelWithDebInfo alimenta a Tracy. Que la traza esté activa
+  en RelWithDebInfo o en Release es un hallazgo, porque altera las mediciones de
+  rendimiento.
 - **Lo que los verificadores no ven** es justo lo que mira este tema: si el diagrama
   describe bien lo que pasa dentro de cada función, si las etiquetas describen bien sus
   datos y si las ramas que el test no recorre están dibujadas.
@@ -763,3 +771,67 @@ Qué mirar:
 - **Determinismo:** ninguna regla usa azar ni el reloj; la secuencia lee el input por
   paso.
 - Los tests del combate no son de este tema: los audita `testing`.
+
+## herramientas
+
+**ADRs:** 0021 (herramientas de depuración, profiling y logging). También la fila de la
+región de depuración en `docs/performance/presupuestos.md`.
+
+Qué mirar:
+
+- **Una frontera por dependencia:** solo un módulo incluye `imgui.h` y solo uno incluye
+  `Tracy.hpp`. El resto del engine usa la macro de zona propia y una interfaz propia
+  para los paneles. Un `#include` de ImGui o de Tracy fuera de su módulo es un hallazgo.
+- **ImGui sin sus backends:** el input le llega desde `platform::`, y sus listas de
+  vértices las dibuja el renderer propio (pipeline propio, atlas como textura, datos por
+  el *ring buffer*). Usar `imgui_impl_sdl3` o `imgui_impl_vulkan` contradice la Decisión 1
+  (además, el primero saca SDL fuera de `platform::`). Sus asignaciones van a la región de
+  depuración con `ImGui::SetAllocatorFunctions`.
+- **Tracy siempre con `TRACY_ON_DEMAND`:** sin esa definición, Tracy guarda todo en
+  memoria hasta que se conecta un servidor, sin tope. Que falte es `bloqueante`, porque
+  ensucia R4 en las mediciones del protocolo. La versión de Tracy es la misma en el
+  cliente y en el servidor.
+- **El registro por frame no depende de Tracy:** guarda, por frame, el número de frame,
+  los pasos que corrió y cuánto tardó cada uno, el tiempo de CPU de cada sistema, los
+  timestamps de la GPU, el *present id* y su tiempo de presentación (que llega varios
+  frames después), `VmHWM` y el uso de `VK_EXT_memory_budget`, y el driver de video.
+  Vive en la región de depuración y se vuelca al terminar. Leer el protocolo desde una
+  captura de Tracy contradice la Decisión 4.
+- **Los frames de recuperación de un tirón externo** se marcan y se reportan aparte (R1
+  con y sin ellos, y cuántos). Descartarlos es un hallazgo.
+- **Timestamps de GPU:** el que abre una medición va en una etapa que espera a los
+  semáforos del frame, no en `TOP_OF_PIPE`, que mide también la espera del swapchain.
+- **R3 se mide en Wayland** (el primer píxel de `VK_EXT_present_timing`), con
+  `VK_KHR_present_wait2` de respaldo. RenderDoc corre en XWayland
+  (`SDL_VIDEO_DRIVER=x11`), con una tecla que dispara la captura por su API *in-app*.
+- **Logging:** cinco niveles (error, aviso, info, debug, traza) y una categoría por
+  módulo. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, sin
+  asignar memoria, y se vacía a un archivo una vez por frame y siempre antes de abortar
+  por un error fatal. `printf` en el engine, spdlog o un formato diferido contradicen la
+  Decisión 5. Por preset: los cinco niveles en `debug`, hasta info en `relwithdebinfo`,
+  y solo error y aviso en `release`; los demás se eliminan al compilar.
+- **Dibujo de depuración:** *immediate mode*, con duración opcional en pasos, en la
+  región de depuración. Guardar sus primitivas en la arena del paso o en la del frame es
+  un hallazgo: la del paso se borra antes del render.
+- **CVars:** cada valor ajustable sin recompilar es una CVar registrada con nombre, tipo,
+  valor por defecto, rango y si afecta la simulación. En Release es una constante. Un
+  valor de tuning editable en Release, o leído de un archivo en Release, contradice la
+  Decisión 7. Las opciones del jugador (cámara, controles) no son CVars (ADR-0028).
+- ***Replay*:** graba el input de cada paso (no los eventos de SDL ni el input del
+  frame), con un encabezado (versión del formato, commit, escenario, semilla y todas las
+  CVars del inicio) y un hash de control cada 60 pasos. Un cambio de una CVar que afecta
+  la simulación durante una grabación se graba como evento de su paso. El hash se compara
+  en la misma máquina; comparar contra un hash guardado entre máquinas lo decide el
+  ADR-0029. Los controles de tiempo (pausa, avance de un paso, cámara lenta) no cambian
+  el `dt`.
+- **Memoria:** contadores de uso, pico y fallos en cada región, en todos los builds
+  (también los pide el ADR-0010). `TracyAllocN` solo en el pool de pedazos; en una
+  arena, manda miles de eventos por paso.
+- **Presets:** una macro por herramienta, con la combinación de cada preset en
+  `CMakePresets.json`. Release no compila ninguna herramienta, salvo los contadores de
+  memoria y el log de errores y avisos. En `relwithdebinfo`, el protocolo mide con la
+  interfaz oculta y el dibujo de depuración apagado. Las flags del compilador no son de
+  este tema: las audita `build-y-licencias`.
+- **La región de depuración** existe solo en `debug` y `relwithdebinfo`, y su tamaño
+  está en `presupuestos.md`. Lo que tenga que ver con su reserva y sus límites lo audita
+  `memoria`.

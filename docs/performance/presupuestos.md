@@ -76,6 +76,7 @@ cada byte se cuenta una sola vez: la RAM anónima del proceso más la memoria de
 | Arenas temporales: la del paso, la del frame y las *scratch* (ADR-0010) | 16 MiB | Hipótesis. El reparto entre las tres se fija midiendo |
 | Subida de geometría dinámica, por frame en vuelo | N × 8 MiB | Hipótesis. N = 2 frames en vuelo (ADR-0007), así que son 2 × 8 MiB. Incluye las matrices de los huesos: 74 KB por frame con 50 zombies (ADR-0017). La cuenta del ADR-0010 para el peor caso (32 cortes, las matrices de los zombies, 10 ragdolls y 100 pedazos rígidos) da ~2,3 MB por frame |
 | Audio | 64 MiB | Hipótesis |
+| Herramientas de depuración (solo `debug` y `relwithdebinfo`, ADR-0021) | 8 MiB | Hipótesis. Log (~0,5 MiB), dibujo de depuración (~1 MiB), ImGui (unos MiB), registro por frame (~2,5 MB en 7 minutos) y *replay* de 5 minutos (~0,4 MB). Cuenta en R4 porque el protocolo mide en `relwithdebinfo`; en Release no existe |
 | Ejecutable, driver y reserva | el resto, hasta 1 GiB | — |
 
 Las filas de pedazos, arenas temporales y subida son regiones del ADR-0010 que usa el
@@ -103,3 +104,4 @@ cambian recién con una medición.
 | 2026-10-20 | #11 | N = 2 frames en vuelo, fijado por el ADR-0007, y las matrices de los huesos (74 KB por frame, ADR-0017) anotadas en la fila de subida. Ninguna meta cambia | Ninguna: es una decisión, no una medición |
 | 2026-10-21 | #19 | Las filas de pedazos, arenas temporales y subida pasan a ser regiones del ADR-0010; la memoria que vive un nivel queda para el ADR-0028. La arena por frame se vuelve "arenas temporales" (paso, frame y *scratch*), y las cuentas del ADR-0010 quedan anotadas en las filas de pedazos y de subida. Ninguna meta cambia | Ninguna: son una decisión y cuentas, no una medición del protocolo |
 | 2026-10-22 | #31 | El costo del combate del ADR-0018 (~60 µs por zombie y por tajo) queda anotado en la fila de combate y corte. Ninguna meta cambia | Ninguna: prototipo de laboratorio, fuera del protocolo |
+| 2026-10-28 | #43 | Fila nueva: la región de depuración del ADR-0021 (8 MiB, hipótesis), que sale de "Ejecutable, driver y reserva". Ninguna otra meta cambia | Ninguna: es una decisión y una cuenta, no una medición |

@@ -1,0 +1,67 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base", "hidden": true, "generator": "Ninja",
+      "binaryDir": "${sourceParentDir}/build/${presetName}",
+      "cacheVariables": { "MZ_WERROR": "ON", "CMAKE_LINKER_TYPE": "LLD" }
+    },
+    {
+      "name": "debug-clang", "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "CMAKE_CXX_COMPILER": "clang++", "MZ_SANITIZE": "ON" }
+    },
+    {
+      "name": "debug-gcc", "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "CMAKE_CXX_COMPILER": "g++", "MZ_SANITIZE": "ON" }
+    },
+    {
+      "name": "coverage", "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "CMAKE_CXX_COMPILER": "clang++", "MZ_COVERAGE": "ON" }
+    },
+    {
+      "name": "relwithdebinfo", "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "CMAKE_CXX_COMPILER": "clang++" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug-clang", "configurePreset": "debug-clang" },
+    { "name": "debug-gcc", "configurePreset": "debug-gcc" },
+    { "name": "coverage", "configurePreset": "coverage" },
+    { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" }
+  ],
+  "testPresets": [
+    { "name": "debug-clang", "configurePreset": "debug-clang", "output": { "outputOnFailure": true } },
+    { "name": "debug-gcc", "configurePreset": "debug-gcc", "output": { "outputOnFailure": true } },
+    {
+      "name": "coverage", "configurePreset": "coverage", "output": { "outputOnFailure": true },
+      "filter": { "include": { "label": "unit" } },
+      "environment": { "LLVM_PROFILE_FILE": "${sourceParentDir}/build/coverage/prof/%p.profraw" }
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "debug-clang",
+      "steps": [
+        { "type": "configure", "name": "debug-clang" },
+        { "type": "build", "name": "debug-clang" },
+        { "type": "test", "name": "debug-clang" }
+      ]
+    },
+    {
+      "name": "debug-gcc",
+      "steps": [
+        { "type": "configure", "name": "debug-gcc" },
+        { "type": "build", "name": "debug-gcc" },
+        { "type": "test", "name": "debug-gcc" }
+      ]
+    },
+    {
+      "name": "coverage",
+      "steps": [
+        { "type": "configure", "name": "coverage" },
+        { "type": "build", "name": "coverage" },
+        { "type": "test", "name": "coverage" }
+      ]
+    }
+  ]
+}

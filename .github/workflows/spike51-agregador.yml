@@ -1,0 +1,51 @@
+# Spike #51: el workflow corre siempre. Un job decide qué cambió, los jobs caros se saltan
+# si no hace falta, y `ci-ok` siempre se reporta: es el único chequeo obligatorio.
+name: spike51-agregador
+
+on:
+  pull_request:
+    branches: [spike/51-ci-base]
+
+permissions:
+  contents: read
+
+jobs:
+  cambios:
+    runs-on: ubuntu-24.04
+    outputs:
+      codigo: ${{ steps.diff.outputs.codigo }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git diff --name-only "$BASE...$HEAD"
+          if git diff --name-only "$BASE...$HEAD" | grep -q '^spike51/sample/'; then
+            echo "codigo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "codigo=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: cambios
+    if: needs.cambios.outputs.codigo == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "acá iría el build"
+
+  ci-ok:
+    needs: [cambios, build]
+    if: always()
+    runs-on: ubuntu-24.04
+    env:
+      RESULTADOS: ${{ join(needs.*.result, ' ') }}
+    steps:
+      - run: |
+          echo "resultados: $RESULTADOS"
+          for r in $RESULTADOS; do
+            case "$r" in success|skipped) ;; *) exit 1 ;; esac
+          done

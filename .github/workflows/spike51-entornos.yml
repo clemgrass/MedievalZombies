@@ -1,0 +1,167 @@
+# Spike #51 (ADR-0029): mide entornos de CI en runners reales. No se mergea.
+name: spike51-entornos
+
+on:
+  push:
+    branches: [spike/51-ci]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ARCH_DATE: "2026/10/25"
+  CMAKE_BUILD_PARALLEL_LEVEL: "4"
+
+jobs:
+  arch-rolling:
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    steps:
+      - name: Instalar toolchain (rolling)
+        run: pacman -Syu --noconfirm --needed clang lld llvm compiler-rt gcc cmake ninja git sdl3 gtest
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Versiones
+        run: pacman -Q glibc clang cmake gcc
+      - name: debug-clang (ASan + UBSan + LSan)
+        run: spike51/sample/ci.sh debug-clang
+      - name: Hash del estado
+        run: spike51/build/debug-clang/mz_sample
+
+  arch-snapshot:
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    steps:
+      - name: Caché de paquetes del snapshot
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-${{ env.ARCH_DATE }}-v1
+      - name: Instalar toolchain (snapshot)
+        run: |
+          echo "Server = https://archive.archlinux.org/repos/${ARCH_DATE}/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+          pacman -Syyuu --noconfirm --needed clang lld llvm compiler-rt gcc cmake ninja git sdl3 gtest reuse valgrind
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Versiones
+        run: pacman -Q glibc gcc gcc-libs clang llvm llvm-libs lld compiler-rt cmake ninja sdl3 gtest
+      - name: format
+        run: spike51/sample/ci.sh format
+      - name: debug-clang
+        run: spike51/sample/ci.sh debug-clang
+      - name: debug-gcc
+        run: spike51/sample/ci.sh debug-gcc
+      - name: coverage
+        run: spike51/sample/ci.sh coverage
+      - name: tidy
+        run: spike51/sample/ci.sh tidy
+      - name: reuse lint
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          reuse lint
+      - name: Hash del estado y libm
+        run: |
+          spike51/build/debug-clang/mz_sample
+          clang++ -std=c++20 -O2 -ffp-contract=off -fno-builtin spike51/libm_probe.cpp -o probe && ./probe
+      - name: Ruido del tiempo vs instrucciones
+        run: |
+          cmake -S spike51/sample --preset relwithdebinfo >/dev/null && cmake --build spike51/build/relwithdebinfo --target mz_sample
+          for i in $(seq 10); do s=$(date +%s%N); spike51/build/relwithdebinfo/mz_sample >/dev/null; echo "ms $(( ($(date +%s%N)-s)/1000000 ))"; done
+          for i in 1 2 3; do valgrind --tool=cachegrind --cache-sim=no --cachegrind-out-file=/dev/null spike51/build/relwithdebinfo/mz_sample 2>&1 | grep "I *refs"; done
+
+  ubuntu-nativo:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Versiones del runner
+        run: |
+          grep PRETTY /etc/os-release; ldd --version | head -1
+          clang --version | head -1; g++ --version | head -1; cmake --version | head -1
+          ls /usr/bin/clang-[0-9]* /usr/bin/g++-[0-9]* 2>/dev/null | tr '\n' ' '
+      - name: Dependencias de SDL3 y gtest
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build lld libgtest-dev \
+            libx11-dev libxext-dev libwayland-dev libxkbcommon-dev wayland-protocols \
+            libegl1-mesa-dev libgles2-mesa-dev libdrm-dev libgbm-dev libudev-dev libdbus-1-dev
+      - name: debug-clang con SDL3 descargado
+        run: |
+          cmake -S spike51/sample --preset debug-clang -DMZ_VENDOR_SDL3=ON
+          cmake --build spike51/build/debug-clang
+          ctest --test-dir spike51/build/debug-clang --output-on-failure
+      - name: Hash del estado y libm
+        run: |
+          spike51/build/debug-clang/mz_sample
+          clang++ -std=c++20 -O2 -ffp-contract=off -fno-builtin spike51/libm_probe.cpp -o probe && ./probe
+
+  imagen-ghcr:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: spike51
+          file: spike51/arch.Dockerfile
+          build-args: ARCH_DATE=${{ env.ARCH_DATE }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          push: true
+          tags: ghcr.io/clemgrass/mzci-spike51:2026-10-25
+
+  desde-imagen:
+    needs: imagen-ghcr
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: ghcr.io/clemgrass/mzci-spike51:2026-10-25
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: debug-clang
+        run: spike51/sample/ci.sh debug-clang
+      - name: debug-gcc
+        run: spike51/sample/ci.sh debug-gcc
+
+  blender-d2:
+    runs-on: ubuntu-24.04
+    env:
+      BLENDER: "5.2.2"
+      D2: "v0.9.0"
+    steps:
+      - name: Caché de Blender y D2
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/herramientas
+          key: herramientas-blender${{ env.BLENDER }}-d2${{ env.D2 }}-v1
+      - name: Descargar y verificar
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/herramientas && cd ~/herramientas
+          b=blender-${BLENDER}-linux-x64
+          curl -sSfLO https://download.blender.org/release/Blender${BLENDER%.*}/$b.tar.xz
+          curl -sSfL https://download.blender.org/release/Blender${BLENDER%.*}/blender-${BLENDER}.sha256 | grep "$b.tar.xz" | sha256sum -c
+          tar -xf $b.tar.xz && rm $b.tar.xz
+          d=d2-${D2}-linux-amd64.tar.gz
+          curl -sSfLO https://github.com/terrastruct/d2/releases/download/${D2}/$d
+          curl -sSfL https://github.com/terrastruct/d2/releases/download/${D2}/checksums.txt | grep " $d\$" | sha256sum -c
+          tar -xzf $d && rm $d
+      - name: Versiones
+        run: |
+          ~/herramientas/blender-${BLENDER}-linux-x64/blender -b --version | head -1
+          ~/herramientas/d2-${D2}/bin/d2 --version
+          du -sh ~/herramientas

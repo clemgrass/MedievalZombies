@@ -1,0 +1,17 @@
+# Spike #51: un chequeo con filtro de ruta. Si un PR no toca esas rutas, el workflow no
+# corre y el chequeo obligatorio nunca se reporta.
+name: spike51-filtrado
+
+on:
+  pull_request:
+    branches: [spike/51-ci-base]
+    paths: ["spike51/sample/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  filtrado:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "corre solo si el PR toca spike51/sample/"

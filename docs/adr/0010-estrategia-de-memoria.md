@@ -4,6 +4,15 @@
 - **Fecha:** 2026-10-21
 - **Ticket:** #19
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 suma herramientas de depuración a
+  RelWithDebInfo. Ese build cuesta lo mismo que Release salvo esas herramientas, de
+  costo despreciable y medido, y una región de depuración que cuenta en R4. Hay dos
+  excepciones declaradas: el dibujo de depuración descarta lo que no cabe en vez de
+  abortar (Decisión 8), y Tracy con un servidor conectado pide memoria mientras corre
+  (Decisión 2), por lo que nunca se mide así. Además, el ADR-0021 decide cómo se ven el
+  uso y los picos de cada región: contadores en todos los builds y un panel en los de
+  desarrollo. Se corrige en Consecuencias (detección de errores y las excepciones a la
+  regla de abortar) y en Abierto.
 
 ## Contexto y problema
 
@@ -444,6 +453,10 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
 - **La degradación de cada pool lleno:** los pedidos de corte, la del ADR-0007 (el combate
   no emite el pedido); los pedazos, descartar el más viejo (ADR-0020); los ragdolls, la
   del ADR-0016 (el más viejo se duerme o se congela).
+- **Dos excepciones a la regla de abortar** (fe de erratas, ADR-0021), las dos solo en
+  los builds de desarrollo: el dibujo de depuración descarta lo que no cabe y muestra en
+  pantalla cuánto descartó, y Tracy con un servidor conectado pide memoria mientras corre.
+  Por eso una medición del protocolo nunca se hace con el servidor conectado.
 - **Lo que vive en `engine/core`:** la arena (con alineación por pedido, marcador y
   reinicio), las *scratch*, el pool con `handle<T>` (ADR-0009), el allocator de offsets y
   los contenedores de capacidad fija (`fixed_vector<T>` y los que hagan falta).
@@ -457,7 +470,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
     patrón fijo, cada asignación de una arena lleva una guarda que se revisa al
     reiniciar, y al cerrar el programa cada pool tiene que estar vacío;
   - RelWithDebInfo no las lleva: es el build que mide el protocolo del ADR-0020, y tiene
-    que costar lo mismo que Release;
+    que costar lo mismo que Release, salvo las herramientas del ADR-0021 (de costo
+    despreciable y medido) y su región de depuración, que cuenta en R4;
   - en todos los builds: el uso y el pico de cada región (los necesita el mensaje al
     abortar, y sirven para medir), la generación de los handles (ADR-0009) y abortar al
     quedarse sin memoria, que es el contrato de cada región.
@@ -499,7 +513,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   - índices de 16 o de 32 bits en los pedazos (ticket del cocinador y ADR-0022). Con 16
     bits, la subida y el pool bajan casi a la mitad;
   - la memoria que vive un nivel y la carga de los assets (ADR-0028);
-  - cómo se ven los picos y el uso de cada región durante el juego (ADR-0021);
+  - cómo se ven los picos y el uso de cada región durante el juego (decidido en el
+    ADR-0021: contadores en todos los builds y un panel en los de desarrollo);
   - el máximo de entidades del ECS y los valores de los patrones (sus tickets);
   - el swap: sin `mlock`, el sistema operativo puede sacar páginas de la RAM. Con el
     presupuesto de 1 GiB en una máquina de 8 GB, se acepta.

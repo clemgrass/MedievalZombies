@@ -348,8 +348,10 @@ Números propuestos para el engine (los fija el ADR-0020):
 - **La cara del corte por dentro:** su geometría (triangulación y coordenadas) la genera
   el ADR-0007, y cómo se dibuja (carne, hueso, capas de metal y carne) lo decide el
   ADR-0022.
-- **Valores configurables sin recompilar** (cámara, controles, carga): el ADR-0021
-  (herramientas de depuración).
+- **Valores configurables sin recompilar** (cámara, controles, carga): decidido en el
+  ADR-0021. Los valores de ajuste (distancia y altura de la cámara, campo de visión,
+  ventanas de input, carga) son CVars, y en Release quedan como constantes. Las opciones
+  del jugador (sensibilidad, invertir un eje) son del ADR-0028.
 - **Checkpoints:** el ADR-0028 (recursos en runtime y guardado).
 
 ## Referencias

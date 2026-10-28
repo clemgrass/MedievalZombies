@@ -112,7 +112,7 @@ textura (el atlas de la fuente, 256 KiB) y los datos por el *ring buffer* del AD
 
 | Opción | Cómo funciona | Problema |
 |---|---|---|
-| **Tracy** (BSD-3) | Instrumentación: una macro (`ZoneScoped`) marca cada zona, el cliente la escribe en una cola sin locks y un hilo propio la manda por red a un servidor con GUI. También mide GPU (Vulkan), memoria, valores (`TracyPlot`) y muestreo. Medido: 10–14 ns por zona conectado, 4,6 ns sin servidor con `TRACY_ON_DEMAND` | Sin `TRACY_ON_DEMAND` y sin servidor guarda todo en RAM (640 MB por 10 M de zonas). Agrega un hilo y un socket. El servidor no está en los repositorios de Arch: se compila. Cliente y servidor tienen que ser de la misma versión |
+| **Tracy** (BSD-3) | Instrumentación: una macro (`ZoneScoped`) marca cada zona, el cliente la escribe en una cola sin locks y un hilo propio la manda por red a un servidor con GUI. También mide GPU (Vulkan), memoria, valores (`TracyPlot`) y muestreo. Medido: 10–14 ns por zona conectado, 4,6 ns sin servidor con `TRACY_ON_DEMAND` | Sin `TRACY_ON_DEMAND` y sin servidor guarda todo en RAM (640 MB por 10 M de zonas). Agrega hilos propios y un socket. El servidor no está en los repositorios de Arch: se compila. Cliente y servidor tienen que ser de la misma versión |
 | **Uno propio** que exporta a Perfetto | Una macro de zona con `rdtsc` escribe eventos en una región fija. Al terminar (o con una tecla) se exportan al formato de Chrome o al de Perfetto, que se ven en el navegador (`ui.perfetto.dev`). Medido: 4–8 ns por zona | La GUI es de otros, pero el formato, el buffer y la exportación son propios. El JSON pesa: ~650 MB para 10 M de zonas (estimación) |
 | **Solo muestreo** (`perf`) | El kernel interrumpe el programa ~1000 veces por segundo y anota la pila. No hace falta tocar el código. Medido: +9 % de tiempo con *frame pointers* | No sabe qué es un frame: dice dónde se va el tiempo en promedio, no por qué *un* frame tardó 30 ms. Los picos del ADR-0020 (p99,9 y máximo) se pierden |
 | **Contadores propios en pantalla** | Cada sistema mide su tiempo por frame y se muestra en un panel, como el `stat unit` de Unreal | Muestra el síntoma, no la causa. No hay línea de tiempo |
@@ -209,8 +209,11 @@ pueden cambiar mientras se graba. En los dos casos, el replay guarda todos los v
 al empezar.
 
 **En Release:** los valores pueden quedar como constantes (con los valores ajustados ya
-copiados al código) o seguir leyéndose de un archivo. Lo que ve el jugador (cámara,
-controles) es otra cosa: son opciones del jugador, y su guardado lo decide el ADR-0028.
+copiados al código) o seguir leyéndose de un archivo. Hay que separar dos cosas que se
+parecen: los **valores de ajuste** de la cámara y los controles que fija la visión
+(distancia, altura, campo de visión, ventanas de input) son del desarrollo, como los del
+combate; las **opciones del jugador** (sensibilidad, invertir un eje, apagar la cámara
+del tajo) son otra cosa, y su guardado lo decide el ADR-0028.
 
 ### 8. La grabación y el replay
 
@@ -246,7 +249,9 @@ encabezado dice con qué versión se grabó.
 
 **Grabar siempre:** con ~86 KB por minuto, los últimos 5 minutos de input caben en
 ~430 KB. Un *ring buffer* que graba siempre permite adjuntar el replay a un reporte de
-bug (ADR-0011), que se reproduce exacto.
+bug (ADR-0011), pero solo se reproduce exacto si también guarda el estado del comienzo
+de su ventana. Grabar la sesión entera desde que empieza el nivel evita ese estado (ver
+Consecuencias).
 
 **Controles de tiempo:** pausar la simulación, avanzar un paso, cámara lenta (menos
 pasos por segundo de reloj, el mismo `dt`) y reproducir un replay hasta un paso dado.
@@ -259,7 +264,7 @@ Como el `dt` no cambia, nada de esto rompe el determinismo.
 | **Contadores en cada región** | Cada arena y cada pool lleva su uso, su pico (*high-water mark*), su capacidad y sus fallos o degradaciones. Cuesta una o dos sumas por asignación | Si están siempre, cuestan algo en Release. Si no, Release no sabe cuándo se acerca al límite |
 | **Panel y gráfica** | La interfaz de depuración muestra una tabla por región y una gráfica del pico | Depende de la dimensión 1 |
 | **Eventos de memoria de Tracy** (`TracyAllocN`) | Cada asignación se manda a Tracy, que muestra qué está vivo y desde dónde se pidió | Pensado para el heap: una arena con miles de asignaciones por paso manda miles de eventos. Sirve más para los pools de pedazos que para las arenas |
-| **La memoria del proceso y de la GPU** para R4 | El pico del proceso (`VmHWM` de `/proc/self/status`) y el uso de `VK_EXT_memory_budget`, en el registro por frame | El presupuesto de la GPU cambia con la RAM libre del sistema (de 1,7 a 2,0 GiB medido): el uso es el dato estable, el presupuesto no |
+| **La memoria del proceso y de la GPU** para R4 | En cada frame, la RAM anónima residente (`RssAnon`, que es `resident − shared` de `/proc/self/statm`) y el `heapUsage` de `VK_EXT_memory_budget`, en el registro por frame. Es la escala de R4 del ADR-0020: el RSS completo (`VmRSS`, o su pico `VmHWM`) incluye la memoria de Vulkan mapeada, y sumarlo con `heapUsage` la contaría dos veces. Medido: leer `statm` cuesta 1,3 µs (p99 2,5 µs) | El presupuesto de la GPU cambia con la RAM libre del sistema (de 1,7 a 2,0 GiB medido): el uso es el dato estable, el presupuesto no |
 
 ### 10. Qué entra en cada preset
 
@@ -278,8 +283,8 @@ profiler y la traza son la misma macro, una sola instrumentación sirve para las
 
 ### Prototipo medido
 
-Seis programas en C++20, medidos en la máquina de referencia (ADR-0020) el 2026-10-23,
-fuera del protocolo. El detalle y cómo repetirlos están en
+Siete programas en C++20, medidos en la máquina de referencia (ADR-0020) el 2026-10-23
+(P1 a P6) y el 2026-10-28 (P7), fuera del protocolo. El detalle y cómo repetirlos están en
 [`../research/herramientas-de-depuracion.md`](../research/herramientas-de-depuracion.md).
 
 | # | Qué | Resultado |
@@ -290,6 +295,7 @@ fuera del protocolo. El detalle y cómo repetirlos están en
 | P4 | Logging | ~450 ns por línea formateada, 0 asignaciones, `std::format` sin excepciones. Formato diferido: 14 ns |
 | P5 | Replay | **Mismo hash con Clang y GCC en -O0, -O2 y -O3** con las banderas del ADR-0008. `-march=native` lo cambia desde el primer paso (FMA). `sinf` difiere del correctamente redondeado en el 1 % de los valores |
 | P6 | Dear ImGui | Panel típico: 37 µs por frame (p99 93 µs), 0 asignaciones en régimen. ~900 KB de código |
+| P7 | Memoria de R4 y de Tracy (después de la auditoría) | Leer `RssAnon` de `/proc/self/statm`: 1,3 µs (p99 2,5 µs). Tracy *on demand* sin servidor: ~14 MiB de RAM anónima y 4 hilos |
 
 Lo que mostró, además de los números:
 
@@ -350,14 +356,14 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 | # | Dimensión | Elección |
 |---|---|---|
 | 1 | Interfaz | **Dear ImGui, dibujado por el renderer propio.** Sin sus backends de SDL3 ni de Vulkan: el input llega desde `platform::` (ADR-0004), y sus listas de vértices se dibujan con un pipeline propio, el atlas de la fuente como textura y los datos por el *ring buffer* (ADR-0005). Sus asignaciones van a la región de depuración, con `ImGui::SetAllocatorFunctions` |
-| 2 | CPU | **Tracy detrás de una macro de zona propia, con `TRACY_ON_DEMAND` siempre.** El engine no nombra a Tracy fuera de un solo módulo. **`perf`** para el muestreo |
+| 2 | CPU | **Tracy detrás de una macro de zona propia, con `TRACY_ON_DEMAND` siempre.** El engine no nombra a Tracy fuera de un módulo por capa. **`perf`** para el muestreo |
 | 3 | GPU | **Timestamps propios** para el registro por frame, **zonas de GPU de Tracy** para diagnosticar y **RenderDoc en XWayland**, con una tecla que dispara la captura por su API *in-app*. Las validation layers, como ya decidieron el ADR-0005 y el ADR-0006 |
-| 4 | R1 a R4 | **Un registro por frame propio**, que no depende de Tracy, para el protocolo. Tracy, para entender un pico. **Los frames de recuperación se marcan y se reportan aparte, nunca se descartan** |
+| 4 | R1 a R4 | **Un registro por frame propio**, que no depende de Tracy, para el protocolo. Además de los tiempos y la memoria, guarda **contadores del juego**: zombies activos, pedazos vivos, ragdolls activos y, en cada paso, los cortes procesados y los que esperan. Tracy, para entender un pico. **Los frames de recuperación se marcan y se reportan aparte, nunca se descartan** |
 | 5 | Logging | **Cinco niveles** (error, aviso, info, debug, traza) y **una categoría por módulo**. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, que se vacía a un archivo una vez por frame y siempre ante un error fatal. Sin formato diferido y sin spdlog. Lo que no corresponde a cada preset se elimina al compilar |
-| 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame |
+| 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame. Del corte muestra: el plano del tajo y su barrido; las cápsulas de cada hueso, y cuáles tocó la hoja; la recta donde se detuvo la hoja y la espada clavada; el contorno del corte; la cuña y el abanico del fondo de la hendidura; las normales de la tapa ya des-deformadas y las de los vértices nuevos; y los pedazos coloreados por grupo de huesos. Los presupuestos de memoria van en el panel (dimensión 9) |
 | 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante** |
-| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el escenario, la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **solo en la misma máquina**. En los builds de desarrollo, un *ring buffer* graba siempre los últimos 5 minutos. Controles de tiempo: pausa, avance de un paso y cámara lenta |
-| 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. El pico del proceso (`VmHWM`) y el uso de `VK_EXT_memory_budget` en el registro por frame. `TracyAllocN` solo para el pool de pedazos |
+| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el escenario, la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **solo en la misma máquina**. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques. Controles de tiempo: pausa, avance de un paso y cámara lenta |
+| 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. En el registro por frame, la escala de R4 del ADR-0020: **`RssAnon` (de `/proc/self/statm`) más el `heapUsage` de `VK_EXT_memory_budget`**, y R4 es el máximo por frame de esa suma. `TracyAllocN` solo para el pool de pedazos |
 | 10 | Presets | **Una macro por herramienta**, con la combinación de cada preset fijada en `CMakePresets.json`. La macro de zona alimenta a Tracy en `relwithdebinfo` y a la traza del verificador del ADR-0030 en `debug` |
 
 ## Consecuencias
@@ -366,7 +372,7 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 
   | Herramienta | `debug` | `relwithdebinfo` | `release` |
   |---|---|---|---|
-  | Macro de zona | Alimenta la traza del ADR-0030 | Alimenta a Tracy, *on demand* | No existe |
+  | Macro de zona | Alimenta la traza del ADR-0030 | Alimenta a Tracy, *on demand* (la variante por elemento queda vacía) | No existe |
   | Registro por frame | Sí | Sí | No |
   | Interfaz (ImGui) | Sí | Sí, oculta al medir | No |
   | Dibujo de depuración | Sí | Sí, apagado al medir | No |
@@ -383,20 +389,50 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   desarrollo:** no se compilan en Release. Ninguna está en los repositorios oficiales de
   Arch, así que entran con `FetchContent` y una versión fijada (ADR-0006). La versión
   fijada importa además porque el cliente y el servidor de Tracy tienen que hablar la
-  misma versión del protocolo. Las dos se agregan a `CREDITS.md` (ADR-0019) en el ticket
-  que las suma al build.
-- **Una frontera para cada dependencia:** solo un módulo incluye `imgui.h`, y solo uno
-  incluye `Tracy.hpp`. El resto del engine usa la macro de zona propia y una interfaz
-  propia para los paneles. Si un día se cambia Tracy por otra cosa, cambia un módulo. Dónde
-  viven esos módulos dentro de las capas del ADR-0012 lo decide su ticket.
+  misma versión del protocolo. **Fe de erratas del ADR-0006** (Decisión 5). La API
+  *in-app* de RenderDoc es un header, `renderdoc_app.h` (MIT), que también se compila
+  solo en desarrollo. Las tres se agregan a `CREDITS.md` (ADR-0019) en el ticket que las
+  suma al build.
+- **Una frontera para cada dependencia:** solo un módulo incluye `imgui.h`, y Tracy
+  tiene **un módulo por capa**: la zona de CPU en una capa de abajo, para que la use todo
+  el engine, y la zona de GPU (`TracyVkZone`) en `gpu`, que es la capa que conoce Vulkan
+  (ADR-0012). El resto del engine usa la macro de zona propia y una interfaz propia para
+  los paneles. Si un día se cambia Tracy por otra cosa, cambian esos módulos y nada más.
+  Dónde vive cada módulo dentro de su capa lo decide su ticket.
+- **Los 4 hilos de Tracy son una excepción al hilo único del ADR-0012** (los arranca
+  aunque esté *on demand* y sin servidor), y no afectan el determinismo (ADR-0016): leen
+  sus propias colas de zonas y las mandan por red, sin tocar el estado del juego. **Fe
+  de erratas del ADR-0012** (Decisión 5).
 - **El servidor de Tracy se compila** desde el código de la misma versión, con CMake (unos
   6 minutos en esta máquina). `tracy-capture` graba sin GUI.
 - **Una región nueva de memoria, la de depuración** (ADR-0010): su dueño son las
-  herramientas, vive todo el programa y existe solo en `debug` y `relwithdebinfo`. Guarda
-  el buffer del dibujo de depuración (que se vacía después del render), el *ring buffer*
-  del log, las asignaciones de ImGui, el registro por frame y el *ring buffer* del
-  *replay*. Como el protocolo mide en `relwithdebinfo`, esta región cuenta en R4 al medir.
-  Su tamaño es una hipótesis (`presupuestos.md`) hasta medirla.
+  herramientas, vive todo el programa y existe solo en `debug` y `relwithdebinfo`. Cada
+  parte tiene su allocator y su regla al llenarse:
+
+  | Parte | Allocator | Al llenarse |
+  |---|---|---|
+  | Log | Anillo de entradas fijas | Pisa lo más viejo, por diseño |
+  | Dibujo de depuración | Lineal, se vacía después del render | Descarta las primitivas nuevas y muestra en pantalla cuántas descartó |
+  | ImGui | El allocator de offsets tipo TLSF del ADR-0010, porque ImGui pide y libera | Aborta con el nombre de la región, como una arena: es un error de dimensionamiento |
+  | Registro por frame y grabación del *replay* | Bloques fijos (~64 KiB cada uno, dos por flujo) que se vuelcan a disco al terminar el frame en que se llenan | No se llenan: la memoria no crece con la duración de la sesión |
+  | Traza del verificador del ADR-0030 (solo `debug`) | Lineal, una por test, con tope. Fuera de un test (jugando en `debug`), ningún test la abrió y la macro no graba nada | Aborta el test |
+
+  El dibujo de depuración descarta en vez de abortar, porque una herramienta para
+  mirar no tiene que tirar el juego. Es una excepción declarada a la Decisión 8 del
+  ADR-0010. Como el protocolo mide en `relwithdebinfo`, esta región cuenta en R4 al
+  medir; su tamaño es una hipótesis (`presupuestos.md`) hasta medirla. Que RelWithDebInfo
+  ya no cueste exactamente lo mismo que Release es la **fe de erratas del ADR-0010**
+  (Consecuencias): cuesta lo mismo salvo estas herramientas, de costo despreciable y
+  medido.
+- **La memoria de Tracy queda fuera de la región:** Tracy reserva la suya con su propio
+  allocator. Medido *on demand* y sin servidor: **~14 MiB** más de RAM anónima. Cuenta en
+  R4 al medir, y va en la fila de depuración de `presupuestos.md`. Con un servidor
+  conectado (para diagnosticar, nunca para medir), Tracy pide memoria mientras corre (60
+  MB de pico en el prototipo): es una excepción declarada a la Decisión 2 del ADR-0010,
+  y por eso una medición del protocolo nunca se hace con el servidor conectado.
+- **R4 en el registro:** `RssAnon` se lee de `/proc/self/statm` (`resident − shared`)
+  con el archivo abierto una sola vez y `pread`, y cuesta 1,3 µs por frame (p99 2,5 µs).
+  Leerlo de `/proc/self/status`, como texto, costó 14 µs.
 - **El protocolo mide con las herramientas compiladas, pero apagadas:** Tracy sin servidor
   cuesta 4,6 ns por zona y no guarda nada; la interfaz está oculta y el dibujo de
   depuración, apagado. Con `TRACY_ON_DEMAND` siempre activo, la acumulación sin tope del
@@ -410,6 +446,13 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   Wayland. SDL3 elige el driver al arrancar (`SDL_VIDEO_DRIVER=x11`), así que no hace
   falta nada nuevo en `platform::`. El registro por frame anota el driver con el que se
   midió. `VK_KHR_present_wait2` es el respaldo si no hay present timing.
+- **El timestamp que abre una medición de GPU va en una etapa que espera a los semáforos
+  del frame,** no en `TOP_OF_PIPE`. En el prototipo, un timestamp en `TOP_OF_PIPE` midió
+  también la espera del swapchain y dio 6 ms para limpiar una imagen.
+- **Los contadores del juego en el registro** explican un pico sin abrir Tracy: un frame
+  de 20 ms con 4 cortes procesados y 80 pedazos vivos cuenta otra historia que uno con
+  ninguno. También muestran en qué carga se midió cada escenario, para comparar con R5.
+  Cada fila del registro queda en ~128 B: 7 minutos (~25 000 frames) son ~3,2 MB.
 - **Los tiempos de presentación llegan tarde:** `vkGetPastPresentationTimingEXT` devuelve
   frames ya presentados, varios frames después. El registro guarda cada frame con su
   *present id* y completa R3 cuando llega el reporte.
@@ -430,9 +473,12 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   guarda todas en su encabezado y graba como evento cualquier cambio de una que afecta la
   simulación. Reproducirlo aplica los mismos cambios en los mismos pasos.
 - **Las CVars en Release son constantes:** un valor ajustado en el archivo de cambios
-  pasa al código (su valor por defecto) con un PR antes de valer en Release. Las
-  opciones que ve el jugador (cámara, controles) no son CVars: su guardado lo decide el
-  ADR-0028.
+  pasa al código (su valor por defecto) con un PR antes de valer en Release.
+- **Qué es una CVar y qué no:** los valores de ajuste de la cámara y los controles que
+  fija la visión (distancia, altura, campo de visión, ventanas de input) son CVars, igual
+  que los del combate (ADR-0018) y el ancho de la cuña (ADR-0007). Las opciones del
+  jugador (sensibilidad, invertir un eje, apagar la cámara del tajo) no lo son: su
+  guardado lo decide el ADR-0028.
 - **El hash entre máquinas** (resuelve el punto abierto del ADR-0016): por ahora, solo en
   la misma máquina. Con las banderas del ADR-0008, Clang y GCC en -O0, -O2 y -O3 dan los
   mismos bits; lo que no está garantizado es la libm de otra máquina. En la CI, un test de
@@ -440,26 +486,45 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   dos salidas para comparar contra un hash guardado (funciones trascendentales propias o
   una CI con la misma glibc) quedan medidas para el ADR-0029. **Fe de erratas del
   ADR-0016** (Abierto).
-- **Si un día se agrega `-march`** (el ADR-0008 lo permite si el profiler lo pide), hay
-  que agregar también `-ffp-contract=off`: con FMA, los *replays* grabados divergen desde
-  el primer paso.
+- **Si un ADR nuevo agrega `-march`** (el ADR-0008 lo deja para un ADR nuevo, si el
+  profiler lo justifica), tiene que sumar también `-ffp-contract=off`: con FMA, los
+  *replays* grabados divergen desde el primer paso.
 - **El input por paso** necesita una regla en el game loop: qué parte del input del frame
   ve cada paso (por ejemplo, el movimiento del mouse lo consume el primero o se reparte).
   El *replay* graba el resultado, sea cual sea la regla.
-- **Un *replay* para cada bug:** el *ring buffer* de 5 minutos (~430 KB) se puede volcar
-  a un archivo y adjuntar a un reporte de bug (ADR-0011). Así, un bug del corte se
-  reproduce exacto, paso por paso.
+- **Un *replay* para cada bug:** como cada sesión se graba entera desde que empieza el
+  nivel, el archivo tiene el estado de partida (el escenario, la semilla y las CVars) y
+  todo el input desde ahí. Un anillo con solo los últimos minutos no alcanzaría: le
+  faltaría el estado del comienzo de su ventana. A ~86 KB por minuto, 30 minutos son
+  ~2,6 MB en disco. El archivo se adjunta a un reporte de bug (ADR-0011), y un bug del
+  corte se reproduce exacto, paso por paso. Empezar un *replay* en medio de una sesión
+  necesitaría guardar el estado completo, y eso se cruza con el guardado del ADR-0028.
 - **La traza del ADR-0030 queda resuelta** (su punto abierto h): es la misma macro de
   zona, y se activa con una definición del preset `debug`, la primera de las tres salidas
   que listó ese ADR. Una sola instrumentación sirve para el profiling y para verificar
-  los diagramas. **Fe de erratas del ADR-0030** (Consecuencias).
+  los diagramas. **Fe de erratas del ADR-0030** (Decisión 6 y Consecuencias).
+- **La macro tiene dos variantes.** Sin eso, cada función dibujada sería una zona de
+  Tracy en `relwithdebinfo`, y una función que corre por vértice o por triángulo
+  rompería la cuenta de 500 zonas por frame. Por eso:
+
+  | Variante | Para qué funciones | `debug` | `relwithdebinfo` | `release` |
+  |---|---|---|---|---|
+  | Zona y traza | Las normales: sistemas, pasos de un proceso, funciones que corren unas pocas veces por frame | Traza | Zona de Tracy | Vacía |
+  | Solo traza | Las que corren por elemento (por vértice, por triángulo, por arista) | Traza | Vacía | Vacía |
+
+  Las dos anotan la función para el verificador, así que el ADR-0030 sigue valiendo
+  completo: cada función dibujada lleva la macro (h), y el diagrama tiene todas las
+  funciones que llama el proceso (i). Los nombres de las dos variantes se fijan con el
+  código.
 - **Lo que se gana:** herramientas que la industria usa y que un evaluador reconoce,
   mediciones en las que puedo confiar porque las herramientas no son mías, y el esfuerzo
   propio puesto donde el juego lo necesita: ver el corte por dentro y repetir una
   partida exacta.
 - **Lo que se sacrifica:**
-  - dos dependencias externas en los builds de desarrollo, y un servidor de Tracy que hay
-    que compilar;
+  - tres dependencias externas en los builds de desarrollo (Dear ImGui, Tracy y el
+    header de RenderDoc), y un servidor de Tracy que hay que compilar;
+  - ~14 MiB de Tracy y la región de depuración en R4 cuando se mide en
+    `relwithdebinfo`;
   - RenderDoc obliga a correr en XWayland;
   - el determinismo entre máquinas no está garantizado;
   - los *frame pointers* cuestan un registro en `relwithdebinfo`.
@@ -474,11 +539,70 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   - el hash entre máquinas para la CI (ADR-0029);
   - el tamaño de la región de depuración, que se mide;
   - el editor de cápsulas del ADR-0017 y las demás herramientas de assets: tienen
-    interfaz (ImGui), pero cada una necesita su ticket.
+    interfaz (ImGui), pero cada una necesita su ticket;
+  - empezar un *replay* en medio de una sesión, con el estado guardado (ADR-0028).
 
 ## Cómo lo defiendo
 
-<!-- Lo escribe el autor: preguntas que haría un evaluador, respondidas con sus palabras. -->
+**Si el engine es "desde cero", ¿por qué usas Tracy y Dear ImGui en vez de escribir tu
+propio profiler y tu propia interfaz?**
+Porque son el instrumento con el que mido lo que construyo. Con herramientas externas en
+las que tengo mucha confianza, si algo sale mal, sé que el problema está en el engine.
+Si la herramienta también fuera mía y fallara, no podría observar el engine con
+confianza: no sabría si el error está en lo que mido o en cómo lo mido. Lo propio del
+engine (el corte, la física, el render) sigue siendo mío, y las herramientas quedan
+detrás de una frontera, fuera de Release.
+
+**El protocolo mide en `relwithdebinfo`, con las herramientas compiladas. ¿Cómo sabes
+que no alteran lo que mides?**
+Porque las mido y las apago. Durante la medición, Tracy está compilado con
+`TRACY_ON_DEMAND` y sin servidor: cada zona cuesta 4,6 ns y no guarda nada. Con 500
+zonas por frame son ~2 µs de 16,7 ms. La interfaz está oculta y el dibujo de depuración,
+apagado. Además, miro los picos (p99 y p99,9), no solo la mediana, y como comparo
+siempre dos builds iguales con el mismo protocolo, el costo que queda está en las dos
+mediciones.
+
+**¿Por qué un registro por frame propio, si ya usas Tracy?**
+Porque responden preguntas distintas. Tracy ve la CPU y la GPU a bajo nivel: qué
+función tardó y cuándo. El registro propio guarda lo que es del engine y del juego en
+cada frame: cuántos pasos de simulación corrió y cuánto tardó cada uno, si fue un frame
+de recuperación, cuándo se presentó y cuánta memoria usó, y también contadores del
+juego, como los zombies activos, los pedazos vivos y los cortes de cada paso. Comparar
+los dos me ayuda a entender y depurar el juego: Tracy me dice qué función tardó, y el
+registro me dice qué estaba pasando en el juego en ese momento. Además, el protocolo no depende de un programa externo, de
+su versión ni de un socket.
+
+**¿Por qué el *replay* graba el input de cada paso y no el de cada frame?**
+Para mantener la simulación determinista. La cantidad de pasos que corre cada frame
+depende del reloj real: en una ejecución un frame tiene un paso, y en la siguiente el
+mismo momento cae en dos. Si grabara por frame, al reproducir el input caería en otros
+pasos, y la simulación divergiría: otros cortes, otros pedazos. Grabado por paso, cada
+paso recibe siempre el mismo input, sin importar cómo se repartan los pasos en los
+frames.
+
+**¿Tus *replays* dan el mismo resultado en otra computadora?**
+No está garantizado, y por ahora no lo necesito: mido en la máquina mínima, la de
+referencia del ADR-0020. El prototipo mostró que Clang y GCC, en cualquier nivel de
+optimización, dan los mismos bits en esta máquina. Lo que cambia entre máquinas es la
+libm: `sinf` de glibc no redondea correctamente, así que otra versión puede dar otros
+bits. En la CI basta con comprobar que dos ejecuciones en el mismo proceso dan lo mismo.
+Si algún día hace falta más, el ADR-0029 tiene medidas las dos salidas.
+
+**Un valor del combate se cambia sin recompilar. ¿Cómo evitas que eso rompa un *replay*,
+y por qué en Release es una constante?**
+El *replay* guarda en su encabezado los valores de todas las CVars, y graba como evento
+cualquier cambio de una que afecta la simulación, en el paso en que ocurrió. Así, el
+código y la configuración quedan separados, y reproducir aplica los mismos valores en
+los mismos pasos. En Release el valor pasa a ser una constante: el compilador la puede
+optimizar, no hay archivos que leer y nadie puede cambiar el tuning por accidente.
+
+**¿Por qué RenderDoc y la medición de R3 no corren en la misma sesión?**
+Porque RenderDoc se mete entre el juego y el driver de Vulkan (*API hooking*), y solo
+deja pasar las extensiones que sabe capturar. La superficie de Wayland no es una de
+ellas, así que dentro de RenderDoc el juego tiene que correr en XWayland. Y en XWayland,
+`VK_EXT_present_timing` no da el momento del primer píxel, que es justo lo que mide R3.
+Además, dentro de RenderDoc el trabajo de la GPU costó el doble: no sirve para medir
+tiempos.
 
 ## Referencias
 

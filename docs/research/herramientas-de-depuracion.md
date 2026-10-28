@@ -3,7 +3,7 @@
 Nota de investigación del [ADR-0021](../adr/0021-herramientas-de-depuracion.md). Guarda
 las mediciones que sostienen la decisión, para poder repetirlas.
 
-Fecha: 2026-10-23, en la máquina de referencia del ADR-0020 (Dell XPS 13 9360,
+Fecha: 2026-10-23 (la sección 7, el 2026-10-28), en la máquina de referencia del ADR-0020 (Dell XPS 13 9360,
 i7-8550U, UHD 620, 8 GB de RAM). Son mediciones de laboratorio para decidir, no del
 protocolo del ADR-0020: no hubo calentamiento térmico y había otras aplicaciones
 abiertas. Los programas son código descartable, fuera del repo.
@@ -260,6 +260,31 @@ el mouse moviéndose sobre la ventana. Compilado con `-fno-exceptions -fno-rtti`
 - **El backend de render es reemplazable:** ImGui entrega listas de vértices, índices y
   rectángulos de recorte. El backend de Vulkan que trae crea su propio pipeline y sus
   descriptores. Dibujarlas con el renderer propio es la otra opción.
+
+## 7. Leer la memoria de R4 y la memoria base de Tracy (P7)
+
+Se agregó después de la auditoría del ADR-0021, el 2026-10-28, con las mismas versiones.
+
+**Leer `RssAnon` en cada frame:** 20 000 lecturas de cada forma.
+
+| Forma | p50 | p99 | Máximo |
+|---|---|---|---|
+| `/proc/self/statm` abierto una vez, con `pread`, y `resident − shared` | **1,25 µs** | 2,52 µs | 47,6 µs |
+| `/proc/self/status`, abierto y leído como texto en cada lectura | 14,4 µs | 38,4 µs | 118 µs |
+
+Las dos dieron el mismo valor (540 KiB). En `statm`, `shared` es la memoria residente
+respaldada por archivos o compartida, así que `resident − shared` es la RAM anónima
+residente: la escala de R4 del ADR-0020.
+
+**La memoria base de Tracy:** el mismo programa, con y sin Tracy compilado con
+`TRACY_ON_DEMAND`, después de un millón de zonas y sin servidor conectado.
+
+| Build | `RssAnon` | `VmRSS` | Hilos |
+|---|---|---|---|
+| Sin Tracy | 540 KiB | 4,4 MiB | 1 |
+| Tracy *on demand*, sin servidor | **13,9 MiB** | 18,4 MiB | **5** |
+
+Tracy suma ~14 MiB de RAM anónima y 4 hilos aunque no guarde ninguna zona.
 
 ## Cómo repetirlo
 

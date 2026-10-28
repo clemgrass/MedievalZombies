@@ -4,6 +4,10 @@
 - **Fecha:** 2026-10-20
 - **Ticket:** #30
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide la interfaz de las
+  herramientas visuales dentro del engine: Dear ImGui, dibujado por el renderer propio.
+  Cada herramienta (por ejemplo, el editor de cápsulas) necesita su ticket. Se corrige
+  en Abierto.
 
 ## Contexto y problema
 
@@ -628,7 +632,8 @@ LFS.
     integrada) se copian a una imagen con *tiling* óptimo;
   - el formato de las escenas y los niveles (ADR-0027);
   - Blender en la CI (ADR-0029);
-  - las herramientas visuales dentro del engine (ADR-0021).
+  - las herramientas visuales dentro del engine (decidido en el ADR-0021: usan Dear
+    ImGui, y cada una necesita su ticket).
 
 ## Cómo lo defiendo
 

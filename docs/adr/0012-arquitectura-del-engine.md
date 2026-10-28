@@ -11,6 +11,10 @@
   2026-10-21 (#19): las colas de eventos viven en la arena del paso, que se reinicia al
   terminar cada paso de simulación. La arena del frame queda para el render (ADR-0010).
   Se corrige en el orden del frame, la Decisión 4 y Consecuencias.
+  2026-10-28 (#43): Tracy (ADR-0021) arranca 4 hilos propios en los builds de
+  desarrollo. Son una excepción al hilo único: leen sus propias colas de zonas y las
+  mandan por red, sin tocar el estado del juego, así que no afectan el determinismo. El
+  engine sigue en un hilo. Se corrige en la Decisión 5.
 
 ## Contexto y problema
 
@@ -174,7 +178,7 @@ docs/      documentación
 | 2 | Módulos | **Capas estrictas** (`platform` → `core` → `gpu` → sistemas → `game`), que CMake hace cumplir: cada módulo es un target y solo enlaza con los de abajo |
 | 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo |
 | 4 | Comunicación | **Colas de eventos entre sistemas** para las órdenes que cambian el estado, guardadas en la arena del paso (ADR-0010). Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
-| 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida |
+| 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida. La única excepción son los hilos de Tracy en los builds de desarrollo, que no tocan el estado del juego (ADR-0021) |
 | 6 | Monorepo | `engine/`, `game/`, `tools/`, `shaders/`, `tests/`, `docs/` |
 
 ## Consecuencias

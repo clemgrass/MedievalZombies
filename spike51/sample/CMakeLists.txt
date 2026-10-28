@@ -11,11 +11,11 @@ option(MZ_WERROR "Warnings como errores" OFF)
 option(MZ_SANITIZE "ASan + UBSan" OFF)
 option(MZ_COVERAGE "Cobertura de Clang" OFF)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wnull-dereference
-                    -fno-exceptions -fno-rtti -ffp-contract=off)
-if(MZ_WERROR)
-  add_compile_options(-Werror)
-endif()
+# Warnings por target: una dependencia descargada (SDL3 con FetchContent) no los hereda.
+add_library(mz_flags INTERFACE)
+target_compile_options(mz_flags INTERFACE -Wall -Wextra -Wpedantic -Wshadow -Wconversion
+                       -Wnull-dereference -fno-exceptions -fno-rtti -ffp-contract=off
+                       $<$<BOOL:${MZ_WERROR}>:-Werror>)
 if(MZ_SANITIZE)
   add_compile_options(-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
   add_link_options(-fsanitize=address,undefined)
@@ -39,20 +39,20 @@ endif()
 
 add_library(mz_core src/core.cpp)
 target_include_directories(mz_core PUBLIC src)
+target_link_libraries(mz_core PRIVATE mz_flags)
 
 add_executable(mz_sample src/main.cpp)
-target_link_libraries(mz_sample PRIVATE mz_core SDL3::SDL3)
+target_link_libraries(mz_sample PRIVATE mz_core mz_flags SDL3::SDL3)
 
 enable_testing()
 find_package(GTest REQUIRED)
 add_executable(core_tests tests/core_tests.cpp)
-# gtest se compila con excepciones; los tests no heredan -fno-exceptions.
-target_compile_options(core_tests PRIVATE -fexceptions -frtti)
-target_link_libraries(core_tests PRIVATE mz_core GTest::gtest_main SDL3::SDL3)
+target_link_libraries(core_tests PRIVATE mz_core mz_flags GTest::gtest_main SDL3::SDL3)
 include(GoogleTest)
 gtest_discover_tests(core_tests PROPERTIES LABELS unit)
 
 # Fuga deliberada: comprueba que LeakSanitizer funciona en el entorno.
 add_executable(leak_probe tests/leak_probe.cpp)
+target_link_libraries(leak_probe PRIVATE mz_flags)
 add_test(NAME leak_probe COMMAND leak_probe)
 set_tests_properties(leak_probe PROPERTIES WILL_FAIL TRUE LABELS sanitizer_probe)

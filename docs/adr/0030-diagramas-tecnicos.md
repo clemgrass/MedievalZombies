@@ -12,6 +12,13 @@
   triángulo), vacía en RelWithDebInfo. Las dos anotan la función para el verificador.
   Se corrige en la Decisión 6 (h), en Consecuencias ("Una convención y una macro más en
   el código") y en "Lo que queda abierto".
+- **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 decide cómo se instala D2: desde su
+  release oficial en GitHub, con la versión exacta (hoy, 0.9.0) verificada con
+  `SHA256SUMS`, en la CI y en la máquina del autor. Cada verificador corre en la etapa de
+  la CI que pide su entrada: (b), (c) y (d) en la etapa rápida, porque solo leen
+  archivos; (a), (f), (g) e (i) junto a `clang-tidy`, porque leen el índice de símbolos o
+  el AST; y (e) y (h) después de los tests en `debug`, porque usan lo que escriben los
+  tests. Se corrige en "Lo que queda abierto".
 
 ## Contexto y problema
 
@@ -316,7 +323,7 @@ y además me gusta cómo se ve.
 ### Lo que queda abierto
 
 - **Cómo se instala D2** en la máquina del autor y en la CI, y cómo se fija su versión
-  (ADR-0006, ADR-0029).
+  (decidido en el ADR-0029: release oficial con la versión exacta y `SHA256SUMS`).
 - **El índice de símbolos del verificador (a):** clangd o universal-ctags. Se decide
   cuando exista el código.
 - **La macro de traza del verificador (h):** su nombre (en mayúsculas, ADR-0013), dónde

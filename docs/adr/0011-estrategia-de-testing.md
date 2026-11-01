@@ -4,6 +4,9 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #21
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#51): qué de todo esto corre en la CI y cuándo no lo
+  decide el ADR-0014, sino el ADR-0029, que el ADR-0014 creó para eso. Se corrige en
+  Contexto y en Consecuencias.
 
 ## Contexto y problema
 
@@ -31,7 +34,7 @@ Hay que decidir:
 6. cómo se **registran los bugs** y cómo se enlazan con sus tests de regresión.
 
 Queda **fuera de alcance** la infraestructura de CI (cuándo y dónde corre cada cosa en
-GitHub), que decide el ADR-0014, y los benchmarks de rendimiento, que deciden los
+GitHub), que decide el ADR-0029, y los benchmarks de rendimiento, que deciden los
 ADR-0020 y ADR-0021.
 
 ## Criterios
@@ -268,7 +271,7 @@ caída se guarda y **se convierte en un test de regresión**.
 - **Dependencias nuevas** cuando empiece el código: `gtest` (paquete de Arch) y, para
   las imágenes de referencia, `vulkan-swrast` (lavapipe). Cada una se agrega a
   `CREDITS.md`.
-- **El ADR-0014** decide qué de todo esto corre en CI y en qué momento. Este ADR deja
+- **El ADR-0029** decide qué de todo esto corre en CI y en qué momento. Este ADR deja
   definido qué existe y cómo se corre en local.
 - **Lo que queda abierto:**
   - la tolerancia exacta de las imágenes de referencia, que se fija cuando exista el

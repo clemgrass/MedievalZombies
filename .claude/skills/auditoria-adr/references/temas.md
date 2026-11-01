@@ -24,6 +24,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
+| [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
 ### Activación por contenido
 
@@ -47,6 +48,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Corte de mallas, tapas, pedazos, hendidura, `slice_request`, índice soldado | `corte` |
 | Diagramas, D2, la leyenda, SVG, Mermaid, PlantUML, Graphviz | `diagramas` |
 | Combate, la fuerza o la carga del tajo, armadura, juntas, rebote, la espada clavada, agarres, energía, pausa de impacto, vivo o muerto, tipos de zombie | `gameplay` |
+| CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -265,6 +267,9 @@ Qué mirar:
   solo en `debug` y `relwithdebinfo`. Si Release los compila o los enlaza, es
   `bloqueante`.
 - **Flags:** `-Werror` y la lista ampliada de warnings del ADR-0013, sin `-Weverything`.
+  **Por target, nunca globales** (fe de erratas del ADR-0013): un target de interfaz que
+  solo enlazan los targets propios. `add_compile_options` con warnings o `-Werror` es un
+  hallazgo, porque llega a las dependencias de `FetchContent`.
   `-fno-exceptions` y `-fno-rtti` (ADR-0009). **Sin `-ffast-math` y sin `-march`**
   (ADR-0008).
 - **SDL3:** del sistema, con la opción `MZ_VENDOR_SDL3` para usar FetchContent.
@@ -850,8 +855,8 @@ Qué mirar:
   solo los últimos minutos es un hallazgo: no se puede reproducir sin el estado del
   comienzo de su ventana. Un cambio de una CVar que afecta
   la simulación durante una grabación se graba como evento de su paso. El hash se compara
-  en la misma máquina; comparar contra un hash guardado entre máquinas lo decide el
-  ADR-0029. Los controles de tiempo (pausa, avance de un paso, cámara lenta) no cambian
+  con la misma glibc: en la misma máquina, o en la CI contra un hash guardado en la
+  máquina del autor (ADR-0029; lo audita `ci`). Los controles de tiempo (pausa, avance de un paso, cámara lenta) no cambian
   el `dt`.
 - **Memoria:** contadores de uso, pico y fallos en cada región, en todos los builds
   (también los pide el ADR-0010). `TracyAllocN` solo en el pool de pedazos; en una
@@ -867,3 +872,72 @@ Qué mirar:
   ADR-0021. Lo que tenga que ver con su reserva y sus límites lo audita `memoria`.
 - **Dependencias de desarrollo:** Dear ImGui, Tracy y `renderdoc_app.h` (MIT) entran a
   `CREDITS.md` en el ticket que las suma al build. Eso lo audita `build-y-licencias`.
+
+## ci
+
+**ADRs:** 0029 (CI/CD). También el uso de `docs/performance/presupuestos.md` como límite
+del *replay*.
+
+Qué mirar:
+
+- **El entorno:** los jobs que compilan o prueban corren en un contenedor
+  `archlinux:latest` con el `mirrorlist` en la fecha del snapshot del Arch Linux
+  Archive, leída del único archivo de `tools/ci/` que la guarda, y `pacman -Syyuu`. Una
+  fecha escrita en el YAML contradice la Decisión 2; un job de build en el runner Ubuntu
+  nativo o una imagen propia en GHCR contradicen la Decisión 1. Mezclar el archivo con mirrors al día también:
+  la wiki de Arch lo desaconseja. La única excepción es la corrida nocturna, que usa
+  `archlinux:latest` sin fecha y nunca bloquea.
+- **Un cambio de la fecha** va en su propio PR `build:`. Si cambia la glibc, el mismo PR
+  vuelve a grabar los hashes guardados del *replay* y lo dice en su descripción.
+- **Blender y D2** se instalan desde su tarball oficial, con la versión exacta y la
+  verificación de su `sha256` (`SHA256SUMS` en D2). Instalarlos con `pacman`, o bajarlos
+  sin verificar, contradice la Decisión 2. La versión es la misma que fijan el ADR-0017 y
+  el ADR-0030.
+- **Dos etapas:** primero los chequeos rápidos, que no compilan (formato, `reuse lint`,
+  `actionlint`, reglas del ADR-0009 y los verificadores de diagramas (b), (c) y (d));
+  después, en paralelo, Clang en `debug` con sus tests y luego los verificadores (e) y
+  (h), GCC en `debug` con sus tests, la cobertura con la meta del 100 %, `clang-tidy`
+  junto con los verificadores (a), (f), (g) e (i), compilar `relwithdebinfo` y `release`,
+  y el *replay*. Un verificador que necesita compilar o correr los tests puesto en la
+  etapa rápida es un hallazgo: falla siempre o no verifica nada. Un job que exige un ADR y no está, o que
+  está pero no puede fallar (por ejemplo, la cobertura que solo informa), es un hallazgo.
+- **`ci-ok` es el único chequeo obligatorio:** corre con `if: always()`, depende de todos
+  los jobs del workflow y falla si alguno falló o se canceló. **Un `paths:` o
+  `paths-ignore:` en el workflow de PR es `bloqueante`**: deja el PR esperando un
+  chequeo que nunca llega. Saltar un job se hace con condiciones, a partir de un job que
+  decide qué cambió. Un job nuevo que no está en los `needs` de `ci-ok` no bloquea nada,
+  y eso también es un hallazgo.
+- **Cuándo:** en `pull_request` hacia `main` y en `push` a `main`. La nocturna
+  (`schedule`) nunca es obligatoria.
+- **El YAML solo elige el entorno, instala y llama a un script de `tools/ci/`.** Comandos
+  de build o de tests escritos en el YAML contradicen la Decisión 6: el autor no podría
+  repetirlos con el mismo comando. Lo que es de CMake usa los *workflow presets*.
+- **El *replay*** compara contra el hash guardado y también dos ejecuciones del mismo
+  proceso. Compilado en `relwithdebinfo`, mide los picos de memoria por región y falla si
+  pasan su fila de `presupuestos.md`; los contadores del juego fallan solo si pasan un
+  tope duro de su ADR (la cuota de cortes por paso, los pedidos pendientes, el tope de
+  ragdolls). Usar las filas de capacidad (R5) como tope es un hallazgo: R5 es un mínimo,
+  y un escenario de carga daría un rojo falso. Medir los picos en `debug` también: las
+  zonas rojas de ASan los inflan. **Nada mide tiempo en la CI:** un umbral de tiempo,
+  o un benchmark que pueda fallar por tiempo, contradice la Decisión 8. Las
+  instrucciones contadas solo informan, en el resumen del job.
+- **Seguridad:** `permissions: contents: read` en cada workflow y más solo en el job que
+  lo necesite; **cada `uses:` fijado por su SHA completo**, con la versión en un
+  comentario (una etiqueta como `@v7` es un hallazgo); `.github/dependabot.yml` con el
+  ecosistema `github-actions`; nunca `pull_request_target`; ningún secreto; ningún
+  runner propio (`runs-on: self-hosted`). Un valor del evento (título, rama, cuerpo de un
+  PR) usado directo dentro de un `run:` es `bloqueante` por inyección: va por `env:`.
+- **Velocidad:** caché de `/var/cache/pacman/pkg` con la fecha como clave, y de Blender
+  y D2 con sus versiones; `cancel-in-progress` solo en los PRs. Si una corrida real pasa
+  de 10 minutos, se anota y se abre un ticket.
+- **CD:** el workflow de release corre solo con un tag y trabaja en el SDK del Steam
+  Linux Runtime 3.0 (*sniper*): compila `debug` y corre sus tests **sin** la comparación
+  contra el hash guardado (que solo vale con la glibc del snapshot; la de dos ejecuciones
+  en el mismo proceso sí corre), después compila `release`, adjunta el binario a la
+  GitHub Release y genera una atestación de procedencia. Correr ahí el hash guardado, o
+  los tests en `release` (los *death tests* no pasan), es un hallazgo. Solo ese job tiene los
+  permisos para escribir la Release y la atestación. Publicar un binario compilado en el
+  contenedor de Arch contradice la Decisión 10: no corre en distros con una glibc más
+  vieja.
+- **Puedes ejecutar `actionlint`** sobre los workflows si está instalado, porque solo
+  lee.

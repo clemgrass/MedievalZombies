@@ -5,6 +5,11 @@ con engine propio. Su feature estrella es el corte de mallas en tiempo real: el 
 la espada corta de verdad al zombie. Aquí vive todo lo que explica **por qué** el
 proyecto es como es: decisiones, investigación, diseño del juego y forma de trabajo.
 
+El proyecto es **un trabajo colaborativo entre el autor y Claude** (un asistente de IA):
+el autor da las ideas de cada sistema, revisa todo el código y es responsable de
+entenderlo, y Claude escribe el código, investiga y propone. El modelo completo está en
+el [ADR-0014](adr/0014-metodologia-de-desarrollo.md).
+
 ## Mapa
 
 ```

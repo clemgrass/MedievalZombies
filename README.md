@@ -49,8 +49,8 @@ rojo es el único color saturado**: en medio de la horda siempre se ve dónde se
 ## El engine
 
 El engine es propio y está escrito en **C++20**. Se apoya en **Vulkan 1.3** como API
-gráfica y en **SDL3** para la ventana, el input, el tiempo y el audio. El resto es
-propio:
+gráfica y en **SDL3** para la ventana, el input, el tiempo y el audio. Lo que define al
+juego es propio:
 
 | Parte | Qué hace |
 |---|---|
@@ -98,7 +98,9 @@ fijos. Cuando la hoja atraviesa a un zombie, dentro del paso de simulación pasa
 Los pedazos comparten el buffer de vértices del modelo original y solo suben a la GPU
 sus índices y sus vértices nuevos. Los pedazos se pueden volver a cortar, incluso en el
 suelo. En un prototipo, un corte de una malla de 8500 vértices, con la deformación
-incluida, tomó de 0,5 a 0,8 ms sin optimizar, en el mismo portátil de la meta de 60 fps.
+incluida, tomó de 0,5 a 0,8 ms sin optimizar, en el mismo portátil de la meta de 60 fps
+(el mejor de 300 repeticiones, medido fuera del protocolo). Un zombie del juego tiene
+un tercio de esos vértices: serían unos 0,2 a 0,3 ms.
 
 ## Cómo funciona el combate
 
@@ -134,7 +136,7 @@ incluida, tomó de 0,5 a 0,8 ms sin optimizar, en el mismo portátil de la meta 
 
 - **Código:** [MIT](LICENSES/MIT.txt).
 - **Documentación y assets propios:** [CC BY 4.0](LICENSES/CC-BY-4.0.txt).
-- **Assets de terceros:** cada uno con su licencia y su autor, en
+- **Dependencias y assets de terceros:** cada uno con su licencia y su autor, en
   [`CREDITS.md`](CREDITS.md).
 
 Más detalle técnico en [`docs/`](docs/README.md).

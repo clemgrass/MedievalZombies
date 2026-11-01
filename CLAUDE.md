@@ -77,6 +77,7 @@ escrito en C++20 (ADR-0003).
 
 Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 
+- `README.md`: presentación pública del juego y del engine, sin el proceso;
 - `docs/`: ADRs, investigación, specs, planes, guías y diagramas técnicos (ADR-0030);
 - `.github/`: formularios de issue y plantilla de PR;
 - `.claude/`: skills y agentes de Claude Code, como la auditoría `/auditoria-adr`;

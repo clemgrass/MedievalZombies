@@ -4,6 +4,8 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #33
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#46): el `README.md` de la raíz es documentación, bajo
+  CC BY 4.0. Se suma a la lista de la Decisión 2.
 
 ## Contexto y problema
 
@@ -119,7 +121,7 @@ que respetar y documentar.
 | # | Qué | Elección |
 |---|---|---|
 | 1 | Código | **MIT** |
-| 2 | Documentación (`docs/`, `CREDITS.md`, `CLAUDE.md`) | **CC BY 4.0** |
+| 2 | Documentación (`docs/`, `README.md`, `CREDITS.md`, `CLAUDE.md`) | **CC BY 4.0** |
 | 3 | Assets propios | **CC BY 4.0** |
 | 4 | Assets de terceros | **Solo CC0 y CC BY.** Los de CC BY se acreditan en `CREDITS.md`. Ninguna otra licencia se acepta |
 | 5 | Documentación de licencias | **REUSE**, con `REUSE.toml` (licencias por carpeta) |

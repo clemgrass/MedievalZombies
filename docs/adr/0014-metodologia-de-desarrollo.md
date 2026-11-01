@@ -4,6 +4,9 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #27
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#46): el `README.md` de la raíz presenta solo el juego
+  y el engine, sin el proceso. El modelo de colaboración se explica en este ADR, enlazado
+  desde `docs/README.md`. Se corrige en la práctica 1.3 y en la Decisión 1.3.
 
 ## Contexto y problema
 
@@ -86,7 +89,7 @@ En los dos modos, **nada entra a `main` sin la revisión del autor**.
 
 | Práctica | Qué aporta |
 |---|---|
-| **El modelo explicado en el `README.md`** y en este ADR | Quien abre el repo sabe desde el principio cómo se hizo |
+| **El modelo explicado en este ADR**, enlazado desde `docs/README.md` | Quien abre la documentación sabe desde el principio cómo se hizo |
 | **`Co-Authored-By: Claude` en los commits** que incluyen código escrito por Claude | GitHub muestra a Claude como coautor en cada commit. La autoría queda en el historial de git, commit por commit |
 | **"Qué debo poder explicar" obligatoria** en cada feature y tarea | El ticket no se cierra hasta que el autor responde las preguntas de un evaluador sobre ese trabajo. Es la prueba de que lo entendió |
 
@@ -293,7 +296,7 @@ mismo Clang, CMake y SDL3 que la máquina del autor (ADR-0006).
 |---|---|---|
 | 1.1 | Modos de trabajo | **Dirigido** para los sistemas grandes (renderer, corte, física, animación, IA) y **propuesto** para lo periférico. En el modo dirigido, Claude prepara el código alrededor y marca con `TODO(human)` los puntos de decisión clave. El autor explica con sus palabras cómo resolverlos, Claude lo escribe y lo mejora, y el autor lo revisa |
 | 1.2 | Marca del modo | Labels **`modo:dirigido`** y **`modo:propuesto`** en las features y las tareas. Las investigaciones no llevan label de modo, porque el proceso de los ADRs ya define los roles |
-| 1.3 | Transparencia | El modelo explicado en el `README.md`, **`Co-Authored-By: Claude`** en los commits con código de Claude, y **"Qué debo poder explicar" obligatoria** en cada feature y tarea |
+| 1.3 | Transparencia | El modelo explicado en este ADR, enlazado desde `docs/README.md`, **`Co-Authored-By: Claude`** en los commits con código de Claude, y **"Qué debo poder explicar" obligatoria** en cada feature y tarea |
 | 2 | Orden de construcción | **Esqueleto andante, después cortes verticales.** Las dudas técnicas se resuelven con **spikes** de tiempo acotado, en ramas `spike/<N>-…` que no se mergean. El resultado queda escrito en el issue |
 | 3 | Flujo | **Kanban, con el tablero tal como está:** `Backlog → Listo → En progreso → En revisión → Hecho`, sin límites por columna ni ceremonias extra |
 | 4 | Revisión | **Todo cambio entra por rama y PR, nunca directo a `main`.** Plantilla de PR con la lista de revisión de Google. **`main` está protegida** con un *ruleset* de GitHub, sin excepciones: PR obligatorio, conversaciones resueltas antes del merge, sin *force push* y sin borrado. Cuando exista la CI, se suma como chequeo obligatorio. No se exige aprobación (GitHub no deja aprobar el propio PR) ni historial lineal (para no restringir los métodos de merge). Antes de cada PR corre la **skill de auditoría** contra los ADRs. Sus hallazgos los revisan juntos el autor y Claude, y cada uno se decide: se corrige, se ignora o queda como deuda técnica |

@@ -1,6 +1,6 @@
 # ADR-0022: Pipeline de render
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-11-01
 - **Ticket:** #36
 - **Reemplaza / Reemplazado por:** —
@@ -427,7 +427,7 @@ borroso.
   - el tamaño de la grilla del temblor y la textura de detalle de la carne, que se
     ajustan mirando el juego.
 
-**Fe de erratas en otros ADRs.** Al aceptar este ADR, se corrigen como fe de erratas
+**Fe de erratas en otros ADRs.** Al aceptar este ADR se corrigieron, como fe de erratas
 (ADR-0014, regla 11):
 
 | ADR | Qué se corrige |

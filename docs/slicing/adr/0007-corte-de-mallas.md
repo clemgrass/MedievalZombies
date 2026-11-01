@@ -7,6 +7,11 @@
 - **Fe de erratas:** 2026-10-28 (#43): el ADR-0021 decide cómo se ajusta sin recompilar
   el ancho máximo de la cuña: es una CVar, constante en Release. Su valor sigue
   abierto. Se corrige en Abierto.
+- **Fe de erratas:** 2026-11-01 (#36): el ADR-0022 decide cómo se dibujan los pedazos y
+  la tapa. Un pedazo son dos llamadas con índices de 16 bits: los triángulos que solo
+  usan vértices del modelo, y un buffer chico con los vértices nuevos y copias de los del
+  borde. La tapa es procedural, según la distancia al hueso, con una textura de detalle
+  en su UV plana. Se corrige en Consecuencias ("Los pedazos en memoria") y en Abierto.
 
 ## Contexto y problema
 
@@ -539,11 +544,10 @@ va a ser gruesa, como la Matadragones de *Berserk*, así que la herida se va a n
   transformación juntos, y el test que los compara cubre también las normales.
 - **Los pedazos en memoria:** el buffer de vértices del modelo vive una sola vez en la
   GPU. Cada pedazo suma sus índices y un buffer chico con sus vértices nuevos (de 180 a
-  570 por corte en el maniquí), dentro de los 32 MiB de pedazos (ADR-0020). Qué lleva
-  ese buffer chico depende de cómo se dibuje, y eso lo decide el ADR-0022. Por ejemplo:
-  con dos llamadas, lleva también copias de los vértices originales de los triángulos
-  del borde; con *vertex pulling*, solo los nuevos; si el buffer del modelo y los
-  vértices nuevos viven en el mismo `VkBuffer`, basta una llamada con índices de 32 bits.
+  570 por corte en el maniquí), dentro de los 32 MiB de pedazos (ADR-0020). El ADR-0022
+  dibuja cada pedazo con **dos llamadas, con índices de 16 bits:** una con los triángulos
+  que solo usan vértices del modelo, y otra con el buffer chico, que lleva los vértices
+  nuevos y **copias de los vértices originales de los triángulos del borde**.
 - **El *ring buffer* es el camino de subida** (ADR-0005), no donde viven los pedazos. En
   la GPU dedicada, los datos se copian de ahí al pool de pedazos (*device-local*). En la
   integrada, se escriben directo en el pool. Liberar el lugar de un pedazo descartado
@@ -668,7 +672,8 @@ va a ser gruesa, como la Matadragones de *Berserk*, así que la herida se va a n
   - cuándo se emite el pedido (al salir la hoja o al detenerse) y cuándo empieza la pausa
     de impacto, que deciden si los cortes que sobran caben en la pausa (ADR-0018);
   - cómo se dibuja la tapa por dentro y cómo se dibuja un pedazo desde dos buffers
-    (ADR-0022);
+    (decidido en el ADR-0022: tapa procedural según la distancia al hueso, con una
+    textura de detalle, y dos llamadas por pedazo);
   - el almacenamiento de los cortes que esperan, los pools de los pedazos y el tamaño del
     *ring buffer* (ADR-0010);
   - el mínimo de un pedazo y el umbral del determinante, que se fijan midiendo;

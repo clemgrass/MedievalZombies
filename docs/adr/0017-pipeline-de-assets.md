@@ -13,6 +13,11 @@
   oficial de `download.blender.org`, verificado con su `sha256`, en la CI y en la máquina
   del autor: el paquete de Arch sigue la fecha del snapshot y no la versión elegida.
   Se corrige en Consecuencias y en Abierto.
+- **Fe de erratas:** 2026-11-01 (#36): el ADR-0022 pide mipmaps. El cocinador los genera
+  para las texturas de color, y se filtran con *nearest*, también entre niveles. Además,
+  para la tapa procedural, el cocinador escribe por cada hueso su segmento (inicio y fin)
+  y su radio en la pose de referencia. Se corrige en Consecuencias ("Las texturas" y "Los
+  huesos de la tapa").
 
 ## Contexto y problema
 
@@ -565,9 +570,12 @@ LFS.
   nivel con esas piezas lo decide el ADR-0027.
 - **Las texturas** ocupan ~3 % de la memoria de la GPU sin comprimir. La sección de
   texturas del binario guarda su `VkFormat`: `R8G8B8A8_SRGB` para el color y
-  `R8G8B8A8_UNORM` para los datos, según el material glTF. Si hay mipmaps (y cómo se
-  filtran) lo decide el ADR-0022; si los pide, el cocinador los genera, promediando el
-  color en espacio lineal.
+  `R8G8B8A8_UNORM` para los datos, según el material glTF. El ADR-0022 pide mipmaps: el
+  cocinador los genera para las texturas de color, promediando el color en espacio
+  lineal, y se filtran con *nearest*, también entre niveles.
+- **Los huesos de la tapa:** para la tapa procedural del ADR-0022, el cocinador escribe
+  por cada hueso su segmento (inicio y fin) y su radio en la pose de referencia. La tapa
+  mide la distancia de cada píxel a esos segmentos, en la pose del pedazo.
 - **El repo:** solo git, nunca LFS.
   - Ningún archivo pasa de 50 MiB (el aviso de GitHub). Los `.blend` low poly pesan
     mucho menos.

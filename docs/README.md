@@ -82,6 +82,6 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0019](adr/0019-licencias.md) | Licencias (código MIT, docs y assets CC BY 4.0) | Transversal | Aceptado |
 | [ADR-0020](adr/0020-requisitos-y-presupuestos-de-rendimiento.md) | Requisitos y presupuestos de rendimiento (UHD 620, 60 fps, 640×360) | Transversal | Aceptado |
 | [ADR-0021](adr/0021-herramientas-de-depuracion.md) | Herramientas de depuración (Dear ImGui, Tracy y `perf`, registro por frame propio, replay por paso) | Transversal | Aceptado |
-| [ADR-0022](graphics/adr/0022-pipeline-de-render.md) | Pipeline de render | Gráficos | Propuesto |
+| [ADR-0022](graphics/adr/0022-pipeline-de-render.md) | Pipeline de render (forward a 640×360, look PSX, blit *nearest* entero, tapa procedural) | Gráficos | Aceptado |
 | [ADR-0029](adr/0029-ci-cd.md) | CI/CD (contenedor de Arch con fecha fija, etapas con `ci-ok`, CD con el Steam Linux Runtime si se logra) | Transversal | Aceptado |
 | [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |

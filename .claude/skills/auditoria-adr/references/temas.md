@@ -14,11 +14,11 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
 | [memoria](#memoria) | 0010 | `engine/core/**`, `engine/gpu/**`, o código que reserve, libere o guarde memoria (arenas, pools, allocators, contenedores) |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
-| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers), 0010 (tamaño del *ring buffer*) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
+| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers), 0010 (tamaño del *ring buffer*), 0022 (pipeline de render) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps y huesos de la tapa) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
 | [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets; tests después en el combate) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
@@ -34,7 +34,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Si el diff menciona… | Corre |
 |---|---|
 | Vectores, matrices, cuaterniones, coordenadas, `float`, una librería de matemática (GLM, Eigen…) | `matematica` |
-| Vulkan, render, shaders, profundidad, GPU | `graficos` |
+| Vulkan, render, shaders, profundidad, GPU, luces, sombras, el look PSX (*dithering*, mipmaps, niebla), el escalado, transparencias, la tapa del corte | `graficos` |
 | Una dependencia o librería nueva, licencias, assets de terceros, flags del compilador | `build-y-licencias` |
 | ECS, capas, módulos, SDL, input, el bucle de juego | `arquitectura` |
 | Rasgos de C++ (excepciones, RTTI, punteros inteligentes, templates, `virtual`) | `cpp-y-convenciones` |
@@ -287,7 +287,8 @@ Qué mirar:
 ## graficos
 
 **ADRs:** 0005 (API gráfica), 0007 (frames en vuelo y subida de los pedazos), 0008
-(proyección y buffers), 0010 (el *ring buffer* dimensionado para el peor caso).
+(proyección y buffers), 0010 (el *ring buffer* dimensionado para el peor caso), 0022
+(pipeline de render).
 
 Qué mirar:
 
@@ -308,10 +309,41 @@ Qué mirar:
   y se compara con `GREATER` o `GREATER_OR_EQUAL`. Un `LESS` o un clear a `1.0` es
   `bloqueante`.
 - **Proyección:** profundidad en [0, 1], Y volteada **en la matriz de proyección** (no
-  con un viewport negativo), y `frontFace` ajustado a ese volteo. Plano lejano infinito
-  solo en la cámara principal.
+  con un viewport negativo), y `frontFace` = **`VK_FRONT_FACE_COUNTER_CLOCKWISE`**, con
+  un test que dibuja un cubo y verifica que se ven sus caras de afuera. `CLOCKWISE` es
+  `bloqueante`: dibuja la escena de adentro hacia afuera sin que cambie la silueta.
+  Plano lejano infinito solo en la cámara principal.
 - **Buffers de GPU:** los `struct` que van a la GPU usan `vec4` o relleno explícito,
   con `static_assert` sobre `sizeof` y `offsetof`.
+- **El frame (ADR-0022):** forward, con estas pasadas en este orden: color y
+  profundidad a 640×360 (opacos y *screen-door*), dibujo de depuración y postproceso a
+  640×360, **blit *nearest* por el factor entero** al swapchain, e ImGui a la resolución
+  nativa. Un *depth prepass*, un G-buffer o un shadow map son una decisión nueva, no un
+  detalle de implementación. Un efecto aplicado después del blit, o un escalado con
+  filtro lineal o por el compositor, es `importante`.
+- **Barreras escritas a mano** con `synchronization2`, sin *render graph*. **Todos los
+  pipelines se compilan al arrancar**, con un `VkPipelineCache`; crear un pipeline
+  durante el juego es `importante` (causa tirones).
+- **Luz estilizada por píxel:** Lambert con atenuación hasta el radio, ambiente frío, sin
+  especular, y un arreglo global de **hasta 16 antorchas** en el uniform del frame.
+  Sombras ***blob***, sin shadow map.
+- **El look PSX:** texturas *nearest* con mipmaps *nearest* entre niveles; *dithering* a
+  15 bits con Bayer 4×4 y niebla lineal al final del fragment shader. El temblor de
+  vértices (grilla) y las texturas afines son **CVars** (ADR-0021), constantes en
+  Release; las afines, apagadas por defecto. Color LDR en `R8G8B8A8_SRGB`, sin
+  antialiasing.
+- **Bindless:** un *descriptor set* global con el arreglo de objetos (un SSBO por frame
+  en vuelo) y el de texturas (*descriptor indexing*, *partially bound*); el índice del
+  objeto va en un *push constant*. Una llamada por objeto; culling por esfera en la CPU.
+  El engine verifica al iniciar `descriptorIndexing`, `runtimeDescriptorArray`,
+  `descriptorBindingPartiallyBound` y `shaderSampledImageArrayNonUniformIndexing`.
+- **Pedazos:** dos llamadas, con **índices de 16 bits**; el buffer chico lleva los
+  vértices nuevos y copias de los del borde. **La tapa es procedural** según la distancia
+  a los segmentos de los huesos del pedazo, con una textura de detalle en su UV plana.
+- **Transparencias:** *screen-door* con Bayer 4×4 para la caballera; *alpha blending*
+  solo para las partículas (ADR-0025).
+- **Medir una pasada:** la comparación de antes y después de un PR de rendimiento se
+  hace con el reloj de la GPU fijo, y el PR dice a qué frecuencia (ADR-0020).
 
 ## matematica
 
@@ -427,7 +459,8 @@ Qué mirar:
 
 ## assets
 
-**ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte).
+**ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
+(mipmaps y los huesos de la tapa).
 
 Qué mirar:
 
@@ -473,6 +506,9 @@ Qué mirar:
 - **Las texturas guardan su `VkFormat`:** `R8G8B8A8_SRGB` para el color y `_UNORM` para
   los datos.
 - **Las texturas son RGBA8 sin comprimir.** BC7, BC1 o Basis cambian la Decisión 5.
+- **Lo que pide el render (ADR-0022):** el cocinador genera los mipmaps de las texturas
+  de color, promediando en espacio lineal, y escribe por cada hueso su segmento (inicio y
+  fin) y su radio en la pose de referencia, para la tapa procedural.
 - **Las mallas que se cortan (ADR-0007):**
   - el cocinador **falla el build** si una cáscara no es cerrada y *manifold* (cada
     arista soldada con exactamente dos triángulos, de orientaciones opuestas);

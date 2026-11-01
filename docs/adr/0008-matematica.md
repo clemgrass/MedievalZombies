@@ -6,6 +6,11 @@
 - **Reemplaza / Reemplazado por:** —
 - **Fe de erratas:** 2026-10-18 (#52): el frente de un modelo glTF mira hacia +Z (la
   cámara, hacia −Z). Se aclara en Opciones, Investigación y Consecuencias.
+- **Fe de erratas:** 2026-11-01 (#36): el prototipo del ADR-0022 midió qué valor toma
+  `frontFace`. Con la Y volteada en la proyección, un triángulo antihorario visto desde
+  afuera también es antihorario para Vulkan, así que el valor es
+  `VK_FRONT_FACE_COUNTER_CLOCKWISE`. Con el valor al revés, el error no se nota en la
+  silueta. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -251,8 +256,12 @@ el mundo (como Unreal 5) resuelve un problema que este juego no tiene.
 - **Reverse-Z cambia el pipeline:** el buffer de profundidad se limpia a `0.0` (no a
   `1.0`), y la comparación es `VK_COMPARE_OP_GREATER` (o `GREATER_OR_EQUAL`), no
   `LESS`. Cualquier tutorial con la convención clásica hay que traducirlo.
-- **El volteo de Y invierte el orden de los vértices**, así que `frontFace` se fija de
-  acuerdo con eso y se verifica con un triángulo de prueba antes de activar el *culling*.
+- **El volteo de Y invierte el orden de los vértices** respecto de no voltear. Así, un
+  triángulo antihorario visto desde afuera queda antihorario en el *framebuffer*, y
+  `frontFace` es **`VK_FRONT_FACE_COUNTER_CLOCKWISE`** (medido en el prototipo del
+  ADR-0022). Con el valor al revés, la escena se dibuja de adentro hacia afuera y la
+  silueta no cambia: lo verifica un test que dibuja un cubo y comprueba que se ven sus
+  caras de afuera, antes de activar el *culling*.
 - **Las sombras usan una proyección finita.** El plano lejano infinito es solo para la
   cámara principal.
 - **Los `struct` que van a buffers de GPU** usan `vec4` o relleno explícito, con

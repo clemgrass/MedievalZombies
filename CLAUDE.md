@@ -3,9 +3,9 @@
 Videojuego 3D sobre un apocalipsis zombie en la época medieval, con engine propio,
 escrito en C++20 (ADR-0003).
 
-> **Estado actual:** milestone M1 (decisiones fundacionales, épica #5). M2 (decisiones de
-> sistemas, épica #35) espera a M1. M0 está
-> cerrado. No existe código del juego: el código empieza después de cerrar M1.
+> **Estado actual:** milestone M2 (decisiones de sistemas, épica #35). M0 y M1 están
+> cerrados. No existe código del juego: el autor eligió decidir los siete ADRs de M2
+> (0022 a 0028) antes de escribir código.
 
 ## El juego
 

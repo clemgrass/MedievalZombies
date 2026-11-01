@@ -17,7 +17,8 @@ ejemplo, sin escenarios grabados), el número sigue marcado como hipótesis.
 
 ## Frame de CPU
 
-Con un hilo (ADR-0012), los sistemas se suman. Hay dos tipos de costo:
+Con un hilo (ADR-0012), los sistemas se suman. El hilo de audio del ADR-0024 corre en
+otro núcleo y tiene su propia meta, más abajo. Hay dos tipos de costo:
 
 - **por paso de simulación:** se paga una vez por cada paso del acumulador. Lo normal es
   uno por frame, pero un frame puede tener de cero a ocho (ADR-0012);
@@ -46,7 +47,7 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 |---|---|---|
 | Plataforma e input | 0,3 ms | Hipótesis |
 | Render en la CPU (culling, comandos y subida de geometría) | 2,5 ms | Hipótesis |
-| Audio | 0,5 ms | Hipótesis |
+| Audio en el hilo principal (eventos, emisores, sonido 3D y comandos, ADR-0024) | 0,5 ms | Hipótesis |
 | Reserva | 0,5 ms | — |
 | **Total por frame** | **3,8 ms** | |
 
@@ -56,6 +57,16 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 |---|---|---|---|
 | Con un paso | 6,0 + 3,8 | 9,8 ms | Meta: 13,3 ms |
 | Con dos pasos | 2 × 6,0 + 3,8 | 15,8 ms | Obligatorio: 16,7 ms |
+
+### Hilo de audio
+
+El callback del ADR-0024 mezcla en el hilo de audio de SDL3, en otro núcleo, así que no
+se suma al frame. Su límite es otro: cada llamada tiene que terminar antes de que el
+dispositivo pida la siguiente (10,7 ms con el buffer de 512), o el audio se corta.
+
+| Qué | Meta | Estado |
+|---|---|---|
+| Mezcla (64 voces), música y limitador, por cada 16,7 ms de audio | 0,5 ms | Hipótesis. El prototipo del ADR-0024 midió 0,22 ms con 64 voces y ~0,05 ms para decodificar la música |
 
 ## Frame de GPU
 
@@ -117,3 +128,4 @@ cambian recién con una medición.
 | 2026-11-01 | #51 | La CI del ADR-0029 usa las filas de memoria por región como límite del *replay*, compilado en `relwithdebinfo`: falla si un pico las pasa. Las filas de capacidad no son un límite, porque R5 es un mínimo. Los tiempos no se miden en la CI. Ninguna meta cambia | Ninguna: es una decisión, no una medición |
 | 2026-11-01 | #36 | Reparto del frame de GPU entre las pasadas del ADR-0022: color 7,0 ms, depuración y postproceso 0,5, blit 2,0, ImGui 0,5 y reserva 3,3. El total no cambia | Ninguna del protocolo: un prototipo de laboratorio con la GPU fija en 700 MHz |
 | 2026-11-01 | #37 | El costo de la IA y la navegación del ADR-0023 (~0,1 ms por paso con 50 zombies) queda anotado en la fila de gameplay e IA. Ninguna meta cambia | Ninguna del protocolo: prototipo de laboratorio, fuera del protocolo |
+| 2026-11-01 | #38 | La fila de audio por frame pasa a ser "Audio en el hilo principal", con la misma meta. Meta nueva: el hilo de audio del ADR-0024, 0,5 ms por cada 16,7 ms de audio, en otro núcleo (hipótesis). Ninguna otra meta cambia | Ninguna del protocolo: prototipo de laboratorio, fuera del protocolo |

@@ -10,6 +10,11 @@
   depuración compila, con una macro por herramienta. Además, Dear ImGui y Tracy entran
   con `FetchContent` y una versión fijada, solo en Debug y RelWithDebInfo. Se corrige en
   las Decisiones 5 y 7.
+- **Fe de erratas:** 2026-11-01 (#38): el ADR-0024 suma las dependencias del audio.
+  stb_vorbis entra copiado en el repo, en el juego; libvorbis y libogg, como paquetes
+  del sistema, solo en el cocinador; dr_flac, copiado en `tools/third_party/`, solo en
+  el cocinador. Se completa también la lista con las del cocinador del ADR-0017 (cgltf y
+  stb_image, copiadas en `tools/third_party/`). Se corrige en la Decisión 5.
 
 ## Contexto y problema
 
@@ -142,7 +147,7 @@ generado.
 | 2 | Generador | **Ninja** |
 | 3 | Compilador y linker | **Clang** como principal, **GCC** como secundario, linker **`lld`** |
 | 4 | Módulos o headers | **Headers con `#pragma once`.** Los módulos se reevalúan cuando `import std` deje de ser experimental |
-| 5 | Dependencias | **SDL3:** opción de CMake para elegir entre el paquete del sistema (por defecto) y una copia con versión fijada vía `FetchContent`. **Vulkan:** siempre del sistema (`find_package(Vulkan)`). **Dear ImGui y Tracy** (ADR-0021): `FetchContent` con versión fijada, solo en Debug y RelWithDebInfo |
+| 5 | Dependencias | **SDL3:** opción de CMake para elegir entre el paquete del sistema (por defecto) y una copia con versión fijada vía `FetchContent`. **Vulkan:** siempre del sistema (`find_package(Vulkan)`). **Dear ImGui y Tracy** (ADR-0021): `FetchContent` con versión fijada, solo en Debug y RelWithDebInfo. **stb_vorbis** (ADR-0024): copiado en el repo, en el juego. **Solo en el cocinador:** cgltf, stb_image (ADR-0017) y dr_flac (ADR-0024), copiados en `tools/third_party/`; libvorbis y libogg (ADR-0024), paquetes del sistema |
 | 6 | Compilador de shaders | **`glslc`**, con validación con `spirv-val` en Debug |
 | 7 | Configuraciones | **Debug** (ASan + UBSan + validation layers), **RelWithDebInfo** (con `-fno-omit-frame-pointer`, ADR-0021) y **Release**, definidas en `CMakePresets.json`. Cada preset fija qué herramientas de depuración compila (ADR-0021) |
 

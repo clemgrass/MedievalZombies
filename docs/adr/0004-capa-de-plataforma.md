@@ -4,6 +4,10 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #8
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#38): el ADR-0024 decide el alcance de SDL3 en el
+  audio. SDL3 solo abre el dispositivo y llama a una función propia del engine
+  (`SDL_OpenAudioDeviceStream` con callback); la mezcla, el sonido 3D y la
+  decodificación son propios. Se cierra en Consecuencias.
 
 ## Contexto y problema
 
@@ -173,8 +177,9 @@ integraciones que trae SDL3, en vez de resolverlos yo.
   escritorios, y deja abierto un port a Windows.
 - **Cómo se integra SDL3** al build (paquete del sistema o copia dentro del repo) lo
   decide el ADR-0006.
-- **El alcance de SDL3 en audio** (solo salida al dispositivo, o también mezcla) se
-  decide cuando llegue el ADR de audio.
+- **El alcance de SDL3 en audio:** solo la salida al dispositivo, con un callback. La
+  mezcla es propia y corre en ese callback (ADR-0024). `platform::` le pasa al engine
+  un buffer de float estéreo, sin tipos de SDL.
 - Un backend propio sobre Wayland queda como posible proyecto aparte, fuera del
   alcance de este.
 

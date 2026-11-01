@@ -17,6 +17,10 @@
   16 bits, con dos llamadas por pedazo. El buffer chico suma copias de los vértices del
   borde, ~20 KB por corte (la fila "dos llamadas" de la Investigación). Se corrige en
   Abierto.
+- **Fe de erratas:** 2026-11-01 (#38): el ADR-0024 suma un segundo hilo, el de audio,
+  que no usa allocators: solo toca memoria reservada al iniciar. Un hilo que no usa
+  allocators (el de audio, los de Tracy) no necesita *scratch* propias. Se corrige en
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -466,7 +470,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   los contenedores de capacidad fija (`fixed_vector<T>` y los que hagan falta).
   `gpu::Allocator`, en `engine/gpu`, usa el mismo allocator de offsets sobre sus bloques
   de Vulkan. Ningún allocator se comparte entre hilos (ADR-0012): cuando haya más de un
-  hilo, cada uno tendrá sus *scratch*.
+  hilo que use allocators, cada uno tendrá sus *scratch*. Un hilo que no usa allocators,
+  como el de audio (ADR-0024), no las necesita.
 - **Las revisiones de desarrollo:**
   - solo en Debug: cada arena y cada pool envenena lo que reinicia o devuelve, con zonas
     rojas entre asignaciones (alineadas a 8 bytes como mínimo, por ASan; fuera de ASan,

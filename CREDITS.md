@@ -25,3 +25,7 @@ para saber de dónde vino cada archivo.
 | [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) | Apache-2.0 o MIT | API gráfica (ADR-0005) |
 | [cgltf](https://github.com/jkuhlmann/cgltf) | MIT | Leer glTF, solo en el cocinador de assets (ADR-0017) |
 | [stb_image](https://github.com/nothings/stb) | MIT (o dominio público; se usa bajo MIT) | Decodificar PNG, solo en el cocinador de assets (ADR-0017) |
+| [stb_vorbis](https://github.com/nothings/stb) | MIT (o dominio público; se usa bajo MIT) | Decodificar la música (Vorbis) en el juego (ADR-0024) |
+| [dr_flac](https://github.com/mackron/dr_libs) | MIT-0 (o dominio público; se usa bajo MIT-0) | Leer los sonidos fuente (FLAC), solo en el cocinador de assets (ADR-0024) |
+| [libvorbis](https://xiph.org/vorbis/) | BSD-3-Clause | Codificar la música en Vorbis, solo en el cocinador de assets (ADR-0024) |
+| [libogg](https://xiph.org/ogg/) | BSD-3-Clause | Contenedor Ogg de la música, solo en el cocinador de assets (ADR-0024) |

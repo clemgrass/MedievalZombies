@@ -18,12 +18,13 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018 y 0023 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets, incluida la navmesh; tests después en el combate y la IA) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023 y 0024 (TDD en el corte, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh y los sonidos, y la cola del audio; tests después en el combate, la IA y el resto del audio) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
+| [audio](#audio) | 0024 | `engine/audio/**`, el audio de `engine/platform/**`, `game/**`, o código que abra el dispositivo de audio, mezcle, emita o lea eventos de sonido, maneje voces, emisores o música, o decodifique sonido |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -50,6 +51,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Diagramas, D2, la leyenda, SVG, Mermaid, PlantUML, Graphviz | `diagramas` |
 | Combate, la fuerza o la carga del tajo, armadura, juntas, rebote, la espada clavada, agarres, energía, pausa de impacto, vivo o muerto, tipos de zombie | `gameplay` |
 | IA, árbol de comportamiento, máquina de estados, percepción, fichas de ataque, navmesh, A*, *funnel*, caminos, ORCA, evasión, la horda | `ia` |
+| Audio, sonido, mezclador, voces, callback de audio, hilo de audio, música, Vorbis, FLAC, paneo, atenuación, el oyente, emisores | `audio` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -187,9 +189,11 @@ Qué mirar:
   (fe de erratas del ADR-0012, por el ADR-0010), para las órdenes que cambian el estado. Las consultas de solo lectura (rayos, barridos, el
   barrido del tajo) son llamadas directas hacia abajo (fe de erratas del ADR-0012, por
   el ADR-0016).
-- **Un solo hilo** por ahora. La única excepción son los hilos de Tracy en los builds de
-  desarrollo, que no tocan el estado del juego (fe de erratas del ADR-0012, por el
-  ADR-0021).
+- **Un solo hilo** por ahora. Hay dos excepciones, y ninguna toca el estado del juego:
+  los hilos de Tracy en los builds de desarrollo (fe de erratas del ADR-0012, por el
+  ADR-0021) y el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (fe de
+  erratas del ADR-0012, por el ADR-0024; sus reglas las audita `audio`). Cualquier otro
+  hilo es una decisión nueva.
 - **Reparto del frame (ADR-0020):** `docs/performance/presupuestos.md` separa el costo
   por paso de simulación del costo por frame. Un frame con dos pasos tiene que caber en
   16,7 ms. Lo que depende de la simulación (por ejemplo, la cuota de cortes) se cuenta
@@ -465,7 +469,7 @@ Qué mirar:
 ## assets
 
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
-(mipmaps), 0023 (la navmesh).
+(mipmaps), 0023 (la navmesh), 0024 (los sonidos).
 
 Qué mirar:
 
@@ -535,6 +539,14 @@ Qué mirar:
   nivel armado; cómo se arma un nivel lo decide el ADR-0027.
   Es determinista (los mismos bytes dos veces). Generarla al cargar el nivel o en el
   juego, o leer una navmesh hecha a mano como fuente única, es una decisión nueva.
+- **Los sonidos** (ADR-0024): los fuentes son FLAC (un WAV, MP3 u Ogg como fuente es
+  una decisión nueva). El cocinador los lee con **dr_flac** (copiado en
+  `tools/third_party/`) y deja los efectos en PCM16 mono a 48 kHz y la música en Vorbis
+  estéreo a 48 kHz, con **libvorbis y libogg** (paquetes del sistema). **Falla el build**
+  si un fuente no está a 48 kHz (no remuestrea), si un sonido 3D no es mono o si la
+  tabla de sonidos nombra una toma que no existe. Cocinar dos veces da los mismos bytes.
+  dr_flac, libvorbis y libogg en el juego son `bloqueante`; el juego solo enlaza
+  stb_vorbis, para la música.
 - **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
   de carga.
 - **Un asset de terceros que solo existe como `.glb`** se versiona importado a `.blend`,
@@ -625,9 +637,9 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018 y 0023 (reparto del TDD en el corte,
-la memoria, la animación, la física y el cocinador de assets; los tests del combate y de
-la IA).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023 y 0024 (reparto del TDD en el
+corte, la memoria, la animación, la física y el cocinador de assets; los tests del
+combate, de la IA y del audio).
 
 Qué mirar:
 
@@ -720,6 +732,16 @@ Qué mirar:
   de frente que no chocan), el reparto de fichas (cercanía, ventaja de la cámara,
   desempate) y la evaluación de un árbol chico. La horda entera tiene tests de *replay*
   con el hash del estado.
+- **En el audio (ADR-0024):** **la cola de comandos de un productor y un consumidor es
+  un contenedor y lleva TDD estricto** (llena, vacía, la vuelta del índice). **Los pasos
+  de audio del cocinador llevan su TDD:** leer un FLAC conocido, fallar con 44,1 kHz,
+  fallar con un sonido 3D en estéreo y cocinar dos veces los mismos bytes. Código nuevo
+  en esas piezas sin test es `bloqueante`. **El resto lleva tests después,** con casos
+  calculados a mano: el paneo y la atenuación, el robo de voces y el límite por sonido,
+  la conversión del paso al reloj del audio y su reajuste, el limitador y la elección de
+  tomas por hash. Además, **un render offline del mezclador** (sin dispositivo, con un
+  guion de eventos) contra un hash guardado, comparado con la glibc fija de la CI
+  (ADR-0029).
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -922,6 +944,77 @@ Qué mirar:
   registro por frame.
 - Los tests de la IA no son de este tema: los audita `testing`.
 
+## audio
+
+**ADRs:** 0024 (audio). También la fe de erratas que hizo en el ADR-0004 (SDL3 solo
+saca el sonido) y en el ADR-0012 (el hilo de audio, segunda excepción al hilo único).
+
+Qué mirar:
+
+- **SDL3 solo abre el dispositivo y llama al callback** (`SDL_OpenAudioDeviceStream`).
+  Usar `SDL_BindAudioStreams` para mezclar, `SDL_PutAudioStreamData` desde el hilo
+  principal para empujar audio, SDL3_mixer o miniaudio es una decisión nueva. **Ningún
+  tipo de SDL sale de `platform::`:** el engine recibe un buffer de float estéreo (lo
+  audita también `arquitectura`).
+- **El contrato del callback:** no asigna memoria, no toma locks, no hace I/O, no
+  registra y no llama a nada que bloquee. Solo toca memoria reservada al iniciar. Un
+  `malloc`, un `std::vector` que crece, un mutex, un `printf`, una macro de log, una
+  lectura de disco o libvorbis (que asigna al decodificar) dentro del callback es
+  `bloqueante`: el audio se corta. Una zona de Tracy en el callback está permitida en
+  los builds de desarrollo.
+- **El callback solo ejecuta.** Las decisiones (qué voz, a quién robar, ganancias,
+  cuándo termina un sonido) se toman en el hilo principal, que lleva una copia de cada
+  voz. Que el callback decida un robo o elija una toma es un hallazgo.
+- **Comunicación:** comandos por una cola de un productor y un consumidor sin locks
+  (1024 para empezar; un comando que no entra se descarta y se cuenta). De vuelta, solo
+  atómicos: el reloj del audio y los contadores. Cualquier otro dato compartido entre
+  los dos hilos es `bloqueante`.
+- **Liberar sonidos:** un sonido cocinado no se libera mientras una voz lo lee. Antes de
+  liberarlo, el hilo principal para sus voces y espera a que el reloj del audio pase el
+  bloque de la orden. Liberar sin esa espera es `bloqueante` (el callback lee memoria
+  liberada).
+- **Los eventos de sonido** van en un arreglo fijo del sistema de audio, con vida de
+  frame (por ejemplo, 256), no en una cola del paso (se borra al terminar el paso) ni en
+  la arena del frame (es del render). Lleno: el nuevo reemplaza al de menor prioridad si
+  es más importante; si no, se descarta y se cuenta.
+- **El tiempo:** cada evento suena en el tiempo de su paso más un desfase con el reloj
+  del audio (latencia de partida: 2 pasos, 33 ms). **El desfase solo se reajusta**
+  cuando un evento caería en el pasado o demasiado lejos. Recalcularlo en cada frame
+  desde el reloj del audio es `importante`: vuelve el temblor de ±1 bloque. Tocar el
+  sonido "al principio del próximo bloque", sin tiempo, es `importante`: dos golpes de
+  pasos seguidos se funden.
+- **Determinismo:** el audio nunca escribe en el estado de la simulación ni usa su
+  generador de azar. Las variaciones salen de un hash del paso, la entidad y la capa.
+  Usar el generador de la simulación es `bloqueante`: el replay deja de dar el mismo
+  hash.
+- **El mezclador:** 64 voces; cuatro prioridades (crítica, alta, normal, baja); un
+  sonido nuevo solo roba una voz de prioridad menor (la más baja, después la que menos
+  suena, después la más vieja); la voz robada baja a 0 con una rampa de un bloque; límite
+  de instancias por sonido. Rampa de ganancia por bloque, retardo dentro del bloque,
+  remuestreo lineal solo si el *pitch* no es 1. Buses de música, mundo y UI; la pausa
+  congela el bus del mundo. Un limitador al final.
+- **El sonido 3D:** distancia desde la caballera y paneo desde la cámara (el oyente
+  híbrido); paneo de potencia constante; atenuación inversa con límite y una distancia
+  máxima por sonido; pasa bajos de "atrás". Se calcula una vez por frame en el hilo
+  principal, con las posiciones interpoladas.
+- **La música:** comprimida en memoria (Vorbis) y decodificada en el callback con
+  stb_vorbis y su buffer propio. El hilo principal abre el track y se lo pasa al callback;
+  desde ahí, solo el callback lo toca. Estados exploración, combate y jefe, con
+  *crossfade* y un tiempo mínimo por estado. Leer la música del disco en el callback es
+  `bloqueante`.
+- **El corte:** las capas de la tabla del ADR-0024 según el material (carne, cota,
+  junta, placa, rebote, hoja clavada) y la fuerza normalizada a `Fmax`, con varias tomas
+  por capa y ±5 % de *pitch* y volumen. **La pausa de impacto no congela el audio.** La
+  cámara del tajo baja el tono del bus del mundo (×0,6 de partida, CVar).
+- **Los valores ajustables** (latencia, buffer de 512, prioridades, límites, distancias,
+  tono de la cámara lenta, *crossfade*) son CVars o datos de la tabla de sonidos. Un
+  número fijo en el código es un hallazgo.
+- **Depuración (ADR-0021):** panel de voces en ImGui; contadores de voces, robos,
+  descartes, eventos tarde, comandos descartados, CPU máxima del callback y llamadas
+  tarde en el registro por frame.
+- Los tests del audio los audita `testing`; los sonidos en el cocinador, `assets`; las
+  dependencias (dr_flac, libvorbis, libogg, stb_vorbis), `build-y-licencias`.
+
 ## herramientas
 
 **ADRs:** 0021 (herramientas de depuración, profiling y logging). También la fila de la
@@ -1025,7 +1118,8 @@ Qué mirar:
   la wiki de Arch lo desaconseja. La única excepción es la corrida nocturna, que usa
   `archlinux:latest` sin fecha y nunca bloquea.
 - **Un cambio de la fecha** va en su propio PR `build:`. Si cambia la glibc, el mismo PR
-  vuelve a grabar los hashes guardados del *replay* y lo dice en su descripción.
+  vuelve a grabar los hashes guardados (el del *replay* y el del render offline del
+  audio, ADR-0024) y lo dice en su descripción.
 - **Blender y D2** se instalan desde su tarball oficial, con la versión exacta y la
   verificación de su `sha256` (`SHA256SUMS` en D2). Instalarlos con `pacman`, o bajarlos
   sin verificar, contradice la Decisión 2. La versión es la misma que fijan el ADR-0017 y
@@ -1068,10 +1162,11 @@ Qué mirar:
   y D2 con sus versiones; `cancel-in-progress` solo en los PRs. Si una corrida real pasa
   de 10 minutos, se anota y se abre un ticket.
 - **CD:** el workflow de release corre solo con un tag y trabaja en el SDK del Steam
-  Linux Runtime 3.0 (*sniper*): compila `debug` y corre sus tests **sin** la comparación
-  contra el hash guardado (que solo vale con la glibc del snapshot; la de dos ejecuciones
-  en el mismo proceso sí corre), después compila `release`, adjunta el binario a la
-  GitHub Release y genera una atestación de procedencia. Correr ahí el hash guardado, o
+  Linux Runtime 3.0 (*sniper*): compila `debug` y corre sus tests **sin** las
+  comparaciones contra un hash guardado (el *replay* y el render offline del audio,
+  ADR-0024; solo valen con la glibc del snapshot; la del *replay* de dos ejecuciones en
+  el mismo proceso sí corre), después compila `release`, adjunta el binario a la
+  GitHub Release y genera una atestación de procedencia. Correr ahí un hash guardado, o
   los tests en `release` (los *death tests* no pasan), es un hallazgo. Solo ese job tiene los
   permisos para escribir la Release y la atestación. Publicar un binario compilado en el
   contenedor de Arch contradice la Decisión 10: no corre en distros con una glibc más

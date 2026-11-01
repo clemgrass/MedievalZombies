@@ -15,6 +15,14 @@
   desarrollo. Son una excepción al hilo único: leen sus propias colas de zonas y las
   mandan por red, sin tocar el estado del juego, así que no afectan el determinismo. El
   engine sigue en un hilo. Se corrige en la Decisión 5.
+  2026-11-01 (#38): el ADR-0024 mezcla el audio en el callback de SDL3, que corre en
+  un hilo de audio. Es la segunda excepción al hilo único: ejecuta comandos que le llegan
+  por una cola sin locks y mezcla, sin tocar el estado del juego ni usar allocators.
+  Todas las decisiones del audio se toman en el hilo principal, en un sistema que corre
+  una vez por frame, después del render, con el estado que el render ya interpoló. Ese
+  sistema es código que corre cada frame (ADR-0009), y el callback tiene además las
+  reglas más estrictas del ADR-0024. Se corrige en el orden del frame, la Decisión 5 y
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -111,7 +119,8 @@ Orden propuesto dentro de un frame:
      simulación: gameplay → combate → corte → física → animación
      reiniciar la arena del paso                                 (ADR-0010)
 3. render: interpolar el estado → grabar comandos → enviar a la GPU  (ADR-0005)
-4. fin de frame: reiniciar la arena del frame                    (ADR-0010)
+4. audio: eventos de los pasos → voces → comandos al callback   (ADR-0024)
+5. fin de frame: reiniciar la arena del frame                    (ADR-0010)
 ```
 
 ### 4. Comunicación entre sistemas
@@ -178,15 +187,16 @@ docs/      documentación
 | 2 | Módulos | **Capas estrictas** (`platform` → `core` → `gpu` → sistemas → `game`), que CMake hace cumplir: cada módulo es un target y solo enlaza con los de abajo |
 | 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo |
 | 4 | Comunicación | **Colas de eventos entre sistemas** para las órdenes que cambian el estado, guardadas en la arena del paso (ADR-0010). Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
-| 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida. La única excepción son los hilos de Tracy en los builds de desarrollo, que no tocan el estado del juego (ADR-0021) |
+| 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida. Hay dos excepciones, y ninguna toca el estado del juego: los hilos de Tracy en los builds de desarrollo (ADR-0021) y el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (ADR-0024) |
 | 6 | Monorepo | `engine/`, `game/`, `tools/`, `shaders/`, `tests/`, `docs/` |
 
 ## Consecuencias
 
 - **"El código que corre cada frame"** (ADR-0009) son los sistemas que se ejecutan
-  dentro del paso de simulación y del render. Ahí aplican las reglas estrictas: nada de
-  contenedores que asignen memoria, nada de `virtual` por entidad, y recursión solo
-  acotada.
+  dentro del paso de simulación, del render y del sistema de audio del hilo principal
+  (ADR-0024). Ahí aplican las reglas estrictas: nada de contenedores que asignen
+  memoria, nada de `virtual` por entidad, y recursión solo acotada. El callback de audio
+  tiene además las reglas del ADR-0024: no asigna memoria, no toma locks y no hace I/O.
 - **Cada módulo de `engine/` es un target de CMake.** Si se agrega una dependencia
   hacia arriba, el build falla.
 - **El ECS necesita su propio diseño y sus tickets:** almacenamiento con sparse sets,
@@ -207,6 +217,11 @@ docs/      documentación
   (el combate preguntando qué tocó la espada, la cámara preguntando si hay una pared) la
   pide con una llamada directa a un módulo de abajo. Una consulta no cambia el estado,
   así que no altera el orden explícito que dan las colas.
+- **El hilo de audio** (ADR-0024) recibe comandos ya resueltos por una cola de un
+  productor y un consumidor sin locks, y devuelve su reloj y sus contadores en
+  atómicos. No asigna memoria, no toma locks y no hace I/O. El sistema de audio del hilo
+  principal corre después del render, con la cámara y las posiciones que el render ya
+  interpoló.
 - **La estructura del monorepo** se crea con el primer ticket de código. Hoy solo
   existen `docs/`, `.github/` y `tools/`.
 

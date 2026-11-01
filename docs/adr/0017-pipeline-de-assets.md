@@ -26,6 +26,13 @@
   zonas para quitar o forzar en la navmesh; se suma a los prefijos que el cocinador
   acepta. Se corrige en Consecuencias ("El cocinador falla el build" y "La navmesh del
   escenario").
+- **Fe de erratas:** 2026-11-01 (#38): el ADR-0024 decide los sonidos. Los fuentes van
+  en FLAC; el cocinador deja los efectos en PCM16 mono y la música en Vorbis estéreo,
+  todos a 48 kHz, y cocina la tabla de sonidos. Falla el build si un fuente no está a
+  48 kHz, si un sonido 3D no es mono o si la tabla nombra una toma que no existe.
+  Dependencias nuevas, solo en el cocinador: dr_flac (copiado en `tools/third_party/`) y
+  libvorbis con libogg (paquetes del sistema). Se corrige en Consecuencias
+  ("Dependencias nuevas", "El cocinador falla el build" y "Los sonidos").
 
 ## Contexto y problema
 
@@ -506,7 +513,9 @@ LFS.
   o MIT; se usa bajo MIT). Son headers sueltos, **copiados en el repo en
   `tools/third_party/`**, con su versión a la vista: el build no necesita red. Están en
   `CREDITS.md`, y cuando entren los archivos, `REUSE.toml` suma una anotación con el
-  copyright de sus autores (ADR-0019).
+  copyright de sus autores (ADR-0019). Para los sonidos (ADR-0024), el cocinador suma
+  **dr_flac** (dominio público o MIT-0), copiado igual, y **libvorbis con libogg**
+  (BSD-3), que no son headers sueltos y entran como paquetes del sistema (ADR-0006).
 - **Qué enlaza qué:** el cocinador enlaza solo `engine/core`, para usar la misma
   matemática (ADR-0008) y la misma definición del formato que el cargador. Por eso **la
   definición del formato** (la cabecera y las structs de cada sección) **vive en
@@ -531,7 +540,9 @@ LFS.
     `UCX_` (casco convexo, en Unreal) o cualquier otro prefijo desconocido es un error,
     porque la física no tiene cascos convexos (ADR-0016). El prefijo que retoca la
     navmesh (ADR-0023) es conocido;
-  - lo que fije el ADR-0007 sobre las mallas que se cortan.
+  - lo que fije el ADR-0007 sobre las mallas que se cortan;
+  - en los sonidos (ADR-0024): que cada fuente esté a 48 kHz, que cada sonido 3D sea
+    mono y que la tabla de sonidos no nombre una toma que no existe.
 - **La navmesh del escenario** (ADR-0023): el cocinador la genera desde la colisión
   (`UBX_`, `UCP_`, `USP_`) y el piso, inflada por el radio del zombie más ancho, y la
   escribe en el binario cocinado: polígonos convexos con vértices en 3D, sus portales, una
@@ -539,6 +550,12 @@ LFS.
   Cocinar dos veces la misma escena da los mismos bytes. Es código del cocinador, así que
   lleva su TDD. Necesita ver la colisión del nivel armado; cómo se arma un nivel, y dónde
   queda la navmesh dentro de lo cocinado, lo decide el ADR-0027.
+- **Los sonidos** (ADR-0024): los fuentes son FLAC, en la carpeta de assets. El
+  cocinador los lee con dr_flac y deja los efectos en PCM16 mono a 48 kHz y la música en
+  Vorbis estéreo a 48 kHz, codificada con libvorbis. También cocina la tabla de sonidos
+  (tomas, bus, prioridad, límites, variaciones y distancias). No remuestrea: un fuente
+  con otra frecuencia falla el build. Cocinar dos veces da los mismos bytes, y lleva el
+  TDD del cocinador.
 - **El formato del binario:** una cabecera con una firma y una versión, y secciones
   planas con offsets relativos. Como lo cocinado no se versiona, **no hay compatibilidad
   hacia atrás**: si el formato cambia, sube la versión y todo se recocina. El cargador

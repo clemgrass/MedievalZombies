@@ -15,9 +15,9 @@
   Se corrige en Consecuencias y en Abierto.
 - **Fe de erratas:** 2026-11-01 (#36): el ADR-0022 pide mipmaps. El cocinador los genera
   para las texturas de color, y se filtran con *nearest*, también entre niveles. Además,
-  para la tapa procedural, el cocinador escribe por cada hueso su segmento (inicio y fin)
-  y su radio en la pose de referencia. Se corrige en Consecuencias ("Las texturas" y "Los
-  huesos de la tapa").
+  los pedazos indexan el buffer del modelo con 16 bits, así que el cocinador falla el
+  build si una malla que se corta pasa de 65 536 vértices. Se corrige en Consecuencias
+  ("Las texturas" y "El cocinador falla el build").
 
 ## Contexto y problema
 
@@ -517,6 +517,8 @@ LFS.
   - hasta 256 huesos por esqueleto. Es el límite del formato (índices de 8 bits), no un
     presupuesto: el costo de cada esqueleto lo acota el presupuesto de animación del
     ADR-0020;
+  - hasta 65 536 vértices en una malla que se corta. Es el límite de los índices de
+    16 bits con que el ADR-0022 dibuja los pedazos sobre el buffer del modelo;
   - los nombres con prefijo de colisión, y que cada primitiva calce con su objeto. Un
     `UCX_` (casco convexo, en Unreal) o cualquier otro prefijo desconocido es un error,
     porque la física no tiene cascos convexos (ADR-0016);
@@ -573,9 +575,6 @@ LFS.
   `R8G8B8A8_UNORM` para los datos, según el material glTF. El ADR-0022 pide mipmaps: el
   cocinador los genera para las texturas de color, promediando el color en espacio
   lineal, y se filtran con *nearest*, también entre niveles.
-- **Los huesos de la tapa:** para la tapa procedural del ADR-0022, el cocinador escribe
-  por cada hueso su segmento (inicio y fin) y su radio en la pose de referencia. La tapa
-  mide la distancia de cada píxel a esos segmentos, en la pose del pedazo.
 - **El repo:** solo git, nunca LFS.
   - Ningún archivo pasa de 50 MiB (el aviso de GitHub). Los `.blend` low poly pesan
     mucho menos.

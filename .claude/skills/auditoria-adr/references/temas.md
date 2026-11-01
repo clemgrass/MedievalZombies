@@ -18,7 +18,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps y huesos de la tapa) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
 | [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets; tests después en el combate) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
@@ -326,7 +326,8 @@ Qué mirar:
   durante el juego es `importante` (causa tirones).
 - **Luz estilizada por píxel:** Lambert con atenuación hasta el radio, ambiente frío, sin
   especular, y un arreglo global de **hasta 16 antorchas** en el uniform del frame.
-  Sombras ***blob***, sin shadow map.
+  Sombras ***blob***, sin shadow map, dibujadas con *screen-door* en la pasada de color,
+  después del piso y con *depth bias*.
 - **El look PSX:** texturas *nearest* con mipmaps *nearest* entre niveles; *dithering* a
   15 bits con Bayer 4×4 y niebla lineal al final del fragment shader. El temblor de
   vértices (grilla) y las texturas afines son **CVars** (ADR-0021), constantes en
@@ -339,7 +340,9 @@ Qué mirar:
   `descriptorBindingPartiallyBound` y `shaderSampledImageArrayNonUniformIndexing`.
 - **Pedazos:** dos llamadas, con **índices de 16 bits**; el buffer chico lleva los
   vértices nuevos y copias de los del borde. **La tapa es procedural** según la distancia
-  a los segmentos de los huesos del pedazo, con una textura de detalle en su UV plana.
+  al eje de las cápsulas de los huesos del pedazo, con una textura de detalle en su UV
+  plana. Usa las cápsulas del asset, movidas con la paleta congelada del pedazo; usar las
+  recortadas del pedazo (ADR-0016) es un hallazgo, porque el hueso no llega a la tapa.
 - **Transparencias:** *screen-door* con Bayer 4×4 para la caballera; *alpha blending*
   solo para las partículas (ADR-0025).
 - **Medir una pasada:** la comparación de antes y después de un PR de rendimiento se
@@ -460,7 +463,7 @@ Qué mirar:
 ## assets
 
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
-(mipmaps y los huesos de la tapa).
+(mipmaps).
 
 Qué mirar:
 
@@ -485,7 +488,8 @@ Qué mirar:
   formato cambia, sube la versión.
 - **El cocinador falla el build, no solo avisa:** un vértice sin pesos en una malla con
   esqueleto, más de 256
-  huesos, un prefijo de colisión mal escrito o desconocido (incluido `UCX_`), una
+  huesos, una malla que se corta con más de 65 536 vértices (índices de 16 bits,
+  ADR-0022), un prefijo de colisión mal escrito o desconocido (incluido `UCX_`), una
   primitiva que no calza, o un hueso conservado que cuelga de uno que se quita. Un
   vértice con más de 4 huesos no es un error: primero se funden los pesos de los huesos
   quitados, y después conserva los 4 de mayor peso, se renormaliza y se cuantiza.
@@ -507,8 +511,8 @@ Qué mirar:
   los datos.
 - **Las texturas son RGBA8 sin comprimir.** BC7, BC1 o Basis cambian la Decisión 5.
 - **Lo que pide el render (ADR-0022):** el cocinador genera los mipmaps de las texturas
-  de color, promediando en espacio lineal, y escribe por cada hueso su segmento (inicio y
-  fin) y su radio en la pose de referencia, para la tapa procedural.
+  de color, promediando en espacio lineal. La tapa procedural no le pide datos nuevos:
+  usa las cápsulas por hueso.
 - **Las mallas que se cortan (ADR-0007):**
   - el cocinador **falla el build** si una cáscara no es cerrada y *manifold* (cada
     arista soldada con exactamente dos triángulos, de orientaciones opuestas);

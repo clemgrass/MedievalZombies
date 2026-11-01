@@ -22,7 +22,7 @@
   antes del blit. Que escale el compositor ahorra ~1,1 ms, pero se ve borroso. Además,
   para comparar dos versiones de una pasada de GPU, el reloj de la GPU se fija: con el
   reloj libre, la misma configuración varió hasta un 50 %. R2 se sigue midiendo con el
-  reloj libre. Se corrige en la Decisión 3 y en Consecuencias.
+  reloj libre. Se corrige en la Decisión 3, en el protocolo y en Consecuencias.
 
 ## Contexto y problema
 
@@ -310,7 +310,10 @@ picos que todavía no se conocen.
    **sin las validation layers** de Vulkan. Debug, con ASan, UBSan y validation layers,
    no sirve para medir.
 2. **Condiciones fijas:** enchufado, perfil de energía en rendimiento, pantalla completa
-   a la resolución nativa y nada pesado abierto.
+   a la resolución nativa y nada pesado abierto. Para comparar dos versiones de una
+   pasada de GPU, el reloj de la GPU se fija (`gt_min_freq_mhz` igual a
+   `gt_max_freq_mhz`), y su frecuencia queda en el entorno registrado. El resto del
+   protocolo no cambia. R2 contra su presupuesto se mide con el reloj libre.
 3. **Entorno registrado** en cada medición: commit, preset, compilador, kernel, Mesa,
    temperatura y frecuencias.
 4. **Escenarios deterministas:** partidas grabadas con su input y versionadas en el

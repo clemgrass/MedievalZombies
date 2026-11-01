@@ -347,9 +347,9 @@ borroso.
 |---|---|---|
 | 1 | Arquitectura | **Forward:** una pasada de color y profundidad a 640×360, sin *depth prepass* |
 | 2 | Iluminación | **Estilizada:** Lambert con atenuación cuadrática hasta el radio de cada luz y un ambiente frío, sin especular. **Por píxel.** Un **arreglo global de hasta 16 antorchas** en el uniform del frame, que recorre cada píxel |
-| 3 | Sombras | **Sombras *blob*:** un disco oscuro bajo cada personaje, proyectado en el piso. **Sin shadow map.** El skinning sigue en el vertex shader (ADR-0015) |
+| 3 | Sombras | **Sombras *blob*:** un disco oscuro bajo cada personaje, proyectado en el piso. Se dibuja con ***screen-door*** (la matriz de Bayer de la Decisión 10, que trama su borde suave), en la pasada de color justo después del piso, con un *depth bias* para que no parpadee contra él. **Sin shadow map.** El skinning sigue en el vertex shader (ADR-0015) |
 | 4 | Look PSX | **Filtrado *nearest*, mipmaps** (también *nearest* entre niveles), ***dithering* a 15 bits** con una matriz de Bayer de 4×4 al final del fragment shader, y **niebla lineal** por distancia hacia un color frío. **Vértices que tiemblan, suaves:** la grilla es una CVar (ADR-0021), por defecto la resolución interna. **Texturas afines:** una CVar, apagada por defecto. En Release, las dos son constantes |
-| 5 | Interior del corte | **Procedural según la distancia al hueso,** con una **textura de detalle** en la UV plana del ADR-0007 encima de la carne. La distancia se mide a los segmentos de los huesos del pedazo, en su pose. **La cámara del tajo muestra la tapa**, de cerca y en cámara lenta. Las capas por profundidad y los rayos X quedan abiertos |
+| 5 | Interior del corte | **Procedural según la distancia al hueso,** con una **textura de detalle** en la UV plana del ADR-0007 encima de la carne. **El hueso sale de las cápsulas del ADR-0016:** su eje es el segmento de la cápsula de cada hueso del pedazo, en su pose, y su radio es una fracción del radio de la cápsula (una CVar). **La cámara del tajo muestra la tapa**, de cerca y en cámara lenta. Las capas por profundidad y los rayos X quedan abiertos |
 | 6 | Pedazos | **Dos llamadas por pedazo:** una con los triángulos que solo usan vértices del modelo, y otra con el buffer chico, que lleva los vértices nuevos y **copias de los vértices del borde**. **Índices de 16 bits** en las dos. Los pedazos se dibujan con el mismo vertex shader de skinning, con su paleta congelada |
 | 7 | Datos y envío | **Bindless:** un *descriptor set* global con el arreglo de objetos (un SSBO por frame en vuelo) y el arreglo de texturas (*descriptor indexing*, *partially bound*). Cada llamada recibe el índice de su objeto en un *push constant*. **Una llamada por objeto**, sin *instancing*. **Culling por objeto en la CPU**, con una esfera contra el frustum |
 | 8 | Pasadas | **Lista fija escrita a mano**, con barreras de *synchronization2*. **Todos los pipelines se compilan al arrancar**, con un `VkPipelineCache` en disco. **El dibujo de depuración va a 640×360** con la profundidad de la escena, e **ImGui a la resolución nativa**, después del escalado |
@@ -382,8 +382,7 @@ borroso.
 
 - **Lo que se gana:** un renderer chico, que crece pasada por pasada desde el triángulo
   del ADR-0005, y que gasta menos de la mitad del presupuesto de GPU, aun medido a
-  700 MHz. Cada efecto
-  del estilo PSX se ajusta sin recompilar.
+  700 MHz. El temblor de los vértices y las texturas afines se ajustan sin recompilar.
 - **Lo que se sacrifica:**
   - las sombras con la forma del cuerpo: el blob no sigue la silueta;
   - más de 16 antorchas a la vez: con más, hay que elegir las N más cercanas a cada
@@ -400,16 +399,21 @@ borroso.
   en 700 MHz con `gt_min_freq_mhz` y `gt_max_freq_mhz`). Con el reloj libre, la misma
   configuración varió hasta un 50 %. Saber si se cumple R2 se sigue midiendo con el reloj
   libre, como pide el ADR-0020.
-- **El cocinador (ADR-0017)** genera los mipmaps de las texturas de color, y escribe para
-  cada hueso su segmento (inicio, fin) y su radio en la pose de referencia, para la tapa
-  procedural.
+- **El cocinador (ADR-0017)** genera los mipmaps de las texturas de color.
+- **La tapa lee las cápsulas del asset, no las del pedazo.** El ADR-0016 recorta las
+  cápsulas de un pedazo para que terminen a un radio del plano del corte: con ellas, el
+  hueso no llegaría a la tapa. La tapa usa las cápsulas tal como salen del cocinador, en
+  el espacio de cada hueso, y las mueve con la paleta congelada del pedazo. Así no
+  necesita datos nuevos. Como la cápsula se ajusta sobre el eje del hueso (ADR-0017),
+  una corrección a mano que la saque del eje mueve también el hueso de la tapa.
 - **Assets nuevos:** la textura del blob y la textura de detalle de la carne.
 - **Tickets, en orden** (cada uno crece desde el anterior):
   1. una malla con profundidad reverse-Z y el test del *front face*;
   2. texturas *nearest* con mipmaps y el *descriptor set* bindless;
   3. skinning en el vertex shader con la paleta de huesos;
   4. antorchas, ambiente y niebla;
-  5. *dithering* y vértices que tiemblan, con sus CVars;
+  5. *dithering* y vértices que tiemblan, con la CVar de la grilla y la de las texturas
+     afines;
   6. el blit al swapchain, con el factor entero y los bordes negros;
   7. el culling por esfera;
   8. los pedazos con dos llamadas y la tapa procedural (junto al ADR-0007);
@@ -419,13 +423,15 @@ borroso.
 - **Abierto:**
   - las capas por profundidad en la tapa (piel, grasa, carne; metal y carne), que
     necesitan la distancia al contorno;
-  - la cámara de rayos X;
+  - la cámara de rayos X. De ella depende lo que pide la visión para la cámara del tajo:
+    ver el interior mientras la hoja atraviesa el cuerpo. Con esta Decisión, el interior
+    se ve en la tapa, después de que pasa la hoja;
   - los *frames* de impacto estilo anime, si se usan: irían en el postproceso a 640×360
     (visión y ADR-0025);
   - el *instancing* de los zombies y el *skin cache*, si una medición los pide;
   - dónde se guarda el `VkPipelineCache` (ADR-0028);
-  - el tamaño de la grilla del temblor y la textura de detalle de la carne, que se
-    ajustan mirando el juego.
+  - el tamaño de la grilla del temblor, la fracción del radio de la cápsula que es hueso
+    y la textura de detalle de la carne, que se ajustan mirando el juego.
 
 **Fe de erratas en otros ADRs.** Al aceptar este ADR se corrigieron, como fe de erratas
 (ADR-0014, regla 11):
@@ -435,13 +441,69 @@ borroso.
 | ADR-0007 | El buffer chico de un pedazo lleva los vértices nuevos y copias de los del borde (dos llamadas). Se cierra en Abierto |
 | ADR-0008 | Con la Y volteada en la proyección, el *front face* es `COUNTER_CLOCKWISE` |
 | ADR-0010 | Los índices de los pedazos son de 16 bits. Se cierra en Abierto |
-| ADR-0017 | El cocinador genera mipmaps (*nearest* entre niveles) y los segmentos y radios de los huesos para la tapa |
+| ADR-0017 | El cocinador genera mipmaps (*nearest* entre niveles) y falla si una malla que se corta pasa de 65 536 vértices |
 | ADR-0020 | El escalado: blit *nearest* entero hecho por el engine. Para comparar versiones de una pasada, el reloj de la GPU se fija |
 | `docs/performance/presupuestos.md` | El reparto del frame de GPU por pasada |
 
 ## Cómo lo defiendo
 
-*Pendiente: lo escribe el autor.*
+**¿Por qué forward, si deferred midió un poco menos?**
+Deferred ganó por 0,25 a 0,30 ms con 8 luces, ~4 %. Deferred ahorra calcular la luz en
+píxeles que después se tapan, pero a 640×360 hay muy pocos píxeles: lo que pesa son los
+vértices (con 2,6 veces más vértices, el frame costó 2,3 veces más). Con 16 antorchas,
+los dos empatan. A cambio de ese poco, deferred necesita un G-buffer y una pasada más, y
+complica las transparencias. Forward es una sola pasada que crece desde el triángulo.
+
+**¿Por qué no un *depth prepass*, que usan muchos engines?**
+El prepass dibuja la geometría dos veces para no sombrear píxeles de más. Aquí la
+geometría es lo caro y los píxeles son baratos, y además el skinning se hace dos veces.
+Medido, el frame pasó de 6,97 ms a 9,90 ms.
+
+**¿Por qué sombras *blob* y no un shadow map?**
+El shadow map costó 3 ms con cualquier tamaño, el 23 % del presupuesto de GPU. El costo
+no es la resolución, sino volver a hacer el skinning de los 50 zombies y los 100 pedazos
+desde la luz. Un disco oscuro bajo cada personaje es lo que usaban los juegos de PS1 y
+calza con el estilo.
+
+**¿Por qué escala el engine, si dejar que escale el compositor ahorra ~1,1 ms?**
+Porque el compositor escala con filtro lineal y se ve borroso. El protocolo de Wayland
+(`wp_viewporter`) no deja elegir el filtro. El estilo PSX necesita píxeles nítidos, así
+que escalo yo con un blit *nearest* y un factor entero: cada píxel de 640×360 se vuelve
+un cuadrado exacto. Si el factor no es entero, uso el mayor que cabe y dejo bordes
+negros, porque un factor no entero deja píxeles de distinto tamaño.
+
+**¿Por qué bindless, si el modelo clásico fue 0,35 ms más rápido en la GPU?**
+Es un intercambio que acepto. En la GPU de Intel, un UBO se lee por un camino más rápido
+que un SSBO indexado. Pero con bindless se enlaza un solo *descriptor set* por frame, y
+cada llamada recibe un índice de 4 bytes: grabar el frame es más simple, y agregar una
+textura no obliga a crear un *set* nuevo. Es como trabajan los engines modernos, y los
+0,35 ms caben de sobra en la reserva.
+
+**¿Qué es el *front face* y por qué es `COUNTER_CLOCKWISE`?**
+Es el orden de los vértices que dice qué cara de un triángulo mira a la cámara. La
+proyección del ADR-0008 voltea la Y, y eso invierte el orden en la pantalla. El
+prototipo lo tenía mal y los zombies se veían del revés por dentro, con la silueta
+correcta. Por eso un test dibuja un cubo y verifica que se vean sus caras de afuera.
+
+**¿Cómo se ve el hueso dentro del corte?**
+Cada píxel de la tapa mide su distancia al eje de las cápsulas de los huesos del
+pedazo. Cerca del eje es médula, un poco más afuera es hueso, y el resto es carne con
+una textura de detalle. Uso las cápsulas del asset, no las del pedazo: el ADR-0016
+recorta las del pedazo para que terminen a un radio del plano del corte, y el hueso no
+llegaría a la tapa. Así la tapa no necesita datos nuevos del cocinador.
+
+**¿Cuánto cuesta el look PSX?**
+Nada: las diferencias que medí son ruido. Lo elijo por cómo se ve. Uso mipmaps con
+filtro *nearest*, porque sin ellos el piso lejano brilla con ruido, y sigo viendo los
+texels nítidos. Dejo las texturas afines apagadas: deforman el piso, y el corte tiene
+que leerse bien.
+
+**¿Por qué mides con el reloj de la GPU fijo?**
+Porque la GPU cambia su frecuencia sola, y con el reloj libre la misma configuración
+varió hasta un 50 %. Así no se pueden comparar dos versiones. Con el reloj fijo en
+700 MHz, las mediciones repetidas coincidieron en ~1 %. Para saber si se cumple el
+presupuesto mido con el reloj libre, como pide el ADR-0020, porque así juega el
+jugador.
 
 ## Referencias
 

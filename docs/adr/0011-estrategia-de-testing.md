@@ -6,7 +6,7 @@
 - **Reemplaza / Reemplazado por:** —
 - **Fe de erratas:** 2026-11-01 (#51): qué de todo esto corre en la CI y cuándo no lo
   decide el ADR-0014, sino el ADR-0029, que el ADR-0014 creó para eso. Se corrige en
-  Consecuencias.
+  Contexto y en Consecuencias.
 
 ## Contexto y problema
 
@@ -34,7 +34,7 @@ Hay que decidir:
 6. cómo se **registran los bugs** y cómo se enlazan con sus tests de regresión.
 
 Queda **fuera de alcance** la infraestructura de CI (cuándo y dónde corre cada cosa en
-GitHub), que decide el ADR-0014, y los benchmarks de rendimiento, que deciden los
+GitHub), que decide el ADR-0029, y los benchmarks de rendimiento, que deciden los
 ADR-0020 y ADR-0021.
 
 ## Criterios

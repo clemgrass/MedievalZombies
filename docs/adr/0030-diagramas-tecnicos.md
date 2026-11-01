@@ -14,8 +14,11 @@
   el código") y en "Lo que queda abierto".
 - **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 decide cómo se instala D2: desde su
   release oficial en GitHub, con la versión exacta (hoy, 0.9.0) verificada con
-  `SHA256SUMS`, en la CI y en la máquina del autor. Los verificadores corren en la etapa
-  rápida de la CI. Se corrige en "Lo que queda abierto".
+  `SHA256SUMS`, en la CI y en la máquina del autor. Cada verificador corre en la etapa de
+  la CI que pide su entrada: (b), (c) y (d) en la etapa rápida, porque solo leen
+  archivos; (a), (f), (g) e (i) junto a `clang-tidy`, porque leen el índice de símbolos o
+  el AST; y (e) y (h) después de los tests en `debug`, porque usan lo que escriben los
+  tests. Se corrige en "Lo que queda abierto".
 
 ## Contexto y problema
 

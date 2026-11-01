@@ -883,8 +883,8 @@ Qué mirar:
 - **El entorno:** los jobs que compilan o prueban corren en un contenedor
   `archlinux:latest` con el `mirrorlist` en la fecha del snapshot del Arch Linux
   Archive, leída del único archivo de `tools/ci/` que la guarda, y `pacman -Syyuu`. Una
-  fecha escrita en el YAML, un job de build en el runner Ubuntu nativo o una imagen
-  propia en GHCR contradicen la Decisión 1. Mezclar el archivo con mirrors al día también:
+  fecha escrita en el YAML contradice la Decisión 2; un job de build en el runner Ubuntu
+  nativo o una imagen propia en GHCR contradicen la Decisión 1. Mezclar el archivo con mirrors al día también:
   la wiki de Arch lo desaconseja. La única excepción es la corrida nocturna, que usa
   `archlinux:latest` sin fecha y nunca bloquea.
 - **Un cambio de la fecha** va en su propio PR `build:`. Si cambia la glibc, el mismo PR
@@ -893,10 +893,13 @@ Qué mirar:
   verificación de su `sha256` (`SHA256SUMS` en D2). Instalarlos con `pacman`, o bajarlos
   sin verificar, contradice la Decisión 2. La versión es la misma que fijan el ADR-0017 y
   el ADR-0030.
-- **Dos etapas:** primero los chequeos rápidos (formato, `reuse lint`, `actionlint`,
-  verificadores de diagramas, reglas del ADR-0009); después, en paralelo, Clang y GCC en
-  `debug` con sus tests, la cobertura con la meta del 100 %, `clang-tidy`, compilar
-  `relwithdebinfo` y `release`, y el *replay*. Un job que exige un ADR y no está, o que
+- **Dos etapas:** primero los chequeos rápidos, que no compilan (formato, `reuse lint`,
+  `actionlint`, reglas del ADR-0009 y los verificadores de diagramas (b), (c) y (d));
+  después, en paralelo, Clang en `debug` con sus tests y luego los verificadores (e) y
+  (h), GCC en `debug` con sus tests, la cobertura con la meta del 100 %, `clang-tidy`
+  junto con los verificadores (a), (f), (g) e (i), compilar `relwithdebinfo` y `release`,
+  y el *replay*. Un verificador que necesita compilar o correr los tests puesto en la
+  etapa rápida es un hallazgo: falla siempre o no verifica nada. Un job que exige un ADR y no está, o que
   está pero no puede fallar (por ejemplo, la cobertura que solo informa), es un hallazgo.
 - **`ci-ok` es el único chequeo obligatorio:** corre con `if: always()`, depende de todos
   los jobs del workflow y falla si alguno falló o se canceló. **Un `paths:` o
@@ -910,8 +913,12 @@ Qué mirar:
   de build o de tests escritos en el YAML contradicen la Decisión 6: el autor no podría
   repetirlos con el mismo comando. Lo que es de CMake usa los *workflow presets*.
 - **El *replay*** compara contra el hash guardado y también dos ejecuciones del mismo
-  proceso. Mide los picos de memoria por región y los contadores del juego, y falla si
-  pasan su fila de `presupuestos.md`. **Nada mide tiempo en la CI:** un umbral de tiempo,
+  proceso. Compilado en `relwithdebinfo`, mide los picos de memoria por región y falla si
+  pasan su fila de `presupuestos.md`; los contadores del juego fallan solo si pasan un
+  tope duro de su ADR (la cuota de cortes por paso, los pedidos pendientes, el tope de
+  ragdolls). Usar las filas de capacidad (R5) como tope es un hallazgo: R5 es un mínimo,
+  y un escenario de carga daría un rojo falso. Medir los picos en `debug` también: las
+  zonas rojas de ASan los inflan. **Nada mide tiempo en la CI:** un umbral de tiempo,
   o un benchmark que pueda fallar por tiempo, contradice la Decisión 8. Las
   instrucciones contadas solo informan, en el resumen del job.
 - **Seguridad:** `permissions: contents: read` en cada workflow y más solo en el job que
@@ -923,9 +930,12 @@ Qué mirar:
 - **Velocidad:** caché de `/var/cache/pacman/pkg` con la fecha como clave, y de Blender
   y D2 con sus versiones; `cancel-in-progress` solo en los PRs. Si una corrida real pasa
   de 10 minutos, se anota y se abre un ticket.
-- **CD:** el workflow de release corre solo con un tag, compila `release` en el SDK del
-  Steam Linux Runtime 3.0 (*sniper*), corre ahí los tests, adjunta el binario a la
-  GitHub Release y genera una atestación de procedencia. Solo ese job tiene los
+- **CD:** el workflow de release corre solo con un tag y trabaja en el SDK del Steam
+  Linux Runtime 3.0 (*sniper*): compila `debug` y corre sus tests **sin** la comparación
+  contra el hash guardado (que solo vale con la glibc del snapshot; la de dos ejecuciones
+  en el mismo proceso sí corre), después compila `release`, adjunta el binario a la
+  GitHub Release y genera una atestación de procedencia. Correr ahí el hash guardado, o
+  los tests en `release` (los *death tests* no pasan), es un hallazgo. Solo ese job tiene los
   permisos para escribir la Release y la atestación. Publicar un binario compilado en el
   contenedor de Arch contradice la Decisión 10: no corre en distros con una glibc más
   vieja.

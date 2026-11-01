@@ -12,9 +12,11 @@
 - **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 decide qué se automatiza en la CI.
   Nada que mida tiempo: R1 a R3 se miden solo con este protocolo, en la máquina de
   referencia (medido: el tiempo varió un 21 % entre corridas de un runner compartido).
-  En el *replay* de la CI, el pico de cada región de memoria y los contadores del juego
-  fallan si pasan su presupuesto de `docs/performance/presupuestos.md`. Las instrucciones
-  contadas solo informan. Se corrige en Abierto.
+  En el *replay* de la CI, compilado en `relwithdebinfo`, el pico de cada región de
+  memoria falla si pasa su fila de `docs/performance/presupuestos.md`, y los contadores
+  del juego, si pasan un tope duro de su ADR (como la cuota de cortes por paso del
+  ADR-0007). R5 no es un tope: es el mínimo que el juego tiene que aguantar. Las
+  instrucciones contadas solo informan. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -368,8 +370,9 @@ picos que todavía no se conocen.
     durante un rato. Tyler Glaiel describe cómo evitarlo ajustando el `dt` al período
     del refresco (ticket del game loop);
   - qué se puede automatizar en CI, donde los runners compartidos no sirven para medir
-    tiempo (decidido en el ADR-0029: nada que mida tiempo; las métricas deterministas del
-    *replay*, contra su presupuesto);
+    tiempo (decidido en el ADR-0029: nada que mida tiempo; los picos de memoria del
+    *replay*, contra su presupuesto, y los contadores, contra los topes duros de sus
+    ADRs);
   - cómo se implementan las arenas, los pools y los ring buffers del presupuesto de
     memoria (ADR-0010).
 

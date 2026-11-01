@@ -18,11 +18,12 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets; tests después en el combate) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018 y 0023 (TDD en el corte, la memoria, la animación, la física y el cocinador de assets, incluida la navmesh; tests después en el combate y la IA) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
+| [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -48,6 +49,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Corte de mallas, tapas, pedazos, hendidura, `slice_request`, índice soldado | `corte` |
 | Diagramas, D2, la leyenda, SVG, Mermaid, PlantUML, Graphviz | `diagramas` |
 | Combate, la fuerza o la carga del tajo, armadura, juntas, rebote, la espada clavada, agarres, energía, pausa de impacto, vivo o muerto, tipos de zombie | `gameplay` |
+| IA, árbol de comportamiento, máquina de estados, percepción, fichas de ataque, navmesh, A*, *funnel*, caminos, ORCA, evasión, la horda | `ia` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -463,7 +465,7 @@ Qué mirar:
 ## assets
 
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
-(mipmaps).
+(mipmaps), 0023 (la navmesh).
 
 Qué mirar:
 
@@ -524,7 +526,15 @@ Qué mirar:
 - **Las cápsulas por hueso** se ajustan en el cocinador, después del recorte de huesos y
   de cuantizar los pesos (ADR-0007), con correcciones a mano. Tiene cápsula todo hueso que mueve algún vértice (si no
   domina en ninguno, se ajusta con los de cualquier peso), y uno que no mueve ninguno no
-  la tiene. En el escenario, solo `UBX_`, `UCP_` y `USP_`.
+  la tiene. En el escenario, solo `UBX_`, `UCP_` y `USP_`, más el prefijo que retoca la
+  navmesh (ADR-0023).
+- **La navmesh del escenario** (ADR-0023) la genera el cocinador desde la colisión y el
+  piso, con el radio de inflado como parámetro del nivel, y la escribe en el binario
+  cocinado: polígonos convexos con vértices en 3D, sus portales, una grilla para ubicar
+  un punto y el radio, guardado en la sección de la navmesh. Necesita ver la colisión del
+  nivel armado; cómo se arma un nivel lo decide el ADR-0027.
+  Es determinista (los mismos bytes dos veces). Generarla al cargar el nivel o en el
+  juego, o leer una navmesh hecha a mano como fuente única, es una decisión nueva.
 - **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
   de carga.
 - **Un asset de terceros que solo existe como `.glb`** se versiona importado a `.blend`,
@@ -615,8 +625,9 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017 y 0018 (reparto del TDD en el corte, la
-memoria, la animación, la física y el cocinador de assets; los tests del combate).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018 y 0023 (reparto del TDD en el corte,
+la memoria, la animación, la física y el cocinador de assets; los tests del combate y de
+la IA).
 
 Qué mirar:
 
@@ -700,6 +711,15 @@ Qué mirar:
   máscaras de huesos armadas a mano. La espada clavada y el agarre tienen tests de
   *replay*. Al ticket del corte se suma un caso: volver a cortar una herida abierta con
   el mismo plano y la misma pose, que pasa justo por el fondo de la ranura.
+- **En la IA (ADR-0023):** **la generación de la navmesh vive en el cocinador y lleva su
+  TDD:** sobre cajas conocidas, polígonos convexos conectados por portales que dejan
+  afuera lo inflado, los mismos bytes al cocinar dos veces, y un prefijo de retoque mal
+  escrito que falla el build. Código nuevo del generador sin test es `bloqueante`. **La
+  IA y la navegación en el juego llevan tests después,** con casos calculados a mano: A*
+  y el *funnel* sobre una navmesh armada a mano, el programa lineal de ORCA (dos agentes
+  de frente que no chocan), el reparto de fichas (cercanía, ventaja de la cámara,
+  desempate) y la evaluación de un árbol chico. La horda entera tiene tests de *replay*
+  con el hash del estado.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -824,6 +844,83 @@ Qué mirar:
 - **Determinismo:** ninguna regla usa azar ni el reloj; la secuencia lee el input por
   paso.
 - Los tests del combate no son de este tema: los audita `testing`.
+
+## ia
+
+**ADRs:** 0023 (IA de los zombies y navegación).
+
+Qué mirar:
+
+- **El orden dentro del gameplay:** percepción → fichas → decisión → camino → ORCA →
+  velocidad deseada en un componente. **La IA no mueve a nadie:** mueve la física, con
+  esa velocidad, en su turno del paso. Una IA que escriba la posición es un hallazgo.
+- **Los zombies deciden con un BT plano:** los nodos de cada tipo en un arreglo
+  compartido, con los hijos contiguos, y las hojas despachadas con un `switch` sobre su
+  id. Un BT con nodos virtuales, memoria asignada al decidir o recursión sin el máximo de
+  profundidad que verifica el constructor rompe el ADR-0009 (lo audita
+  `cpp-y-convenciones`). Se evalúa desde la raíz en cada decisión; las acciones
+  comprometidas (preparar el ataque, agarrar, recuperarse) avanzan fuera del árbol.
+  **El punto del agarre lo marca el temporizador de la tabla del tipo**, y el clip se
+  reproduce escalado a esa duración; que la consulta del agarre dependa del clip (un
+  evento de animación, otro reloj) es un hallazgo.
+  **Los jefes** (el mago, el rey, la reina) son una FSM propia con `switch`; un jefe
+  metido en el árbol común es un hallazgo.
+- **Los árboles se arman en C++ al iniciar,** fuera del paso. **Los números de cada
+  tipo** (velocidad, alcance, tiempos del ataque, radios de percepción) van en la tabla
+  de datos del tipo y se ajustan sin recompilar. Un número fijo en el código es un
+  hallazgo.
+- **Percepción:** vista con distancia, ángulo y **el rayo de la física**; oído por
+  eventos de ruido que emite el combate; contagio entre vecinos. **El ruido va en un
+  arreglo fijo del mundo,** no en una cola del paso: una cola de la arena del paso se
+  borra antes de que la IA la lea, y el ruido se pierde. Con el arreglo lleno, el ruido
+  nuevo reemplaza al de radio más chico si es más grande; si no, se descarta y un
+  contador lo registra. Un ruido que se pierde sin contarlo es un hallazgo (lo audita
+  `memoria`). En el corte vertical, un zombie alertado no olvida.
+- **Fichas de ataque** (3 para empezar, configurable): la ficha va al más cercano, con
+  un descuento si está dentro de la cámara del paso anterior, y el desempate es por
+  entidad. Se toma al empezar a preparar el ataque y se devuelve al terminar de
+  recuperarse, **o antes** si su dueño muere, pierde los brazos útiles, queda ensartado
+  o pasa a escala 0 por un pedido de corte. Una ficha que no vuelve en esos casos es
+  `importante`: la horda se queda sin fichas. Los que no tienen ficha esperan en anillo.
+  **No usan ficha** el guardaespaldas, los jefes y el agarre que sale de la espada
+  clavada (lo lleva el combate, ADR-0018). Fuera de esos casos, un zombie de la horda
+  común que ataca sin ficha es `importante`: rompe la justicia que pide el ADR-0018.
+- **La navmesh:** polígonos convexos con portales, generada por el cocinador (lo audita
+  `assets`). Una grilla, *waypoints* o un campo de flujo como representación son una
+  decisión nueva. **Recast/Detour no es una dependencia:** incluirlo lo audita
+  `build-y-licencias`. **Al cargar el nivel,** el juego verifica que ningún radio de las
+  tablas de tipos supere el radio de inflado guardado en la navmesh, y si lo supera,
+  falla con un mensaje; que falte esa verificación es un hallazgo.
+- **Caminos:** A* sobre los polígonos y *funnel*. Si el zombie ve a su objetivo, camina
+  directo; esa línea de vista es **un rayo sobre la navmesh**, no el de la física.
+  Seguimiento reactivo hacia un punto más adelante. El camino es un arreglo fijo de 32
+  esquinas en `nav_agent`. La memoria de A* se reserva al cargar el nivel; que una
+  búsqueda asigne memoria lo audita `memoria`.
+- **El recálculo** se reparte por **el índice estable del *handle***, cada 30 pasos
+  (configurable) o antes si el objetivo se aleja del final del camino. Repartir por la
+  posición en el arreglo denso del *sparse set* es `importante`: esa posición cambia
+  cuando muere otro zombie, y con ella el turno, así que un camino puede quedar viejo
+  hasta ~59 pasos y los recálculos se juntan. No rompe el determinismo: con un hilo y
+  destrucción diferida, las muertes se repiten en el mismo orden.
+- **ORCA entre agentes:** hasta 10 vecinos a menos de 3 m, horizonte de 1 s, la mitad
+  del esquive para cada uno, y todo el esquive contra la caballera y contra un zombie
+  quieto (preparando el ataque, agarrando, congelado o ensartado). Los muros los
+  resuelven la navmesh y el controlador, que sigue sacando a los zombies de lo que
+  penetran (ADR-0016).
+- **El zombie mutilado:** el pedazo vivo sigue con el mismo árbol y su nuevo estado de
+  locomoción (ADR-0018), y su camino se descarta. Sin brazos útiles, no ataca ni pide
+  ficha; el que se retuerce no se mueve ni decide. Una sola navmesh, inflada por el
+  radio mayor del corte vertical (0,45 m).
+- **Escala de tiempo:** la IA multiplica sus temporizadores por la escala de cada
+  personaje; con escala 0 no decide ni pide camino. **El zombie ensartado no decide.**
+- **Determinismo:** sin azar ni reloj; la cola abierta de A*, las fichas y los vecinos
+  de ORCA desempatan por índice; los valores ajustables son CVars que afectan la
+  simulación (ADR-0021).
+- **Depuración (ADR-0021):** dibujo de la navmesh, los caminos, la velocidad deseada
+  contra la elegida, el cono de la vista, los ruidos y quién tiene ficha; el panel del
+  zombie elegido con el recorrido de su árbol; contadores de A*, fichas y vecinos en el
+  registro por frame.
+- Los tests de la IA no son de este tema: los audita `testing`.
 
 ## herramientas
 

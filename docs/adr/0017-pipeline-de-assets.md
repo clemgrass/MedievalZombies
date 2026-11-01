@@ -18,6 +18,14 @@
   los pedazos indexan el buffer del modelo con 16 bits, así que el cocinador falla el
   build si una malla que se corta pasa de 65 536 vértices. Se corrige en Consecuencias
   ("Las texturas" y "El cocinador falla el build").
+- **Fe de erratas:** 2026-11-01 (#37): el ADR-0023 pide una navmesh. El cocinador la
+  genera desde la colisión del escenario, de forma determinista, y la escribe en el
+  binario cocinado, junto con el radio de inflado, que recibe como parámetro del nivel.
+  Necesita ver la colisión del nivel armado: cómo se arma un nivel lo decide el
+  ADR-0027. Un prefijo nuevo, cuyo nombre fija el ticket del cocinador, marca
+  zonas para quitar o forzar en la navmesh; se suma a los prefijos que el cocinador
+  acepta. Se corrige en Consecuencias ("El cocinador falla el build" y "La navmesh del
+  escenario").
 
 ## Contexto y problema
 
@@ -521,8 +529,16 @@ LFS.
     16 bits con que el ADR-0022 dibuja los pedazos sobre el buffer del modelo;
   - los nombres con prefijo de colisión, y que cada primitiva calce con su objeto. Un
     `UCX_` (casco convexo, en Unreal) o cualquier otro prefijo desconocido es un error,
-    porque la física no tiene cascos convexos (ADR-0016);
+    porque la física no tiene cascos convexos (ADR-0016). El prefijo que retoca la
+    navmesh (ADR-0023) es conocido;
   - lo que fije el ADR-0007 sobre las mallas que se cortan.
+- **La navmesh del escenario** (ADR-0023): el cocinador la genera desde la colisión
+  (`UBX_`, `UCP_`, `USP_`) y el piso, inflada por el radio del zombie más ancho, y la
+  escribe en el binario cocinado: polígonos convexos con vértices en 3D, sus portales, una
+  grilla para ubicar un punto y el radio de inflado, que recibe como parámetro del nivel.
+  Cocinar dos veces la misma escena da los mismos bytes. Es código del cocinador, así que
+  lleva su TDD. Necesita ver la colisión del nivel armado; cómo se arma un nivel, y dónde
+  queda la navmesh dentro de lo cocinado, lo decide el ADR-0027.
 - **El formato del binario:** una cabecera con una firma y una versión, y secciones
   planas con offsets relativos. Como lo cocinado no se versiona, **no hay compatibilidad
   hacia atrás**: si el formato cambia, sube la versión y todo se recocina. El cargador

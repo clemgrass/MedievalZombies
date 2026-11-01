@@ -8,6 +8,11 @@
   herramientas visuales dentro del engine: Dear ImGui, dibujado por el renderer propio.
   Cada herramienta (por ejemplo, el editor de cápsulas) necesita su ticket. Se corrige
   en Abierto.
+- **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 decide cómo se instala Blender. La
+  versión se fija hasta el parche (hoy, 5.2.2 LTS), y Blender se instala desde el tarball
+  oficial de `download.blender.org`, verificado con su `sha256`, en la CI y en la máquina
+  del autor: el paquete de Arch sigue la fecha del snapshot y no la versión elegida.
+  Se corrige en Consecuencias y en Abierto.
 
 ## Contexto y problema
 
@@ -475,13 +480,15 @@ LFS.
   Lo exportado y lo cocinado viven en el directorio de build y no se versionan. CMake
   sabe qué depende de qué, así que tocar un `.blend` re-exporta y recocina solo ese
   asset.
-- **El build necesita Blender, con su versión fijada** (hoy, 5.2 LTS), y la verifica al
-  configurar:
+- **El build necesita Blender, con su versión fijada hasta el parche** (hoy, 5.2.2 LTS),
+  y la verifica al configurar:
   - la exportación es idéntica bit a bit con la misma versión. Cambiar de versión es un
     cambio deliberado: se re-exporta todo y se revisa la diferencia;
   - **el otro computador** donde se modele usa la misma versión. Un `.blend` guardado con
     una versión más nueva puede no abrirse bien en una más vieja;
-  - la CI también necesita Blender. Cómo se instala lo decide el ADR-0029.
+  - la CI también necesita Blender. Se instala desde el tarball oficial, verificado con
+    su `sha256` y guardado en la caché de la CI, y el autor usa el mismo tarball
+    (ADR-0029).
 - **Dependencias nuevas, solo en el cocinador:** cgltf (MIT) y stb_image (dominio público
   o MIT; se usa bajo MIT). Son headers sueltos, **copiados en el repo en
   `tools/third_party/`**, con su versión a la vista: el build no necesita red. Están en
@@ -631,7 +638,8 @@ LFS.
     pueden usar directo desde el archivo: en las dos rutas del ADR-0005 (incluida la GPU
     integrada) se copian a una imagen con *tiling* óptimo;
   - el formato de las escenas y los niveles (ADR-0027);
-  - Blender en la CI (ADR-0029);
+  - Blender en la CI (decidido en el ADR-0029: tarball oficial con la versión de parche
+    fijada);
   - las herramientas visuales dentro del engine (decidido en el ADR-0021: usan Dear
     ImGui, y cada una necesita su ticket).
 

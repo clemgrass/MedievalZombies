@@ -4,6 +4,11 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #23
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#51): "`-Werror` en todas las configuraciones" vale para
+  el código propio. Los warnings se aplican por target, con un target de interfaz que
+  solo enlazan los targets propios, nunca con `add_compile_options`: el *spike* del
+  ADR-0029 midió que, con banderas globales, `-Werror` llega al código de SDL3 descargado
+  con `FetchContent` y su build falla. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -122,6 +127,10 @@ consciente.
   `m_`. Por convención, las macros van en `MAYÚSCULAS` y los parámetros de template en
   `PascalCase` (`template <typename Vertex>`). Las constantes siguen el `snake_case`
   general.
+- **Los warnings van por target:** un target de interfaz de CMake lleva los warnings y
+  `-Werror`, y solo lo enlazan los targets propios. Con `add_compile_options`, que es
+  global, llegan también a las dependencias descargadas con `FetchContent`, y su build
+  falla (ADR-0029).
 - **Lista de warnings:** además de la base, `-Wold-style-cast`, `-Wsign-conversion`,
   `-Wdouble-promotion`, `-Wnull-dereference`, `-Wimplicit-fallthrough`,
   `-Wnon-virtual-dtor`, `-Wcast-align` y `-Wformat=2`. No se usa `-Weverything` de

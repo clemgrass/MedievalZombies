@@ -29,6 +29,11 @@
   ADR-0008, Clang y GCC dan los mismos bits; lo que cambia entre máquinas es la libm.
   Las dos salidas para comparar contra un hash guardado (funciones trascendentales
   propias o una CI con la misma glibc) quedan para el ADR-0029. Se corrige en Abierto.
+- **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 elige la CI con la misma glibc. La CI
+  corre con el toolchain de la máquina del autor, fijado por una fecha del Arch Linux
+  Archive, y el test de *replay* compara contra un hash guardado en esa máquina (medido:
+  el mismo hash en la máquina del autor y en un runner de GitHub). Un cambio de la fecha
+  que cambia la glibc vuelve a grabar los hashes. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -420,7 +425,7 @@ contra el escenario y el golpe de la espada.
   - qué pasa entre los controladores y los pedazos del suelo: si los empujan, los
     ignoran o los frenan (decidido en el ADR-0018);
   - si un test de *replay* necesita un hash estable entre máquinas, para compararlo en
-    la CI (decidido en el ADR-0021: por ahora no; lo retoma el ADR-0029);
+    la CI (decidido en el ADR-0029: sí, con la misma glibc que la máquina del autor);
   - cómo se separan los zombies de la horda entre sí (ADR-0023);
   - qué decide que un zombie muera entero (ragdoll) o en pedazos (decidido en el
     ADR-0018);

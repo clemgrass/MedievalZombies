@@ -4,6 +4,9 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #21
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#51): qué de todo esto corre en la CI y cuándo no lo
+  decide el ADR-0014, sino el ADR-0029, que el ADR-0014 creó para eso. Se corrige en
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -268,7 +271,7 @@ caída se guarda y **se convierte en un test de regresión**.
 - **Dependencias nuevas** cuando empiece el código: `gtest` (paquete de Arch) y, para
   las imágenes de referencia, `vulkan-swrast` (lavapipe). Cada una se agrega a
   `CREDITS.md`.
-- **El ADR-0014** decide qué de todo esto corre en CI y en qué momento. Este ADR deja
+- **El ADR-0029** decide qué de todo esto corre en CI y en qué momento. Este ADR deja
   definido qué existe y cómo se corre en local.
 - **Lo que queda abierto:**
   - la tolerancia exacta de las imágenes de referencia, que se fija cuando exista el

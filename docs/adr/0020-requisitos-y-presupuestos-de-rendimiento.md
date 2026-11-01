@@ -9,6 +9,12 @@
   después de un tirón externo se marcan en el registro por frame y se reportan aparte:
   R1 se da con y sin ellos, con su cantidad, y nunca se descartan. Se corrige en el
   protocolo (punto 7) y en Abierto.
+- **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 decide qué se automatiza en la CI.
+  Nada que mida tiempo: R1 a R3 se miden solo con este protocolo, en la máquina de
+  referencia (medido: el tiempo varió un 21 % entre corridas de un runner compartido).
+  En el *replay* de la CI, el pico de cada región de memoria y los contadores del juego
+  fallan si pasan su presupuesto de `docs/performance/presupuestos.md`. Las instrucciones
+  contadas solo informan. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -362,7 +368,8 @@ picos que todavía no se conocen.
     durante un rato. Tyler Glaiel describe cómo evitarlo ajustando el `dt` al período
     del refresco (ticket del game loop);
   - qué se puede automatizar en CI, donde los runners compartidos no sirven para medir
-    tiempo (ADR-0029);
+    tiempo (decidido en el ADR-0029: nada que mida tiempo; las métricas deterministas del
+    *replay*, contra su presupuesto);
   - cómo se implementan las arenas, los pools y los ring buffers del presupuesto de
     memoria (ADR-0010).
 

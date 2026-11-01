@@ -4,6 +4,11 @@
 - **Fecha:** 2026-10-28
 - **Ticket:** #43
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-01 (#51): el ADR-0029 decide el hash entre máquinas. La CI
+  corre con la misma glibc que la máquina del autor, fijada por una fecha del Arch Linux
+  Archive, y el test de *replay* compara contra un hash guardado en esa máquina, además
+  de comparar dos ejecuciones del mismo proceso. Se corrige en la Decisión 8, en
+  Consecuencias ("El hash entre máquinas"), en Abierto y en "Cómo lo defiendo".
 
 ## Contexto y problema
 
@@ -362,7 +367,7 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 | 5 | Logging | **Cinco niveles** (error, aviso, info, debug, traza) y **una categoría por módulo**. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, que se vacía a un archivo una vez por frame y siempre ante un error fatal. Sin formato diferido y sin spdlog. Lo que no corresponde a cada preset se elimina al compilar |
 | 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame. Del corte muestra: el plano del tajo y su barrido; las cápsulas de cada hueso, y cuáles tocó la hoja; la recta donde se detuvo la hoja y la espada clavada; el contorno del corte; la cuña y el abanico del fondo de la hendidura; las normales de la tapa ya des-deformadas y las de los vértices nuevos; y los pedazos coloreados por grupo de huesos. Los presupuestos de memoria van en el panel (dimensión 9) |
 | 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante** |
-| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el escenario, la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **solo en la misma máquina**. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques. Controles de tiempo: pausa, avance de un paso y cámara lenta |
+| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el escenario, la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques. Controles de tiempo: pausa, avance de un paso y cámara lenta |
 | 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. En el registro por frame, la escala de R4 del ADR-0020: **`RssAnon` (de `/proc/self/statm`) más el `heapUsage` de `VK_EXT_memory_budget`**, y R4 es el máximo por frame de esa suma. `TracyAllocN` solo para el pool de pedazos |
 | 10 | Presets | **Una macro por herramienta**, con la combinación de cada preset fijada en `CMakePresets.json`. La macro de zona alimenta a Tracy en `relwithdebinfo` y a la traza del verificador del ADR-0030 en `debug` |
 
@@ -479,13 +484,12 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   que los del combate (ADR-0018) y el ancho de la cuña (ADR-0007). Las opciones del
   jugador (sensibilidad, invertir un eje, apagar la cámara del tajo) no lo son: su
   guardado lo decide el ADR-0028.
-- **El hash entre máquinas** (resuelve el punto abierto del ADR-0016): por ahora, solo en
-  la misma máquina. Con las banderas del ADR-0008, Clang y GCC en -O0, -O2 y -O3 dan los
-  mismos bits; lo que no está garantizado es la libm de otra máquina. En la CI, un test de
-  *replay* compara dos ejecuciones en el mismo proceso, como ya pide el ADR-0016. Las
-  dos salidas para comparar contra un hash guardado (funciones trascendentales propias o
-  una CI con la misma glibc) quedan medidas para el ADR-0029. **Fe de erratas del
-  ADR-0016** (Abierto).
+- **El hash entre máquinas** (resuelve el punto abierto del ADR-0016): con las banderas
+  del ADR-0008, Clang y GCC en -O0, -O2 y -O3 dan los mismos bits; lo que no está
+  garantizado es la libm de otra máquina. El ADR-0029 eligió una CI con la misma glibc
+  que la máquina del autor: el test de *replay* compara dos ejecuciones en el mismo
+  proceso, como ya pide el ADR-0016, y además compara contra un hash guardado en la
+  máquina del autor. **Fe de erratas del ADR-0016** (Abierto).
 - **Si un ADR nuevo agrega `-march`** (el ADR-0008 lo deja para un ADR nuevo, si el
   profiler lo justifica), tiene que sumar también `-ffp-contract=off`: con FMA, los
   *replays* grabados divergen desde el primer paso.
@@ -535,8 +539,8 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   - dónde viven en el repo los escenarios grabados del protocolo (su ticket);
   - la regla del input por paso (ticket del game loop);
   - con qué se calculan los percentiles y el *bootstrap* a partir del registro (su
-    ticket o el ADR-0029);
-  - el hash entre máquinas para la CI (ADR-0029);
+    ticket; el ADR-0029 no mide tiempo en la CI);
+  - el hash entre máquinas para la CI (decidido en el ADR-0029: con la misma glibc);
   - el tamaño de la región de depuración, que se mide;
   - el editor de cápsulas del ADR-0017 y las demás herramientas de assets: tienen
     interfaz (ImGui), pero cada una necesita su ticket;
@@ -585,8 +589,8 @@ No está garantizado, y por ahora no lo necesito: mido en la máquina mínima, l
 referencia del ADR-0020. El prototipo mostró que Clang y GCC, en cualquier nivel de
 optimización, dan los mismos bits en esta máquina. Lo que cambia entre máquinas es la
 libm: `sinf` de glibc no redondea correctamente, así que otra versión puede dar otros
-bits. En la CI basta con comprobar que dos ejecuciones en el mismo proceso dan lo mismo.
-Si algún día hace falta más, el ADR-0029 tiene medidas las dos salidas.
+bits. Por eso la CI usa la misma glibc que mi máquina (ADR-0029): ahí el *replay* se
+compara contra un hash que grabé yo, y en un runner de GitHub dio el mismo hash.
 
 **Un valor del combate se cambia sin recompilar. ¿Cómo evitas que eso rompa un *replay*,
 y por qué en Release es una constante?**

@@ -13,6 +13,11 @@
   oficial de `download.blender.org`, verificado con su `sha256`, en la CI y en la máquina
   del autor: el paquete de Arch sigue la fecha del snapshot y no la versión elegida.
   Se corrige en Consecuencias y en Abierto.
+- **Fe de erratas:** 2026-11-01 (#36): el ADR-0022 pide mipmaps. El cocinador los genera
+  para las texturas de color, y se filtran con *nearest*, también entre niveles. Además,
+  los pedazos indexan el buffer del modelo con 16 bits, así que el cocinador falla el
+  build si una malla que se corta pasa de 65 536 vértices. Se corrige en Consecuencias
+  ("Las texturas" y "El cocinador falla el build").
 
 ## Contexto y problema
 
@@ -512,6 +517,8 @@ LFS.
   - hasta 256 huesos por esqueleto. Es el límite del formato (índices de 8 bits), no un
     presupuesto: el costo de cada esqueleto lo acota el presupuesto de animación del
     ADR-0020;
+  - hasta 65 536 vértices en una malla que se corta. Es el límite de los índices de
+    16 bits con que el ADR-0022 dibuja los pedazos sobre el buffer del modelo;
   - los nombres con prefijo de colisión, y que cada primitiva calce con su objeto. Un
     `UCX_` (casco convexo, en Unreal) o cualquier otro prefijo desconocido es un error,
     porque la física no tiene cascos convexos (ADR-0016);
@@ -565,9 +572,9 @@ LFS.
   nivel con esas piezas lo decide el ADR-0027.
 - **Las texturas** ocupan ~3 % de la memoria de la GPU sin comprimir. La sección de
   texturas del binario guarda su `VkFormat`: `R8G8B8A8_SRGB` para el color y
-  `R8G8B8A8_UNORM` para los datos, según el material glTF. Si hay mipmaps (y cómo se
-  filtran) lo decide el ADR-0022; si los pide, el cocinador los genera, promediando el
-  color en espacio lineal.
+  `R8G8B8A8_UNORM` para los datos, según el material glTF. El ADR-0022 pide mipmaps: el
+  cocinador los genera para las texturas de color, promediando el color en espacio
+  lineal, y se filtran con *nearest*, también entre niveles.
 - **El repo:** solo git, nunca LFS.
   - Ningún archivo pasa de 50 MiB (el aviso de GitHub). Los `.blend` low poly pesan
     mucho menos.

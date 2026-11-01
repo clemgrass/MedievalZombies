@@ -60,7 +60,16 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 ## Frame de GPU
 
 Meta total: **13,3 ms** (R2), a la resolución interna de 640×360 más el escalado a la
-salida. El reparto entre pasadas se agrega cuando el ADR-0022 defina el pipeline.
+salida. El reparto sigue las pasadas del ADR-0022.
+
+| Pasada | Meta | Estado |
+|---|---|---|
+| Color: 50 zombies, escenario y ~100 pedazos (640×360) | 7,0 ms | Hipótesis. El prototipo del ADR-0022 midió 4,5 ms con la GPU fija en 700 MHz |
+| Dibujo de depuración y postproceso (640×360) | 0,5 ms | Hipótesis |
+| Blit *nearest* a la pantalla | 2,0 ms | Hipótesis. El prototipo midió 1,3–1,6 ms a 700 MHz |
+| ImGui (solo en desarrollo) | 0,5 ms | Hipótesis |
+| Reserva | 3,3 ms | — |
+| **Total** | **13,3 ms** | |
 
 ## Memoria
 
@@ -106,3 +115,4 @@ cambian recién con una medición.
 | 2026-10-22 | #31 | El costo del combate del ADR-0018 (~60 µs por zombie y por tajo) queda anotado en la fila de combate y corte. Ninguna meta cambia | Ninguna: prototipo de laboratorio, fuera del protocolo |
 | 2026-10-28 | #43 | Fila nueva: las herramientas de depuración del ADR-0021 (región de 8 MiB, hipótesis, más ~14 MiB de Tracy), que salen de "Ejecutable, driver y reserva". Ninguna otra meta cambia | Ninguna del protocolo: la región es una cuenta, y lo de Tracy, un prototipo de laboratorio |
 | 2026-11-01 | #51 | La CI del ADR-0029 usa las filas de memoria por región como límite del *replay*, compilado en `relwithdebinfo`: falla si un pico las pasa. Las filas de capacidad no son un límite, porque R5 es un mínimo. Los tiempos no se miden en la CI. Ninguna meta cambia | Ninguna: es una decisión, no una medición |
+| 2026-11-01 | #36 | Reparto del frame de GPU entre las pasadas del ADR-0022: color 7,0 ms, depuración y postproceso 0,5, blit 2,0, ImGui 0,5 y reserva 3,3. El total no cambia | Ninguna del protocolo: un prototipo de laboratorio con la GPU fija en 700 MHz |

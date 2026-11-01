@@ -17,6 +17,12 @@
   del juego, si pasan un tope duro de su ADR (como la cuota de cortes por paso del
   ADR-0007). R5 no es un tope: es el mínimo que el juego tiene que aguantar. Las
   instrucciones contadas solo informan. Se corrige en Abierto.
+- **Fe de erratas:** 2026-11-01 (#36): el ADR-0022 decide cómo se escala: lo hace el
+  engine, con un blit *nearest* por el factor entero, y todo el postproceso va a 640×360,
+  antes del blit. Que escale el compositor ahorra ~1,1 ms, pero se ve borroso. Además,
+  para comparar dos versiones de una pasada de GPU, el reloj de la GPU se fija: con el
+  reloj libre, la misma configuración varió hasta un 50 %. R2 se sigue midiendo con el
+  reloj libre. Se corrige en la Decisión 3, en el protocolo y en Consecuencias.
 
 ## Contexto y problema
 
@@ -258,7 +264,7 @@ escala entera a todas las pantallas comunes y es la más barata.
 |---|---|---|
 | 1 | Cómo se expresa | **Requisitos cuantificados** en las tres categorías de la ISO/IEC 25010 (tiempo, recursos y capacidad), escritos al estilo Planguage: escala, medidor, nivel obligatorio y meta. El tiempo de frame se reporta en ms y con percentiles, nunca en fps promedio |
 | 2 | Máquina | **El Dell XPS 13 9360 de la Investigación es la mínima y la objetivo.** Todo se mide ahí |
-| 3 | Tasa y resolución | **60 fps sincronizados con la pantalla.** La salida va a la resolución nativa, con una **resolución interna de 640×360** escalada por un factor entero (5× en esta pantalla). Cómo se escala lo decide el ADR-0022 |
+| 3 | Tasa y resolución | **60 fps sincronizados con la pantalla.** La salida va a la resolución nativa, con una **resolución interna de 640×360** escalada por un factor entero (5× en esta pantalla). La escala el engine con un blit *nearest* (ADR-0022) |
 | 4 | Requisitos | Los de la tabla de abajo |
 | 5 | Reparto | El ADR fija los totales y el método. **El reparto por sistema vive en [`docs/performance/presupuestos.md`](../performance/presupuestos.md)**, y cada cambio llega en un PR con su medición |
 | 6 | Al superarlo | **Límites duros y degradación diseñada** en el juego. En desarrollo, incumplir un nivel obligatorio es un bug y no cumplir una meta, un ticket |
@@ -304,7 +310,10 @@ picos que todavía no se conocen.
    **sin las validation layers** de Vulkan. Debug, con ASan, UBSan y validation layers,
    no sirve para medir.
 2. **Condiciones fijas:** enchufado, perfil de energía en rendimiento, pantalla completa
-   a la resolución nativa y nada pesado abierto.
+   a la resolución nativa y nada pesado abierto. Para comparar dos versiones de una
+   pasada de GPU, el reloj de la GPU se fija (`gt_min_freq_mhz` igual a
+   `gt_max_freq_mhz`), y su frecuencia queda en el entorno registrado. El resto del
+   protocolo no cambia. R2 contra su presupuesto se mide con el reloj libre.
 3. **Entorno registrado** en cada medición: commit, preset, compilador, kernel, Mesa,
    temperatura y frecuencias.
 4. **Escenarios deterministas:** partidas grabadas con su input y versionadas en el
@@ -349,8 +358,14 @@ picos que todavía no se conocen.
   - la resolución interna limita el detalle de lejos. El campo de visión al apuntar
     (30°) compensa en parte, porque agranda lo que se apunta.
 - **El escalado final cuesta más ancho de banda que la escena:** escribir 3200×1800
-  son unos 23 MB por frame, contra 1,8 MB de una pasada a 640×360. Cómo reducirlo lo
-  decide el ADR-0022.
+  son unos 23 MB por frame, contra 1,8 MB de una pasada a 640×360. El ADR-0022 lo hace
+  con un blit *nearest* (1,3–1,6 ms, medido con la GPU fija en 700 MHz) y deja todo el
+  postproceso a 640×360. Que escale el compositor ahorra ~1,1 ms, pero se ve borroso.
+- **Para comparar dos versiones de una pasada de GPU** (el antes y el después de un PR de
+  rendimiento, ADR-0014), el reloj de la GPU se fija, por ejemplo en 700 MHz con
+  `gt_min_freq_mhz` y `gt_max_freq_mhz`. Con el reloj libre, a 60 Hz el driver lo baja, y
+  la misma configuración varió hasta un 50 % (ADR-0022). Saber si se cumple R2 se sigue
+  midiendo con el reloj libre, con este protocolo.
 - **Los cortes en cola** abren una opción para el ADR-0007 y el ADR-0018: la pausa de
   impacto (de 50 a 80 ms, de 3 a 5 pasos de simulación) es una ventana natural para
   repartir varios cortes sin que se note.

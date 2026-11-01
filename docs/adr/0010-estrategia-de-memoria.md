@@ -13,6 +13,10 @@
   uso y los picos de cada región: contadores en todos los builds y un panel en los de
   desarrollo. Se corrige en Consecuencias (detección de errores y las excepciones a la
   regla de abortar) y en Abierto.
+- **Fe de erratas:** 2026-11-01 (#36): el ADR-0022 decide los índices de los pedazos:
+  16 bits, con dos llamadas por pedazo. El buffer chico suma copias de los vértices del
+  borde, ~20 KB por corte (la fila "dos llamadas" de la Investigación). Se corrige en
+  Abierto.
 
 ## Contexto y problema
 
@@ -510,8 +514,9 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   - los tamaños de cada región, con el protocolo del ADR-0020;
   - la fragmentación del allocator de offsets real: la simulación usó un *good fit*, que
     TLSF aproxima pero no iguala (busca por clases de tamaño). Se mide cuando exista;
-  - índices de 16 o de 32 bits en los pedazos (ticket del cocinador y ADR-0022). Con 16
-    bits, la subida y el pool bajan casi a la mitad;
+  - índices de 16 o de 32 bits en los pedazos (decidido en el ADR-0022: 16 bits, con dos
+    llamadas por pedazo). La subida y el pool bajan casi a la mitad, más ~20 KB por corte
+    de copias de los vértices del borde. Los tamaños se miden con el protocolo;
   - la memoria que vive un nivel y la carga de los assets (ADR-0028);
   - cómo se ven los picos y el uso de cada región durante el juego (decidido en el
     ADR-0021: contadores en todos los builds y un panel en los de desarrollo);

@@ -11,7 +11,7 @@ SPDX-License-Identifier = "MIT"
 
 # Documentación bajo CC BY 4.0.
 [[annotations]]
-path = ["docs/**", "CREDITS.md", "CLAUDE.md"]
+path = ["docs/**", "README.md", "CREDITS.md", "CLAUDE.md"]
 SPDX-FileCopyrightText = "2026 Clemente Grass"
 SPDX-License-Identifier = "CC-BY-4.0"
 

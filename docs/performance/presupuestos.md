@@ -34,7 +34,7 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 
 | Sistema | Meta | Estado |
 |---|---|---|
-| Gameplay e IA (50 zombies) | 1,3 ms | Hipótesis |
+| Gameplay e IA (50 zombies) | 1,3 ms | Hipótesis. La IA y la navegación del ADR-0023 (decidir, caminos en la navmesh y ORCA) midieron ~0,1 ms por paso con 50 zombies (p99 ~0,11 ms), en un prototipo 2D sin el gameplay real |
 | Combate y corte (hasta 4 cortes en un paso) | 2,0 ms | Hipótesis. El gasto de la fuerza del ADR-0018 midió ~60 µs por zombie en todo el barrido, en un prototipo sin optimizar |
 | Física (zombies y ~100 pedazos) | 1,5 ms | Hipótesis |
 | Animación (50 esqueletos) | 1,2 ms | Hipótesis |
@@ -116,3 +116,4 @@ cambian recién con una medición.
 | 2026-10-28 | #43 | Fila nueva: las herramientas de depuración del ADR-0021 (región de 8 MiB, hipótesis, más ~14 MiB de Tracy), que salen de "Ejecutable, driver y reserva". Ninguna otra meta cambia | Ninguna del protocolo: la región es una cuenta, y lo de Tracy, un prototipo de laboratorio |
 | 2026-11-01 | #51 | La CI del ADR-0029 usa las filas de memoria por región como límite del *replay*, compilado en `relwithdebinfo`: falla si un pico las pasa. Las filas de capacidad no son un límite, porque R5 es un mínimo. Los tiempos no se miden en la CI. Ninguna meta cambia | Ninguna: es una decisión, no una medición |
 | 2026-11-01 | #36 | Reparto del frame de GPU entre las pasadas del ADR-0022: color 7,0 ms, depuración y postproceso 0,5, blit 2,0, ImGui 0,5 y reserva 3,3. El total no cambia | Ninguna del protocolo: un prototipo de laboratorio con la GPU fija en 700 MHz |
+| 2026-11-01 | #37 | El costo de la IA y la navegación del ADR-0023 (~0,1 ms por paso con 50 zombies) queda anotado en la fila de gameplay e IA. Ninguna meta cambia | Ninguna del protocolo: prototipo de laboratorio, fuera del protocolo |

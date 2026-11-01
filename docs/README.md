@@ -27,10 +27,11 @@ docs/
 ├── animation/       animación: README, adr/, research/
 ├── physics/         física: README, adr/, research/
 ├── gameplay/        reglas del juego (combate, desmembramiento): README, adr/, research/
+├── ai/              IA de los zombies y navegación: README, adr/, research/
 └── performance/     rendimiento: README y presupuestos por sistema (documento vivo)
 ```
 
-Las carpetas de área nuevas (`ai/`, `audio/`, etc.) se crean cuando
+Las carpetas de área nuevas (`audio/`, etc.) se crean cuando
 les toca su primer ADR y tienen la misma forma que `graphics/`. Cuando un área tiene
 código, suma una carpeta `diagramas/` con los diagramas de sus sistemas y procesos
 (ADR-0030).
@@ -83,5 +84,6 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0020](adr/0020-requisitos-y-presupuestos-de-rendimiento.md) | Requisitos y presupuestos de rendimiento (UHD 620, 60 fps, 640×360) | Transversal | Aceptado |
 | [ADR-0021](adr/0021-herramientas-de-depuracion.md) | Herramientas de depuración (Dear ImGui, Tracy y `perf`, registro por frame propio, replay por paso) | Transversal | Aceptado |
 | [ADR-0022](graphics/adr/0022-pipeline-de-render.md) | Pipeline de render (forward a 640×360, look PSX, blit *nearest* entero, tapa procedural) | Gráficos | Aceptado |
+| [ADR-0023](ai/adr/0023-ia-y-navegacion.md) | IA de los zombies y navegación (BT plano, navmesh propia en el cocinador, ORCA, fichas de ataque) | IA | Aceptado |
 | [ADR-0029](adr/0029-ci-cd.md) | CI/CD (contenedor de Arch con fecha fija, etapas con `ci-ok`, CD con el Steam Linux Runtime si se logra) | Transversal | Aceptado |
 | [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |

@@ -329,15 +329,115 @@ Lo que mostró, además de los números:
 
 ## Decisión
 
-*Pendiente: la escribe el autor.*
+Elijo un renderer forward, simple, con el estilo PSX hecho a 640×360 y escalado por el
+propio engine, para que los píxeles se vean nítidos. El prototipo mostró que a esta
+resolución lo que pesa es la geometría, no los píxeles, así que las técnicas pensadas
+para ahorrar sombreado (deferred, prepass, clustered) no me dan nada que necesite, y sí
+me quitan cosas: la luz por vértice o las transparencias simples. Prefiero construir
+desde el triángulo algo que entiendo entero, y dejar escritas las alternativas por si una
+medición las pide más adelante.
 
-Ya decidido por el autor (2026-11-01), de la dimensión 9: **escala el engine, con
-*nearest* y factor entero**, para que los píxeles se vean nítidos. Que escale el
-compositor queda descartado: se ve borroso.
+El look PSX es gratis, así que lo elijo por cómo se ve: texturas nítidas, *dithering*,
+niebla y vértices que tiemblan un poco, pero sin las texturas afines, que deforman el piso
+y van contra que el corte se lea. El interior del corte tiene que mostrar el hueso en su
+lugar: es lo que se recuerda del tajo. Que escale el compositor queda descartado: se ve
+borroso.
+
+| # | Dimensión | Elección |
+|---|---|---|
+| 1 | Arquitectura | **Forward:** una pasada de color y profundidad a 640×360, sin *depth prepass* |
+| 2 | Iluminación | **Estilizada:** Lambert con atenuación cuadrática hasta el radio de cada luz y un ambiente frío, sin especular. **Por píxel.** Un **arreglo global de hasta 16 antorchas** en el uniform del frame, que recorre cada píxel |
+| 3 | Sombras | **Sombras *blob*:** un disco oscuro bajo cada personaje, proyectado en el piso. **Sin shadow map.** El skinning sigue en el vertex shader (ADR-0015) |
+| 4 | Look PSX | **Filtrado *nearest*, mipmaps** (también *nearest* entre niveles), ***dithering* a 15 bits** con una matriz de Bayer de 4×4 al final del fragment shader, y **niebla lineal** por distancia hacia un color frío. **Vértices que tiemblan, suaves:** la grilla es una CVar (ADR-0021), por defecto la resolución interna. **Texturas afines:** una CVar, apagada por defecto. En Release, las dos son constantes |
+| 5 | Interior del corte | **Procedural según la distancia al hueso,** con una **textura de detalle** en la UV plana del ADR-0007 encima de la carne. La distancia se mide a los segmentos de los huesos del pedazo, en su pose. **La cámara del tajo muestra la tapa**, de cerca y en cámara lenta. Las capas por profundidad y los rayos X quedan abiertos |
+| 6 | Pedazos | **Dos llamadas por pedazo:** una con los triángulos que solo usan vértices del modelo, y otra con el buffer chico, que lleva los vértices nuevos y **copias de los vértices del borde**. **Índices de 16 bits** en las dos. Los pedazos se dibujan con el mismo vertex shader de skinning, con su paleta congelada |
+| 7 | Datos y envío | **Bindless:** un *descriptor set* global con el arreglo de objetos (un SSBO por frame en vuelo) y el arreglo de texturas (*descriptor indexing*, *partially bound*). Cada llamada recibe el índice de su objeto en un *push constant*. **Una llamada por objeto**, sin *instancing*. **Culling por objeto en la CPU**, con una esfera contra el frustum |
+| 8 | Pasadas | **Lista fija escrita a mano**, con barreras de *synchronization2*. **Todos los pipelines se compilan al arrancar**, con un `VkPipelineCache` en disco. **El dibujo de depuración va a 640×360** con la profundidad de la escena, e **ImGui a la resolución nativa**, después del escalado |
+| 9 | Escalado y salida | **Escala el engine, con un blit *nearest* y factor entero** (`vkCmdBlitImage2`). **Todo el postproceso, si hay, va a 640×360, antes del blit.** Color **LDR** en `R8G8B8A8_SRGB`, **sin antialiasing**. En una pantalla sin factor entero, el **mayor factor entero que cabe, con bordes negros**. Presentación FIFO |
+| 10 | Transparencias | ***Screen-door*** con la misma matriz de Bayer de 4×4, para la caballera cuando la cámara se acerca. El ***alpha blending*** queda para las partículas del ADR-0025 |
 
 ## Consecuencias
 
-*Se escriben con la decisión.*
+- **El frame tiene cuatro pasos, en este orden:**
+
+  ```
+  640×360:  color y profundidad (opacos y screen-door) → dibujo de depuración
+            → postproceso (si hay)
+  nativa:   blit nearest al swapchain → ImGui
+  ```
+
+  Cada paso es un `vkCmdBeginRendering` (o el blit) con sus barreras escritas a mano y un
+  par de timestamps (ADR-0021).
+- **Reparto del frame de GPU** (hipótesis para `docs/performance/presupuestos.md`,
+  medidas con el reloj fijo en 700 MHz, que es el 61 % del máximo):
+
+  | Pasada | Medido a 700 MHz | Meta |
+  |---|---|---|
+  | Color: 50 zombies, escenario y ~100 pedazos | 4,5 ms | 7,0 ms |
+  | Dibujo de depuración y postproceso | — | 0,5 ms |
+  | Blit a la pantalla | 1,3–1,6 ms | 2,0 ms |
+  | ImGui (solo en desarrollo) | — | 0,5 ms |
+  | Reserva | — | 3,3 ms |
+  | **Total** | | **13,3 ms** (R2) |
+
+- **Lo que se gana:** un renderer chico, que crece pasada por pasada desde el triángulo
+  del ADR-0005, y que gasta menos de la mitad del presupuesto de GPU, aun medido a
+  700 MHz. Cada efecto
+  del estilo PSX se ajusta sin recompilar.
+- **Lo que se sacrifica:**
+  - las sombras con la forma del cuerpo: el blob no sigue la silueta;
+  - más de 16 antorchas a la vez: con más, hay que elegir las N más cercanas a cada
+    objeto, o pasar a clustered;
+  - ~0,35 ms de GPU de bindless frente al modelo clásico, a cambio de una CPU más simple;
+  - la imagen no llena las pantallas sin factor entero.
+- **Features que el engine verifica al iniciar,** junto a las del ADR-0005:
+  `descriptorIndexing`, `runtimeDescriptorArray`, `descriptorBindingPartiallyBound` y
+  `shaderSampledImageArrayNonUniformIndexing` (Vulkan 1.2). La UHD 620 las tiene.
+- **El *front face* es `VK_FRONT_FACE_COUNTER_CLOCKWISE`**, por la Y volteada del
+  ADR-0008. Un test dibuja un cubo y verifica que se vean sus caras de afuera: el error
+  no se nota en la silueta.
+- **Para comparar dos versiones de una pasada, el reloj de la GPU se fija** (por ejemplo,
+  en 700 MHz con `gt_min_freq_mhz` y `gt_max_freq_mhz`). Con el reloj libre, la misma
+  configuración varió hasta un 50 %. Saber si se cumple R2 se sigue midiendo con el reloj
+  libre, como pide el ADR-0020.
+- **El cocinador (ADR-0017)** genera los mipmaps de las texturas de color, y escribe para
+  cada hueso su segmento (inicio, fin) y su radio en la pose de referencia, para la tapa
+  procedural.
+- **Assets nuevos:** la textura del blob y la textura de detalle de la carne.
+- **Tickets, en orden** (cada uno crece desde el anterior):
+  1. una malla con profundidad reverse-Z y el test del *front face*;
+  2. texturas *nearest* con mipmaps y el *descriptor set* bindless;
+  3. skinning en el vertex shader con la paleta de huesos;
+  4. antorchas, ambiente y niebla;
+  5. *dithering* y vértices que tiemblan, con sus CVars;
+  6. el blit al swapchain, con el factor entero y los bordes negros;
+  7. el culling por esfera;
+  8. los pedazos con dos llamadas y la tapa procedural (junto al ADR-0007);
+  9. las sombras blob;
+  10. el *screen-door* de la caballera;
+  11. ImGui y el dibujo de depuración en sus pasadas (junto al ADR-0021).
+- **Abierto:**
+  - las capas por profundidad en la tapa (piel, grasa, carne; metal y carne), que
+    necesitan la distancia al contorno;
+  - la cámara de rayos X;
+  - los *frames* de impacto estilo anime, si se usan: irían en el postproceso a 640×360
+    (visión y ADR-0025);
+  - el *instancing* de los zombies y el *skin cache*, si una medición los pide;
+  - dónde se guarda el `VkPipelineCache` (ADR-0028);
+  - el tamaño de la grilla del temblor y la textura de detalle de la carne, que se
+    ajustan mirando el juego.
+
+**Fe de erratas en otros ADRs.** Al aceptar este ADR, se corrigen como fe de erratas
+(ADR-0014, regla 11):
+
+| ADR | Qué se corrige |
+|---|---|
+| ADR-0007 | El buffer chico de un pedazo lleva los vértices nuevos y copias de los del borde (dos llamadas). Se cierra en Abierto |
+| ADR-0008 | Con la Y volteada en la proyección, el *front face* es `COUNTER_CLOCKWISE` |
+| ADR-0010 | Los índices de los pedazos son de 16 bits. Se cierra en Abierto |
+| ADR-0017 | El cocinador genera mipmaps (*nearest* entre niveles) y los segmentos y radios de los huesos para la tapa |
+| ADR-0020 | El escalado: blit *nearest* entero hecho por el engine. Para comparar versiones de una pasada, el reloj de la GPU se fija |
+| `docs/performance/presupuestos.md` | El reparto del frame de GPU por pasada |
 
 ## Cómo lo defiendo
 

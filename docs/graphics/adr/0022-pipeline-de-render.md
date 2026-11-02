@@ -13,6 +13,9 @@
   (Decisión 10), *instancing* (Decisión 7) y luz por vértice (Decisión 2). Como el alfa
   lleva la máscara, el swapchain usa `VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR`. Se corrige en
   Consecuencias y se cierran en Abierto las capas de la tapa y los *frames* de impacto.
+  2026-11-02 (#40): el ADR-0026 suma **una pasada de UI a 640×360** (HUD, subtítulos y
+  menús), después del postproceso y antes del blit: una llamada, con alfa premultiplicado
+  y sin escribir el alfa del destino. Se corrige el orden del frame en Consecuencias.
 
 ## Contexto y problema
 
@@ -367,17 +370,19 @@ borroso.
 
 ## Consecuencias
 
-- **El frame tiene cuatro pasos, en este orden:**
+- **El frame tiene cinco pasos, en este orden:**
 
   ```
   640×360:  color y profundidad (opacos, screen-door y los VFX del ADR-0025)
             → dibujo de depuración → postproceso (si hay)
+            → UI del ADR-0026 (HUD, subtítulos y menús)
   nativa:   blit nearest al swapchain → ImGui
   ```
 
   Cada paso es un `vkCmdBeginRendering` (o el blit) con sus barreras escritas a mano y un
   par de timestamps (ADR-0021). Dentro de la pasada de color, los VFX van después de lo
-  opaco, en el orden del ADR-0025.
+  opaco, en el orden del ADR-0025. La UI va después del postproceso, así que los *frames*
+  de impacto no la invierten (fe de erratas, ADR-0026).
 - **El canal alfa del color es la máscara de personajes** (ADR-0025): el shader de los
   personajes escribe 0 y el resto escribe 1. Las mezclas de los VFX conservan el alfa del
   destino, y el postproceso de los *frames* de impacto lo lee. **El swapchain usa

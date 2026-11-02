@@ -33,6 +33,17 @@
   Dependencias nuevas, solo en el cocinador: dr_flac (copiado en `tools/third_party/`) y
   libvorbis con libogg (paquetes del sistema). Se corrige en Consecuencias
   ("Dependencias nuevas", "El cocinador falla el build" y "Los sonidos").
+- **Fe de erratas:** 2026-11-02 (#40): el ADR-0026 decide el texto. El cocinador
+  rasteriza las fuentes de píxeles (OFL) en su grilla exacta, sin antialiasing, a un
+  atlas `R8` con una tabla de glifos y otra de *kerning*, en dos tamaños (×1 y ×2), y
+  convierte los archivos de textos (un TSV en UTF-8 por idioma) en tablas binarias, con
+  el ancho máximo de cada texto, que sale de un archivo de anchos en los assets. Falla el
+  build si a un idioma le falta un ID, si un texto usa un carácter que la fuente no tiene
+  o si un texto no cabe en su ancho. Dependencia nueva, solo en el cocinador:
+  `stb_truetype` (dominio público o MIT; se usa bajo MIT), copiado en
+  `tools/third_party/`. Se
+  corrige en Consecuencias ("Dependencias nuevas", "El cocinador falla el build" y "Las
+  fuentes y los textos").
 
 ## Contexto y problema
 
@@ -515,7 +526,9 @@ LFS.
   `CREDITS.md`, y cuando entren los archivos, `REUSE.toml` suma una anotación con el
   copyright de sus autores (ADR-0019). Para los sonidos (ADR-0024), el cocinador suma
   **dr_flac** (dominio público o MIT-0), copiado igual, y **libvorbis con libogg**
-  (BSD-3), que no son headers sueltos y entran como paquetes del sistema (ADR-0006).
+  (BSD-3), que no son headers sueltos y entran como paquetes del sistema (ADR-0006). Para
+  las fuentes (ADR-0026), **`stb_truetype`** (dominio público o MIT; se usa bajo MIT),
+  copiado igual.
 - **Qué enlaza qué:** el cocinador enlaza solo `engine/core`, para usar la misma
   matemática (ADR-0008) y la misma definición del formato que el cargador. Por eso **la
   definición del formato** (la cabecera y las structs de cada sección) **vive en
@@ -542,7 +555,10 @@ LFS.
     navmesh (ADR-0023) es conocido;
   - lo que fije el ADR-0007 sobre las mallas que se cortan;
   - en los sonidos (ADR-0024): que cada fuente esté a 48 kHz, que cada sonido 3D sea
-    mono y que la tabla de sonidos no nombre una toma que no existe.
+    mono y que la tabla de sonidos no nombre una toma que no existe;
+  - en los textos (ADR-0026): que cada idioma tenga todos los IDs, que la fuente tenga
+    cada carácter y que cada texto quepa en su ancho máximo, que sale del archivo de
+    anchos de los assets (no del código del juego, que el cocinador no enlaza).
 - **La navmesh del escenario** (ADR-0023): el cocinador la genera desde la colisión
   (`UBX_`, `UCP_`, `USP_`) y el piso, inflada por el radio del zombie más ancho, y la
   escribe en el binario cocinado: polígonos convexos con vértices en 3D, sus portales, una
@@ -556,6 +572,15 @@ LFS.
   (tomas, bus, prioridad, límites, variaciones y distancias). No remuestrea: un fuente
   con otra frecuencia falla el build. Cocinar dos veces da los mismos bytes, y lleva el
   TDD del cocinador.
+- **Las fuentes y los textos** (ADR-0026): las fuentes (OFL) van en la carpeta de assets.
+  El cocinador las rasteriza con `stb_truetype` en su grilla exacta (1 píxel de diseño =
+  1 píxel), sin antialiasing, a un atlas `R8` con una tabla de glifos y otra de
+  *kerning*, en los tamaños ×1 y ×2. Los textos son un TSV en UTF-8 por idioma, con un
+  ID por texto, y salen como una tabla binaria por idioma. **El ancho máximo de cada
+  texto es un archivo de anchos** en la carpeta de assets (ID → ancho en unidades de
+  640×360, y el tamaño en que se valida); el cocinador lo guarda en la tabla cocinada, y
+  el juego lo lee de ahí. Cocinar dos veces da los mismos bytes, y lleva el TDD del
+  cocinador.
 - **El formato del binario:** una cabecera con una firma y una versión, y secciones
   planas con offsets relativos. Como lo cocinado no se versiona, **no hay compatibilidad
   hacia atrás**: si el formato cambia, sube la versión y todo se recocina. El cargador

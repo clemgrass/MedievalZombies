@@ -12,6 +12,12 @@
   usan vértices del modelo, y un buffer chico con los vértices nuevos y copias de los del
   borde. La tapa es procedural, según la distancia al hueso, con una textura de detalle
   en su UV plana. Se corrige en Consecuencias ("Los pedazos en memoria") y en Abierto.
+- **Fe de erratas:** 2026-11-02 (#39): el ADR-0025 decide las capas de la tapa (piel,
+  grasa; metal, gambesón y piel). El corte llena un campo de distancia de 64² con su
+  contorno en la base `(u, v)` del plano, con una transformada lineal que propaga la
+  arista más cercana, y las dos tapas lo comparten. Su costo cuenta en el paso del
+  corte. El campo es del corte: se libera con la última tapa que lo usa, y con el pool
+  lleno se reusa el más viejo. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -583,6 +589,19 @@ va a ser gruesa, como la Matadragones de *Berserk*, así que la herida se va a n
     lo decide el ADR-0018.
 - **Los pedazos chicos:** el mínimo (por volumen o por cantidad de triángulos) se fija
   midiendo, y se ajusta sin recompilar. La salpicadura que lo disimula es del ADR-0025.
+- **El campo de distancia de la tapa** (ADR-0025): con el contorno ya proyectado en la
+  base `(u, v)` para triangular, el corte lo rasteriza en una grilla de 64² y le aplica
+  una transformada lineal que **propaga la arista más cercana** (una *feature
+  transform*, en la línea de Felzenszwalb y Huttenlocher) y mide la distancia exacta a
+  ese segmento. Medir hasta los centros de los texeles daría ~5 mm de error, más que la
+  capa de piel. El resultado (de 0 a 10 cm, en `R8`) va al arreglo de texturas de los
+  campos, y las dos tapas del corte lo comparten. Es una función pura del corte, así que
+  lleva su TDD estricto (ADR-0011), con un caso que la compara con la fuerza bruta, y su
+  costo cuenta en los 2,0 ms de "combate y corte".
+- **El campo es del corte:** se libera cuando se descarta la última tapa que lo usa
+  (también en un zombie vivo herido), por la cola por número de frame del ADR-0010. Con
+  el pool lleno, el corte nuevo reusa el campo más viejo, y la tapa que lo usaba se queda
+  sin capas.
 - **Volver a cortar:** la salida de un corte es una entrada válida (pedazos cerrados y
   *manifold*, con el mismo formato), así que el pedazo vivo o uno en el suelo se pueden
   volver a cortar, incluida una herida abierta. Si el juego lo permite, y cuándo, lo

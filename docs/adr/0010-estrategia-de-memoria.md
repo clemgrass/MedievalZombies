@@ -21,6 +21,12 @@
   que no usa allocators: solo toca memoria reservada al iniciar. Un hilo que no usa
   allocators (el de audio, los de Tracy) no necesita *scratch* propias. Se corrige en
   Consecuencias.
+- **Fe de erratas:** 2026-11-02 (#39): el ADR-0025 suma la región de VFX (las
+  partículas, en la CPU) y dos bloques de la GPU (las marcas de sangre y los campos de
+  distancia de las tapas), con capacidad fija y su degradación: la partícula nueva no
+  nace cuando el pool está lleno; la marca nueva reemplaza a la más vieja; el corte nuevo
+  reusa el campo de distancia más viejo. Se corrige en Consecuencias (el mapa de la
+  memoria y la degradación).
 
 ## Contexto y problema
 
@@ -413,6 +419,9 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   | Geometría de los pedazos (CPU y GPU) | El corte y `engine/gpu` | La del pedazo, más los frames en vuelo | Offsets, tipo TLSF |
   | Cuerpos y ragdolls | La física | La del cuerpo | Pools con handles, con el tope del ADR-0016 |
   | ECS | `engine/core` | Todo el programa | Capacidad fija |
+  | Partículas (ADR-0025) | Los VFX | Todo el programa | Dos pools fijos en SoA: chicas y grandes |
+  | Marcas de sangre (ADR-0025) | Los VFX y `engine/gpu` | La de la marca, más los frames en vuelo | Anillo de lugares fijos en un buffer persistente de la GPU, con la cola por número de frame |
+  | Campos de distancia de las tapas (ADR-0025) | El corte y `engine/gpu` | La de la última tapa que lo usa, más los frames en vuelo | Pool de capas de un arreglo de texturas; lleno, se reusa el más viejo |
   | *Ring buffer* | `engine/gpu` | Un frame en vuelo | Anillo |
   | Recursos de la GPU que viven un nivel | `engine/gpu` | Un nivel | Lineal, por bloques. Cómo se cargan lo decide el ADR-0028 |
 
@@ -460,7 +469,16 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   como una arena.
 - **La degradación de cada pool lleno:** los pedidos de corte, la del ADR-0007 (el combate
   no emite el pedido); los pedazos, descartar el más viejo (ADR-0020); los ragdolls, la
-  del ADR-0016 (el más viejo se duerme o se congela).
+  del ADR-0016 (el más viejo se duerme o se congela); las partículas, la del ADR-0025 (la
+  nueva no nace, y un contador lo muestra); las marcas de sangre, la del ADR-0025 (la
+  nueva reemplaza a la más vieja, después de la cola por número de frame); los campos de
+  distancia de las tapas, la del ADR-0025 (el corte nuevo reusa el más viejo, y esa tapa
+  se queda sin capas).
+- **La región de VFX** (ADR-0025) se reserva y se toca al iniciar, como las demás: los
+  dos pools de partículas, ~330 KB en la CPU, que caen en la fila "Mundo y ECS" de
+  `presupuestos.md`. Las marcas (384 KB) y los campos de distancia (512 KB) son bloques
+  de `gpu::Allocator` y caen en "Recursos de la GPU". Las tres filas están en el mapa de
+  arriba.
 - **Dos excepciones a la regla de abortar** (fe de erratas, ADR-0021), las dos solo en
   los builds de desarrollo: el dibujo de depuración descarta lo que no cabe y muestra en
   pantalla cuánto descartó, y Tracy con un servidor conectado pide memoria mientras corre.

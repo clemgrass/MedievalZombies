@@ -23,6 +23,10 @@
   sistema es código que corre cada frame (ADR-0009), y el callback tiene además las
   reglas más estrictas del ADR-0024. Se corrige en el orden del frame, la Decisión 5 y
   Consecuencias.
+  2026-11-02 (#39): el ADR-0025 integra los VFX al final de cada paso, después de la
+  animación y antes de reiniciar la arena del paso, para leer los eventos y las poses de
+  ese paso. Los VFX no son estado de la simulación: no entran en el hash del *replay* y
+  nunca escriben en ella. Se corrige en el orden del frame y en Consecuencias.
 
 ## Contexto y problema
 
@@ -117,6 +121,7 @@ Orden propuesto dentro de un frame:
 1. platform: vaciar la cola de eventos → estado de input        (ADR-0004)
 2. mientras el acumulador ≥ paso fijo:
      simulación: gameplay → combate → corte → física → animación
+     VFX: eventos del paso → partículas (fuera del estado)        (ADR-0025)
      reiniciar la arena del paso                                 (ADR-0010)
 3. render: interpolar el estado → grabar comandos → enviar a la GPU  (ADR-0005)
 4. audio: eventos de los pasos → voces → comandos al callback   (ADR-0024)
@@ -222,6 +227,9 @@ docs/      documentación
   atómicos. No asigna memoria, no toma locks y no hace I/O. El sistema de audio del hilo
   principal corre después del render, con la cámara y las posiciones que el render ya
   interpoló.
+- **Los VFX** (ADR-0025) corren en cada paso, después de la animación, pero no son
+  estado de la simulación: leen sus eventos y sus poses, nunca escriben en ella, y el
+  hash del *replay* no los incluye. Quitarlos no cambia la simulación.
 - **La estructura del monorepo** se crea con el primer ticket de código. Hoy solo
   existen `docs/`, `.github/` y `tools/`.
 

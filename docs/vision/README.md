@@ -343,11 +343,14 @@ Números propuestos para el engine (los fija el ADR-0020):
 ## Abierto
 
 - **Cómo se siente apuntar la espada** en detalle: lo afinan el ADR-0018 y el ADR-0015.
-- **Cuándo se usan los frames de impacto** estilo anime, si se usan.
+- **Cuándo se usan los frames de impacto** estilo anime, si se usan (decidido en el
+  ADR-0025: siluetas en blanco, negro y rojo, solo en los cortes cargados y en la cámara
+  del tajo, y se pueden apagar).
 - **El dragón** como enemigo.
 - **La cara del corte por dentro:** su geometría (triangulación y coordenadas) la genera
   el ADR-0007, y cómo se dibuja (carne, hueso, capas de metal y carne) lo decide el
-  ADR-0022.
+  ADR-0022 (decidido: el ADR-0022, la carne y el hueso; el ADR-0025, las capas, con un
+  campo de distancia por corte).
 - **Valores configurables sin recompilar** (cámara, controles, carga): decidido en el
   ADR-0021. Los valores de ajuste (distancia y altura de la cámara, campo de visión,
   ventanas de input, carga) son CVars, y en Release quedan como constantes. Las opciones

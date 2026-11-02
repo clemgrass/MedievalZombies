@@ -20,11 +20,12 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
 | [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023 y 0024 (TDD en el corte, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh y los sonidos, y la cola del audio; tests después en el combate, la IA y el resto del audio) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024 y 0025 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh y los sonidos, y la cola del audio; tests después en el combate, la IA, el resto del audio y los VFX) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
 | [audio](#audio) | 0024 | `engine/audio/**`, el audio de `engine/platform/**`, `game/**`, o código que abra el dispositivo de audio, mezcle, emita o lea eventos de sonido, maneje voces, emisores o música, o decodifique sonido |
+| [vfx](#vfx) | 0025 | `engine/vfx/**`, los shaders de partículas, marcas, estela o postproceso, `game/**`, o código que emita, integre o dibuje partículas, marcas de sangre, la estela, los *frames* de impacto o las capas de la tapa |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -52,6 +53,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Combate, la fuerza o la carga del tajo, armadura, juntas, rebote, la espada clavada, agarres, energía, pausa de impacto, vivo o muerto, tipos de zombie | `gameplay` |
 | IA, árbol de comportamiento, máquina de estados, percepción, fichas de ataque, navmesh, A*, *funnel*, caminos, ORCA, evasión, la horda | `ia` |
 | Audio, sonido, mezclador, voces, callback de audio, hilo de audio, música, Vorbis, FLAC, paneo, atenuación, el oyente, emisores | `audio` |
+| VFX, partículas, sangre, salpicadura, chispas, polvo, fuego, *decals* o marcas, la estela de la espada, los *frames* de impacto, las capas de la tapa, el campo de distancia | `vfx` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -194,6 +196,10 @@ Qué mirar:
   ADR-0021) y el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (fe de
   erratas del ADR-0012, por el ADR-0024; sus reglas las audita `audio`). Cualquier otro
   hilo es una decisión nueva.
+- **Los VFX corren al final de cada paso, fuera del estado** (fe de erratas del ADR-0012,
+  por el ADR-0025): después de la animación y antes de reiniciar la arena del paso. No
+  entran en el hash del *replay* y nunca escriben en la simulación; sus reglas las
+  audita `vfx`.
 - **Reparto del frame (ADR-0020):** `docs/performance/presupuestos.md` separa el costo
   por paso de simulación del costo por frame. Un frame con dos pasos tiene que caber en
   16,7 ms. Lo que depende de la simulación (por ejemplo, la cuota de cortes) se cuenta
@@ -237,7 +243,8 @@ Qué mirar:
   permiten en cada zona es de `cpp-y-convenciones`.
 - **Cuando se acaba:** las arenas y las tablas del engine abortan con el nombre de la
   región y su pico, en todos los builds. Los pools que llena el juego (pedidos de corte,
-  pedazos, ragdolls) degradan con su regla, y el juego pregunta antes si hay lugar.
+  pedazos, ragdolls; y las partículas, las marcas y los campos de distancia del ADR-0025,
+  por fe de erratas del ADR-0010) degradan con su regla, y el juego pregunta antes si hay lugar.
   Devolver `nullptr` en silencio, o pedir al heap como respaldo, es un hallazgo. **Dos
   excepciones declaradas** (fe de erratas del ADR-0010, por el ADR-0021): el dibujo de
   depuración descarta lo que no cabe y lo muestra en pantalla, y Tracy con un servidor
@@ -322,7 +329,8 @@ Qué mirar:
 - **Buffers de GPU:** los `struct` que van a la GPU usan `vec4` o relleno explícito,
   con `static_assert` sobre `sizeof` y `offsetof`.
 - **El frame (ADR-0022):** forward, con estas pasadas en este orden: color y
-  profundidad a 640×360 (opacos y *screen-door*), dibujo de depuración y postproceso a
+  profundidad a 640×360 (opacos, *screen-door* y los VFX del ADR-0025, sin pasadas
+  nuevas), dibujo de depuración y postproceso a
   640×360, **blit *nearest* por el factor entero** al swapchain, e ImGui a la resolución
   nativa. Un *depth prepass*, un G-buffer o un shadow map son una decisión nueva, no un
   detalle de implementación. Un efecto aplicado después del blit, o un escalado con
@@ -343,14 +351,22 @@ Qué mirar:
   en vuelo) y el de texturas (*descriptor indexing*, *partially bound*); el índice del
   objeto va en un *push constant*. Una llamada por objeto; culling por esfera en la CPU.
   El engine verifica al iniciar `descriptorIndexing`, `runtimeDescriptorArray`,
-  `descriptorBindingPartiallyBound` y `shaderSampledImageArrayNonUniformIndexing`.
+  `descriptorBindingPartiallyBound`, `shaderSampledImageArrayNonUniformIndexing` y
+  `shaderDemoteToHelperInvocation` (la usa el `discard` del *screen-door*; fe de erratas
+  del ADR-0022, por el ADR-0025).
+- **El canal alfa del color es la máscara de personajes** (fe de erratas del ADR-0022,
+  por el ADR-0025): 0 en los personajes, 1 en el resto. Un shader que escribe otro alfa,
+  o una mezcla que no conserva el alfa del destino, rompe los *frames* de impacto.
 - **Pedazos:** dos llamadas, con **índices de 16 bits**; el buffer chico lleva los
   vértices nuevos y copias de los del borde. **La tapa es procedural** según la distancia
   al eje de las cápsulas de los huesos del pedazo, con una textura de detalle en su UV
   plana. Usa las cápsulas del asset, movidas con la paleta congelada del pedazo; usar las
   recortadas del pedazo (ADR-0016) es un hallazgo, porque el hueso no llega a la tapa.
 - **Transparencias:** *screen-door* con Bayer 4×4 para la caballera; *alpha blending*
-  solo para las partículas (ADR-0025).
+  solo para los VFX del ADR-0025 (partículas, marcas y estela). Los VFX son además la
+  excepción a "una llamada por objeto" (usan *instancing*) y a la luz por píxel (luz por
+  vértice, sin normal); fe de erratas del ADR-0022, por el ADR-0025. **El swapchain usa
+  `VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR`:** otro modo deja transparentes a los personajes.
 - **Medir una pasada:** la comparación de antes y después de un PR de rendimiento se
   hace con el reloj de la GPU fijo, y el PR dice a qué frecuencia (ADR-0020).
 
@@ -363,7 +379,10 @@ Qué mirar:
 - **Biblioteca propia**, sin GLM ni DirectXMath.
 - **Tipos concretos con `float`:** `vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat` y
   `plane`. Sin `vec<N, T>` genérico.
-- **Escalar.** SIMD y SoA solo donde el profiler lo justifique, con la medición en el PR.
+- **Escalar.** SIMD solo donde el profiler lo justifique, con la medición en el PR. El
+  SoA de un pool decidido por diseño (las partículas del ADR-0025) no necesita
+  medición: es diseño orientado a datos (fe de erratas del ADR-0008, por el ADR-0025).
+  Llevar un bucle a SIMD, sí.
 - **Convenciones:** mano derecha, Y arriba, −Z adelante, metros y radianes.
 - **Importación de assets:** se convierten a Y arriba y metros, con el frente del modelo
   hacia −Z. Un glTF (frente hacia +Z) se rota 180° sobre Y, en toda la jerarquía. Un
@@ -633,13 +652,22 @@ Qué mirar:
   el juego es un hallazgo. Los pedazos bajo el mínimo se descartan.
 - **Determinismo:** los identificadores se asignan en el orden de los triángulos, y las
   tablas hash solo se consultan, nunca se recorren.
+- **El campo de distancia de la tapa** (fe de erratas del ADR-0007, por el ADR-0025):
+  el corte rasteriza el contorno en la base `(u, v)` del plano en una grilla de 64² y le
+  aplica una transformada lineal que **propaga la arista más cercana** y mide la
+  distancia exacta a ese segmento. Las dos tapas del corte lo comparten. Calcularlo por
+  fuerza bruta (cada texel contra cada arista: 3,6 ms con 64²) es `importante`: no cabe
+  en el paso del corte. Medir solo hasta los centros de los texeles también es
+  `importante`: el error (~5 mm) pasa la capa de piel. **El campo es del corte:** se
+  libera con la última tapa que lo usa (cola por número de frame) y, con el pool lleno,
+  el corte nuevo reusa el más viejo. Abortar o no liberarlo es un hallazgo.
 - El TDD y la cobertura del corte no son de este tema: los audita `testing`.
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023 y 0024 (reparto del TDD en el
-corte, la memoria, la animación, la física y el cocinador de assets; los tests del
-combate, de la IA y del audio).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024 y 0025 (reparto del TDD
+en el corte, la memoria, la animación, la física y el cocinador de assets; los tests del
+combate, de la IA, del audio y de los VFX).
 
 Qué mirar:
 
@@ -742,6 +770,11 @@ Qué mirar:
   tomas por hash. Además, **un render offline del mezclador** (sin dispositivo, con un
   guion de eventos) contra un hash guardado, comparado con la glibc fija de la CI
   (ADR-0029).
+- **En los VFX (ADR-0025):** **el campo de distancia de la tapa lo llena el corte, así
+  que lleva el TDD estricto del corte**, con un caso que la compara con la fuerza bruta,
+  con una tolerancia en milímetros. Código nuevo ahí sin test es `bloqueante`. **El resto
+  lleva tests después,** con casos calculados a mano para el recorte de las marcas y la
+  integración.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -1014,6 +1047,77 @@ Qué mirar:
   tarde en el registro por frame.
 - Los tests del audio los audita `testing`; los sonidos en el cocinador, `assets`; las
   dependencias (dr_flac, libvorbis, libogg, stb_vorbis), `build-y-licencias`.
+
+## vfx
+
+**ADRs:** 0025 (VFX y partículas). También la fe de erratas que hizo en el ADR-0007 (el
+campo de distancia de la tapa), el ADR-0008 (el SoA de un pool es diseño; el SIMD espera
+al profiler), el ADR-0010 (la región de VFX, las marcas y los campos), el ADR-0012 (los
+VFX al final del paso), el ADR-0018 (la tabla `material → efecto`) y el ADR-0022 (la
+máscara en el alfa, el swapchain `OPAQUE`, la feature del *screen-door* y las tres
+excepciones de los VFX: *alpha*, *instancing* y luz por vértice).
+
+Qué mirar:
+
+- **Las partículas, en la CPU, en SoA, con dos pools fijos** reservados al iniciar
+  (chicas y grandes); **las marcas y los campos de distancia, en bloques de la GPU** (ver
+  más abajo). Simular en la GPU (un *compute
+  shader* de partículas) es una decisión nueva.
+- **Al final del paso, fuera del estado.** Los VFX leen los eventos y las poses del paso
+  y nunca escriben en la simulación. Que el gameplay, la física o la IA lean una
+  partícula o una marca es `bloqueante`: lo cosmético pasa a cambiar el *replay*.
+  Integrar con el tiempo real del frame en vez del `dt` del paso es `importante`.
+- **El azar es un `pcg` del número de paso, la entidad y el índice.** Usar el generador
+  de la simulación es `bloqueante` (cambia el hash); usar `rand()` o el reloj es
+  `importante` (el *replay* deja de repetir los efectos).
+- **El tiempo de cada efecto es el de su dueño:** la estela usa el tiempo propio de la
+  caballera (se congela con la pausa de impacto); la salpicadura, el del mundo, así que
+  sale en el contacto. La cámara lenta escala todos.
+- **Se dibujan en `pos − vel · (1 − α) · dt`** con el α de la interpolación: van un
+  paso atrás, como todo lo que dibuja el render. `pos + vel · α · dt` extrapola y es
+  `importante`: la sangre se despega del muñón. Guardar la posición anterior de cada
+  partícula es un hallazgo menor (memoria de más). La estela termina en la pose
+  interpolada de la espada.
+- **Dibujo:** quads con *instancing* (4 vértices por instancia). *Vertex pulling* o
+  *point sprites* son una decisión nueva (los primeros miden +45 % en esta GPU; los
+  segundos no se estiran). **La mezcla por tipo:** sangre con *screen-door* (sin
+  ordenar); polvo, humo y estela con *alpha* premultiplicado, ordenados con *radix
+  sort*; chispas y fuego aditivos. Sangre aditiva es `importante` (brilla). *Alpha* sin
+  ordenar es `importante`.
+- **Todo dentro de la pasada de color, después de lo opaco**, en el orden *screen-door*
+  → marcas → *alpha* → aditivo. Una pasada nueva o una pasada de color partida para los
+  VFX es una decisión nueva.
+- **La sangre:** salpicadura en el contacto, chorros en pulsos y gotas que mueren al
+  tocar el suelo. **Un rayo hacia abajo por estallido** (consulta del ADR-0016), **que
+  solo toca lo estático**, da el plano del suelo. Un rayo por gota es `importante` (gasta
+  la física en algo cosmético); un rayo que toca cuerpos, también (la sangre queda a la
+  altura de una rodilla).
+- **Las marcas son *decals* de malla:** la CPU recorta los triángulos estáticos contra la
+  caja (Sutherland–Hodgman) al crear la marca, y la escribe una vez en un buffer
+  persistente de la GPU, en un anillo de lugares fijos. Un lugar reemplazado pasa por la
+  cola por número de frame: reusarlo mientras un frame en vuelo lo lee es `bloqueante`.
+  Subir las marcas cada frame por el *ring buffer* es un hallazgo. *Decals* proyectados
+  (que manchan a los personajes) o pintura en una máscara son una decisión nueva. Un
+  recorte que pasa de 64 vértices descarta lo que sobra y lo cuenta.
+- **La tabla `material → efecto`** vive junto a la de materiales por cápsula del
+  ADR-0018. Elegir el efecto con un `if` por material en el código es un hallazgo.
+- **Los *frames* de impacto:** siluetas en blanco, negro y rojo en el postproceso a
+  640×360, antes del blit, leyendo el alfa del color como máscara. **Solo en los cortes
+  cargados que cortan y en la cámara del tajo,** y con una opción para apagarlos.
+  Dispararlos en cada tajo, o sin la opción, es `importante` (fotosensibilidad).
+- **Las capas de la tapa** leen el campo de distancia del corte (filtrado lineal) y el
+  material de la cápsula. Calcular la distancia por píxel contra las aristas del
+  contorno es `importante`: costó +1,15 ms en primer plano con 203 aristas.
+- **Pool lleno:** la partícula nueva no nace, y un contador lo muestra; la marca nueva
+  reemplaza a la más vieja; el corte nuevo reusa el campo de distancia más viejo. Crecer,
+  pedir al heap o fallar en silencio es un hallazgo (lo audita también `memoria`).
+- **Los valores** (cantidades, tamaños, vidas, la fracción de gotas que manchan, los
+  grosores de las capas, el tope de partículas grandes, la duración de los *frames* de
+  impacto) son CVars, constantes en Release. Un número fijo en el código es un hallazgo.
+- **Depuración (ADR-0021):** contadores de partículas vivas y descartadas, marcas y
+  recortes truncados en ImGui.
+- Los tests de los VFX y el TDD del campo de distancia los audita `testing`; el
+  presupuesto (0,5 ms de GPU; 0,2 ms de CPU que corren en cada paso), `arquitectura`.
 
 ## herramientas
 

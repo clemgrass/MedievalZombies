@@ -4,6 +4,15 @@
 - **Fecha:** 2026-11-01
 - **Ticket:** #36
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-02 (#39): el ADR-0025 dibuja los VFX dentro de la pasada
+  de color, después de lo opaco, sin pasadas nuevas, y usa el canal alfa del color como
+  máscara de personajes para los *frames* de impacto (siluetas, en el postproceso). Con
+  `--target-env=vulkan1.3`, glslc compila `discard` con `DemoteToHelperInvocation`, así
+  que el *screen-door* necesita la feature `shaderDemoteToHelperInvocation`. Los VFX son
+  la excepción a tres decisiones: usan *alpha blending* también en las marcas y la estela
+  (Decisión 10), *instancing* (Decisión 7) y luz por vértice (Decisión 2). Como el alfa
+  lleva la máscara, el swapchain usa `VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR`. Se corrige en
+  Consecuencias y se cierran en Abierto las capas de la tapa y los *frames* de impacto.
 
 ## Contexto y problema
 
@@ -361,13 +370,24 @@ borroso.
 - **El frame tiene cuatro pasos, en este orden:**
 
   ```
-  640×360:  color y profundidad (opacos y screen-door) → dibujo de depuración
-            → postproceso (si hay)
+  640×360:  color y profundidad (opacos, screen-door y los VFX del ADR-0025)
+            → dibujo de depuración → postproceso (si hay)
   nativa:   blit nearest al swapchain → ImGui
   ```
 
   Cada paso es un `vkCmdBeginRendering` (o el blit) con sus barreras escritas a mano y un
-  par de timestamps (ADR-0021).
+  par de timestamps (ADR-0021). Dentro de la pasada de color, los VFX van después de lo
+  opaco, en el orden del ADR-0025.
+- **El canal alfa del color es la máscara de personajes** (ADR-0025): el shader de los
+  personajes escribe 0 y el resto escribe 1. Las mezclas de los VFX conservan el alfa del
+  destino, y el postproceso de los *frames* de impacto lo lee. **El swapchain usa
+  `VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR`**: con `PRE_MULTIPLIED` o `INHERIT`, el compositor
+  dibujaría transparentes a los personajes de los frames sin postproceso.
+- **Los VFX del ADR-0025 son la excepción a tres decisiones:** usan *alpha blending* en
+  las partículas, las marcas y la estela (la Decisión 10 lo dejaba solo para las
+  partículas), *instancing* en las partículas (la Decisión 7 es una llamada por objeto)
+  y luz por vértice, sin normal (la Decisión 2 es por píxel). El resto del frame sigue
+  las Decisiones como están.
 - **Reparto del frame de GPU** (hipótesis para `docs/performance/presupuestos.md`,
   medidas con el reloj fijo en 700 MHz, que es el 61 % del máximo):
 
@@ -391,7 +411,9 @@ borroso.
   - la imagen no llena las pantallas sin factor entero.
 - **Features que el engine verifica al iniciar,** junto a las del ADR-0005:
   `descriptorIndexing`, `runtimeDescriptorArray`, `descriptorBindingPartiallyBound` y
-  `shaderSampledImageArrayNonUniformIndexing` (Vulkan 1.2). La UHD 620 las tiene.
+  `shaderSampledImageArrayNonUniformIndexing` (Vulkan 1.2), y
+  `shaderDemoteToHelperInvocation` (Vulkan 1.3), que usa el `discard` del *screen-door*
+  (fe de erratas, ADR-0025). La UHD 620 las tiene.
 - **El *front face* es `VK_FRONT_FACE_COUNTER_CLOCKWISE`**, por la Y volteada del
   ADR-0008. Un test dibuja un cubo y verifica que se vean sus caras de afuera: el error
   no se nota en la silueta.
@@ -422,12 +444,14 @@ borroso.
   11. ImGui y el dibujo de depuración en sus pasadas (junto al ADR-0021).
 - **Abierto:**
   - las capas por profundidad en la tapa (piel, grasa, carne; metal y carne), que
-    necesitan la distancia al contorno;
+    necesitan la distancia al contorno (decidido en el ADR-0025: un campo de distancia
+    de 64² por corte, que llena el corte);
   - la cámara de rayos X. De ella depende lo que pide la visión para la cámara del tajo:
     ver el interior mientras la hoja atraviesa el cuerpo. Con esta Decisión, el interior
     se ve en la tapa, después de que pasa la hoja;
   - los *frames* de impacto estilo anime, si se usan: irían en el postproceso a 640×360
-    (visión y ADR-0025);
+    (visión y ADR-0025; decidido en el ADR-0025: siluetas en blanco, negro y rojo, en el
+    postproceso, solo en los cortes cargados y en la cámara del tajo);
   - el *instancing* de los zombies y el *skin cache*, si una medición los pide;
   - dónde se guarda el `VkPipelineCache` (ADR-0028);
   - el tamaño de la grilla del temblor, la fracción del radio de la cápsula que es hueso

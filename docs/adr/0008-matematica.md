@@ -11,6 +11,11 @@
   afuera también es antihorario para Vulkan, así que el valor es
   `VK_FRONT_FACE_COUNTER_CLOCKWISE`. Con el valor al revés, el error no se nota en la
   silueta. Se corrige en Consecuencias.
+- **Fe de erratas:** 2026-11-02 (#39): el ADR-0025 separa dos cosas que la Decisión 3
+  juntaba. **Guardar los datos de un pool en SoA es diseño orientado a datos** (ADR-0014,
+  regla 10) y se decide al diseñar el pool, como en las partículas de los VFX. **El SIMD
+  sigue esperando al profiler:** los tipos siguen siendo escalares, y un bucle pasa a SIMD
+  solo cuando una medición lo marca. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -276,7 +281,9 @@ el mundo (como Unreal 5) resuelve un problema que este juego no tiene.
   IA, en vez de las dos de Godot. Se aplica a toda la jerarquía (nodos, esqueleto,
   matrices de *bind* inversas y animaciones), y el detalle lo define el ADR-0017.
 - **Lo que queda abierto:** los predicados robustos del corte (ADR-0007), el formato de
-  assets (ADR-0017) y qué sistemas pasan a SoA, que se decide midiendo.
+  assets (ADR-0017) y qué sistemas pasan a SoA, que se decide midiendo (decidido en el
+  ADR-0025 para las partículas: SoA por diseño, al crear el pool; el SIMD de cualquier
+  bucle se sigue decidiendo midiendo).
 
 ## Cómo lo defiendo
 

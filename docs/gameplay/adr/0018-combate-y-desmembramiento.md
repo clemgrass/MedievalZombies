@@ -4,6 +4,9 @@
 - **Fecha:** 2026-10-22
 - **Ticket:** #31
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-02 (#39): el ADR-0025 decide la imagen del rebote (chispas)
+  y suma una tabla `material → efecto` junto a la de materiales por cápsula, que también
+  elige las capas de la tapa. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -510,6 +513,11 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   de los tajos; con 0,3, la carga máxima rebota en uno de cada cuatro (prototipo). Fuerza
   del tajo rápido: 0,15. **Todos se ajustan sin recompilar** (cómo, lo decide el
   ADR-0021), y salen de un prototipo, no de jugar.
+
+  **La tabla `material → efecto`** (ADR-0025) vive junto a esta: decide qué efecto
+  visual sale en cada contacto (carne → salpicadura; placa → chispas; cota → chispas y
+  poca sangre) y qué capas muestra la tapa (carne → piel y grasa; placa y cota → metal,
+  gambesón y piel).
 - **El plano del tajo cambia de definición:** ya no contiene el rayo de la cámara, sino
   el pecho de la caballera, el punto apuntado y la dirección de la línea dibujada (la
   perpendicular al rayo con el ángulo que eligió el jugador). El corte coincide con la
@@ -624,7 +632,8 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
 - **Rebote:** la caballera pierde el resto del barrido y queda aturdida un instante, y la
   energía se recupera más lento durante un rato. Los dos tiempos son configurables. La
   imagen y el sonido del rebote (chispa, metal) son la forma de leer el ángulo y el
-  umbral: los deciden el ADR-0025 y el ADR-0024.
+  umbral: los deciden el ADR-0025 y el ADR-0024 (decidido en el ADR-0025: chispas
+  aditivas y estiradas, de una tabla `material → efecto`).
 - **La cámara del tajo** sale con un mínimo de zombies cortados en un tajo (configurable)
   y en el golpe final al mago, y se puede apagar. **Al mago lo aturde solo un tajo con
   carga máxima.**

@@ -49,7 +49,8 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 | Render en la CPU (culling, comandos y subida de geometría) | 2,5 ms | Hipótesis |
 | Audio en el hilo principal (eventos, emisores, sonido 3D y comandos, ADR-0024) | 0,5 ms | Hipótesis |
 | VFX: integrar, crear marcas, ordenar y escribir los registros de dibujo (ADR-0025) | 0,2 ms | Hipótesis. El prototipo del ADR-0025 midió ~0,005 ms con la demo de un corte (~200 partículas vivas) y 0,24 ms con 20 000; cada marca recortada, 2 µs. La integración y las marcas corren en cada paso, así que un frame con dos pasos las paga dos veces (ver abajo) |
-| Reserva | 0,3 ms | — |
+| UI: armar el HUD, los subtítulos y los menús (ADR-0026) | 0,1 ms | Hipótesis, sobre la mediana. El prototipo del ADR-0026 midió, a 640×360, ~34 µs el HUD con subtítulos y de 23 a 51 µs el menú de pausa (mediana), con un p99 de 108 µs al navegar el menú. El menú solo aparece en la pausa, con 0 pasos de simulación, así que en esos frames sobra CPU |
+| Reserva | 0,2 ms | — |
 | **Total por frame** | **3,8 ms** | |
 
 ### Cómo quedan los frames
@@ -83,8 +84,9 @@ salida. El reparto sigue las pasadas del ADR-0022.
 | VFX dentro de la pasada de color: partículas, marcas y estela (ADR-0025) | 0,5 ms | Hipótesis. El prototipo del ADR-0025 midió ~0,23 ms con la demo de un corte (partículas 0,03, marcas 0,2) con la GPU fija en 700 MHz |
 | Dibujo de depuración y postproceso (640×360) | 0,5 ms | Hipótesis. Los *frames* de impacto del ADR-0025 midieron 0,14 ms, solo en los frames en que salen |
 | Blit *nearest* a la pantalla | 2,0 ms | Hipótesis. El prototipo midió 1,3–1,6 ms a 700 MHz |
+| UI a 640×360: HUD, subtítulos y menús (ADR-0026) | 0,2 ms | Hipótesis. El prototipo del ADR-0026 midió 0,02 ms el HUD con subtítulos y 0,14 ms el menú de pausa, con el reloj libre (~300 MHz en promedio) |
 | ImGui (solo en desarrollo) | 0,5 ms | Hipótesis |
-| Reserva | 2,8 ms | — |
+| Reserva | 2,6 ms | — |
 | **Total** | **13,3 ms** | |
 
 ## Memoria
@@ -109,7 +111,9 @@ frame: se reservan y se tocan enteras al iniciar, con un tope duro. Las demás r
 del ADR-0010 (pedidos de corte, cuerpos y ragdolls, ECS y las partículas de los VFX,
 ~330 KB) caen en "Mundo y ECS", y también se reservan y se tocan al iniciar. Las marcas
 de sangre (384 KB) y los campos de distancia de las tapas (512 KB) del ADR-0025 son
-bloques de la GPU que viven todo el programa y caen en "Recursos de la GPU". La
+bloques de la GPU que viven todo el programa y caen en "Recursos de la GPU". La región
+de UI del ADR-0026 (~200 KB, con las tablas de las fuentes y de los textos) cae en "Mundo y ECS", y el atlas de sus fuentes (~165 KB),
+en "Recursos de la GPU"; sus vértices viajan por la subida (160 KB por frame). La
 memoria que vive un nivel (recursos de la GPU, assets y audio) la decide el ADR-0028.
 Las cuentas del ADR-0010 son estimaciones, no mediciones del protocolo: las metas
 cambian recién con una medición.
@@ -137,3 +141,4 @@ cambian recién con una medición.
 | 2026-11-01 | #37 | El costo de la IA y la navegación del ADR-0023 (~0,1 ms por paso con 50 zombies) queda anotado en la fila de gameplay e IA. Ninguna meta cambia | Ninguna del protocolo: prototipo de laboratorio, fuera del protocolo |
 | 2026-11-01 | #38 | La fila de audio por frame pasa a ser "Audio en el hilo principal", con la misma meta. Meta nueva: el hilo de audio del ADR-0024, 0,5 ms por cada 16,7 ms de audio, en otro núcleo (hipótesis). Ninguna otra meta cambia | Ninguna del protocolo: prototipo de laboratorio, fuera del protocolo |
 | 2026-11-02 | #39 | Metas nuevas para los VFX del ADR-0025 (hipótesis): 0,2 ms de CPU por frame, que salen de la reserva del frame (de 0,5 a 0,3 ms), y 0,5 ms de GPU, que salen de la reserva de GPU (de 3,3 a 2,8 ms). Los *frames* de impacto entran en la fila de postproceso. Como la integración corre en cada paso, el frame con dos pasos pasa de 15,8 a 16,0 ms. La memoria de los VFX cae en "Mundo y ECS" (partículas, ~330 KB) y en "Recursos de la GPU" (marcas y campos de distancia, ~0,9 MB). Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con la GPU fija en 700 MHz |
+| 2026-11-02 | #40 | Metas nuevas para la UI del ADR-0026 (hipótesis): 0,1 ms de CPU por frame, que salen de la reserva del frame (de 0,3 a 0,2 ms), y 0,2 ms de GPU, que salen de la reserva de GPU (de 2,8 a 2,6 ms). La región de UI (~200 KB) cae en "Mundo y ECS" y el atlas de las fuentes (~165 KB), en "Recursos de la GPU". Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con el reloj de la GPU libre |

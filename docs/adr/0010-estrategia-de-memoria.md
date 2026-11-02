@@ -27,6 +27,12 @@
   nace cuando el pool está lleno; la marca nueva reemplaza a la más vieja; el corte nuevo
   reusa el campo de distancia más viejo. Se corrige en Consecuencias (el mapa de la
   memoria y la degradación).
+- **Fe de erratas:** 2026-11-02 (#40): el ADR-0026 suma la región de UI (los vértices que
+  se arman en la CPU, el estado por ID de lo que se anima, los subtítulos ya cortados y
+  las tablas de las fuentes y de los textos de todos los idiomas, cargadas al iniciar) y
+  el atlas de las fuentes en la GPU. **Llena, la región aborta** con su nombre, como una
+  arena: lo que dibuja la UI lo decide el autor, no el jugador, así que es un error de
+  dimensionamiento. Se corrige en Consecuencias (el mapa de la memoria y la región).
 
 ## Contexto y problema
 
@@ -422,6 +428,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   | Partículas (ADR-0025) | Los VFX | Todo el programa | Dos pools fijos en SoA: chicas y grandes |
   | Marcas de sangre (ADR-0025) | Los VFX y `engine/gpu` | La de la marca, más los frames en vuelo | Anillo de lugares fijos en un buffer persistente de la GPU, con la cola por número de frame |
   | Campos de distancia de las tapas (ADR-0025) | El corte y `engine/gpu` | La de la última tapa que lo usa, más los frames en vuelo | Pool de capas de un arreglo de texturas; lleno, se reusa el más viejo |
+  | UI (ADR-0026) | La UI | Todo el programa | Capacidad fija: 8192 vértices por frame, el estado por ID, los subtítulos cortados y las tablas de las fuentes y de los textos de todos los idiomas; llena, aborta |
+  | Atlas de las fuentes (ADR-0026) | La UI y `engine/gpu` | Todo el programa | Un bloque de `gpu::Allocator` |
   | *Ring buffer* | `engine/gpu` | Un frame en vuelo | Anillo |
   | Recursos de la GPU que viven un nivel | `engine/gpu` | Un nivel | Lineal, por bloques. Cómo se cargan lo decide el ADR-0028 |
 
@@ -479,6 +487,12 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   `presupuestos.md`. Las marcas (384 KB) y los campos de distancia (512 KB) son bloques
   de `gpu::Allocator` y caen en "Recursos de la GPU". Las tres filas están en el mapa de
   arriba.
+- **La región de UI** (ADR-0026) se reserva y se toca al iniciar: ~200 KB en la CPU, en
+  "Mundo y ECS", con las tablas de glifos, de *kerning*, de anchos y de textos de todos
+  los idiomas, cargadas al iniciar: cambiar de idioma no pide memoria. Los vértices de cada frame en vuelo viajan por el *ring buffer* (160 KB
+  de los 8 MiB de la subida). El atlas de las fuentes (~165 KB, dos tamaños) es un
+  bloque de `gpu::Allocator`, en "Recursos de la GPU". **Llena, aborta:** la UI dibuja lo
+  que decide el autor, no el jugador, así que llenarla es un error de dimensionamiento.
 - **Dos excepciones a la regla de abortar** (fe de erratas, ADR-0021), las dos solo en
   los builds de desarrollo: el dibujo de depuración descarta lo que no cabe y muestra en
   pantalla cuánto descartó, y Tracy con un servidor conectado pide memoria mientras corre.

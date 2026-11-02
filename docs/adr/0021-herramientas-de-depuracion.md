@@ -9,6 +9,9 @@
   Archive, y el test de *replay* compara contra un hash guardado en esa máquina, además
   de comparar dos ejecuciones del mismo proceso. Se corrige en la Decisión 8, en
   Consecuencias ("El hash entre máquinas"), en Abierto y en "Cómo lo defiendo".
+- **Fe de erratas:** 2026-11-02 (#40): el menú de opciones que ve el jugador lo decide el
+  ADR-0026; dónde se guardan las opciones sigue siendo del ADR-0028. Se corrige en Fuera
+  de alcance.
 
 ## Contexto y problema
 
@@ -78,7 +81,7 @@ Lo que ya está decidido y limita este ADR:
 | El envenenamiento de ASan dentro de los allocators | ADR-0010 |
 | Qué se automatiza en la CI | ADR-0029 |
 | El editor de niveles | ADR-0027 |
-| Las opciones que ve el jugador (menú de opciones) y dónde se guardan | ADR-0028 |
+| Las opciones que ve el jugador (menú de opciones) y dónde se guardan | ADR-0026 (el menú) y ADR-0028 (dónde se guardan) |
 | El diseño del game loop (ajustar el `dt` al refresco, el ruido del vsync) | Ticket del game loop |
 
 ## Criterios

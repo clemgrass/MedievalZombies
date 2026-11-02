@@ -5,7 +5,11 @@
 - **Ticket:** #33
 - **Reemplaza / Reemplazado por:** —
 - **Fe de erratas:** 2026-11-01 (#46): el `README.md` de la raíz es documentación, bajo
-  CC BY 4.0. Se suma a la lista de la Decisión 2.
+  CC BY 4.0. Se suma a la lista de la Decisión 2. 2026-11-02 (#40): el ADR-0026 elige
+  fuentes de píxeles con licencia **SIL Open Font License 1.1** (OFL), la licencia
+  estándar de las fuentes libres, con el mismo espíritu que CC0 y CC BY. **Las fuentes
+  de terceros pueden ser OFL**, además de CC0 y CC BY. Se corrige la Decisión 4 y
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -123,7 +127,7 @@ que respetar y documentar.
 | 1 | Código | **MIT** |
 | 2 | Documentación (`docs/`, `README.md`, `CREDITS.md`, `CLAUDE.md`) | **CC BY 4.0** |
 | 3 | Assets propios | **CC BY 4.0** |
-| 4 | Assets de terceros | **Solo CC0 y CC BY.** Los de CC BY se acreditan en `CREDITS.md`. Ninguna otra licencia se acepta |
+| 4 | Assets de terceros | **Solo CC0 y CC BY.** Los de CC BY se acreditan en `CREDITS.md`. Ninguna otra licencia se acepta, **salvo la OFL 1.1 para las fuentes** (fe de erratas, ADR-0026) |
 | 5 | Documentación de licencias | **REUSE**, con `REUSE.toml` (licencias por carpeta) |
 
 Titular del copyright: **Clemente Grass**.
@@ -141,6 +145,12 @@ Titular del copyright: **Clemente Grass**.
 - **Cada asset de terceros nuevo** necesita una fila en `CREDITS.md` (autor, URL,
   licencia, archivos) y, si no es CC BY 4.0 con autor Clemente Grass, una anotación
   propia en `REUSE.toml`.
+- **Las fuentes OFL** (fe de erratas, ADR-0026) se acreditan en `CREDITS.md`, con su
+  anotación en `REUSE.toml` (`OFL-1.1`) y el texto en `LICENSES/OFL-1.1.txt`, en el
+  ticket que las suma. La OFL deja incluirlas en el juego, incluso comercial; no deja
+  venderlas solas, y una versión modificada de la fuente no puede usar su nombre
+  reservado. El atlas que cocina el cocinador viaja con el juego; no se publica como una
+  fuente aparte.
 - **Los assets bajo CC BY 4.0 se pueden reutilizar incluso de forma comercial**, dando
   crédito. Es una elección consciente, coherente con el código abierto.
 - **Las dependencias** (SDL3 con licencia zlib, Vulkan-Headers con Apache-2.0 o MIT)

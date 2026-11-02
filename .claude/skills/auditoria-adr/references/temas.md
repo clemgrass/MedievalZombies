@@ -18,14 +18,15 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024 y 0025 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh y los sonidos, y la cola del audio; tests después en el combate, la IA, el resto del audio y los VFX) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025 y 0026 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes y los textos, la cola del audio y la lógica pura de la UI; tests después en el combate, la IA, el resto del audio, los VFX y las pantallas de la UI) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
 | [audio](#audio) | 0024 | `engine/audio/**`, el audio de `engine/platform/**`, `game/**`, o código que abra el dispositivo de audio, mezcle, emita o lea eventos de sonido, maneje voces, emisores o música, o decodifique sonido |
 | [vfx](#vfx) | 0025 | `engine/vfx/**`, los shaders de partículas, marcas, estela o postproceso, `game/**`, o código que emita, integre o dibuje partículas, marcas de sangre, la estela, los *frames* de impacto o las capas de la tapa |
+| [ui](#ui) | 0026 | `engine/ui/**`, los shaders de la UI, `game/**`, los archivos de textos y las fuentes en `assets/**`, `docs/ui/**`, o código que dibuje el HUD, los subtítulos o los menús, mida o corte texto, mueva el foco o pause el juego |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -54,6 +55,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | IA, árbol de comportamiento, máquina de estados, percepción, fichas de ataque, navmesh, A*, *funnel*, caminos, ORCA, evasión, la horda | `ia` |
 | Audio, sonido, mezclador, voces, callback de audio, hilo de audio, música, Vorbis, FLAC, paneo, atenuación, el oyente, emisores | `audio` |
 | VFX, partículas, sangre, salpicadura, chispas, polvo, fuego, *decals* o marcas, la estela de la espada, los *frames* de impacto, las capas de la tapa, el campo de distancia | `vfx` |
+| UI, HUD, menús, pausa, subtítulos, fuentes, texto, idiomas, traducción, foco, íconos de botones, accesibilidad, contraste, daltonismo, el color de acento | `ui` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -248,7 +250,9 @@ Qué mirar:
   Devolver `nullptr` en silencio, o pedir al heap como respaldo, es un hallazgo. **Dos
   excepciones declaradas** (fe de erratas del ADR-0010, por el ADR-0021): el dibujo de
   depuración descarta lo que no cabe y lo muestra en pantalla, y Tracy con un servidor
-  conectado pide memoria mientras corre (por eso nunca se mide así).
+  conectado pide memoria mientras corre (por eso nunca se mide así). **La región de UI**
+  (ADR-0026) no degrada: llena, aborta con su nombre, como una arena, porque lo que dibuja
+  la UI lo decide el autor. Descartar vértices en silencio es un hallazgo.
 - **RelWithDebInfo** cuesta lo mismo que Release, salvo las herramientas del ADR-0021 y
   su región de depuración (fe de erratas del ADR-0010).
 - **Revisiones de desarrollo, solo en Debug:** las arenas y los pools envenenan para
@@ -293,8 +297,11 @@ Qué mirar:
   anotación por defecto. Sin ella, `reuse lint` pasa igual, pero con el autor
   equivocado.
 - **Licencias (ADR-0019):** el código va bajo MIT, y la documentación y los assets
-  propios bajo CC BY 4.0. Un asset de terceros solo puede ser CC0 o CC BY, con su fila
-  en `CREDITS.md` y su anotación en `REUSE.toml` si no es CC BY 4.0 de Clemente Grass.
+  propios bajo CC BY 4.0. Un asset de terceros solo puede ser CC0 o CC BY, **salvo las
+  fuentes, que también pueden ser OFL 1.1** (fe de erratas del ADR-0019, por el ADR-0026),
+  con su fila en `CREDITS.md` y su anotación en `REUSE.toml` si no es CC BY 4.0 de
+  Clemente Grass. Una fuente OFL lleva además `LICENSES/OFL-1.1.txt`. Una fuente con otra
+  licencia, o un asset que no es fuente bajo OFL, es `bloqueante`.
 - **`uvx reuse lint` sigue pasando.** Puedes ejecutarlo, porque solo lee.
 
 ## graficos
@@ -330,9 +337,9 @@ Qué mirar:
   con `static_assert` sobre `sizeof` y `offsetof`.
 - **El frame (ADR-0022):** forward, con estas pasadas en este orden: color y
   profundidad a 640×360 (opacos, *screen-door* y los VFX del ADR-0025, sin pasadas
-  nuevas), dibujo de depuración y postproceso a
-  640×360, **blit *nearest* por el factor entero** al swapchain, e ImGui a la resolución
-  nativa. Un *depth prepass*, un G-buffer o un shadow map son una decisión nueva, no un
+  nuevas), dibujo de depuración, postproceso y **la UI del ADR-0026** (HUD, subtítulos y
+  menús, después del postproceso; fe de erratas del ADR-0022) a 640×360, **blit
+  *nearest* por el factor entero** al swapchain, e ImGui a la resolución nativa. Un *depth prepass*, un G-buffer o un shadow map son una decisión nueva, no un
   detalle de implementación. Un efecto aplicado después del blit, o un escalado con
   filtro lineal o por el compositor, es `importante`.
 - **Barreras escritas a mano** con `synchronization2`, sin *render graph*. **Todos los
@@ -488,7 +495,7 @@ Qué mirar:
 ## assets
 
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
-(mipmaps), 0023 (la navmesh), 0024 (los sonidos).
+(mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos).
 
 Qué mirar:
 
@@ -566,6 +573,17 @@ Qué mirar:
   tabla de sonidos nombra una toma que no existe. Cocinar dos veces da los mismos bytes.
   dr_flac, libvorbis y libogg en el juego son `bloqueante`; el juego solo enlaza
   stb_vorbis, para la música.
+- **Las fuentes y los textos** (ADR-0026): el cocinador rasteriza las fuentes de píxeles
+  con **`stb_truetype`** (copiado en `tools/third_party/`) **en su grilla exacta, sin
+  antialiasing**, a un atlas `R8` con tablas de glifos y de *kerning*, en ×1 y ×2.
+  Rasterizar a un tamaño que no es múltiplo de la grilla (los píxeles se deforman) o con
+  antialiasing a 640×360 es `importante`. Los textos son un TSV en UTF-8 por idioma, con
+  IDs. **Falla el build** si a un idioma le falta un ID, si la fuente no tiene un carácter
+  o si un texto no cabe en su ancho, que sale de un **archivo de anchos en los assets**.
+  Declarar el ancho en el código del juego es `importante`: el cocinador no enlaza
+  `game/` (ADR-0017). `stb_truetype` en el juego, o
+  rasterizar fuentes al cargar, es una decisión nueva. Cocinar dos veces da los mismos
+  bytes.
 - **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
   de carga.
 - **Un asset de terceros que solo existe como `.glb`** se versiona importado a `.blend`,
@@ -775,6 +793,12 @@ Qué mirar:
   con una tolerancia en milímetros. Código nuevo ahí sin test es `bloqueante`. **El resto
   lleva tests después,** con casos calculados a mano para el recorte de las marcas y la
   integración.
+- **En la UI (ADR-0026):** **TDD estricto** en el cocinador de fuentes y de textos (que
+  falle por un ID que falta, un carácter que la fuente no tiene o un texto que no cabe, y
+  que cocinar dos veces dé los mismos bytes) y en la lógica pura: UTF-8, *layout*, corte
+  de línea, foco y repetición del stick. Código nuevo ahí sin test es `bloqueante`. **Las
+  pantallas llevan tests después,** con capturas de referencia comparadas con la
+  tolerancia que fije el ADR-0011.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -1050,7 +1074,8 @@ Qué mirar:
 
 ## vfx
 
-**ADRs:** 0025 (VFX y partículas). También la fe de erratas que hizo en el ADR-0007 (el
+**ADRs:** 0025 (VFX y partículas), con la fe de erratas del ADR-0026 (el color de
+acento de la sangre). También la fe de erratas que hizo en el ADR-0007 (el
 campo de distancia de la tapa), el ADR-0008 (el SoA de un pool es diseño; el SIMD espera
 al profiler), el ADR-0010 (la región de VFX, las marcas y los campos), el ADR-0012 (los
 VFX al final del paso), el ADR-0018 (la tabla `material → efecto`) y el ADR-0022 (la
@@ -1099,9 +1124,14 @@ Qué mirar:
   Subir las marcas cada frame por el *ring buffer* es un hallazgo. *Decals* proyectados
   (que manchan a los personajes) o pintura en una máscara son una decisión nueva. Un
   recorte que pasa de 64 vértices descarta lo que sobra y lo cuenta.
+- **El color de la sangre es el color de acento** (fe de erratas, ADR-0026): un valor
+  del frame (rojo, magenta o cian) que leen las partículas de sangre, las marcas y el rojo
+  de las siluetas de los *frames* de impacto. Un rojo fijo en un shader o en el código es
+  `importante`: el modo para quien no distingue el rojo deja de funcionar.
 - **La tabla `material → efecto`** vive junto a la de materiales por cápsula del
   ADR-0018. Elegir el efecto con un `if` por material en el código es un hallazgo.
-- **Los *frames* de impacto:** siluetas en blanco, negro y rojo en el postproceso a
+- **Los *frames* de impacto:** siluetas en blanco, negro y el color de acento (rojo por
+  defecto; fe de erratas, ADR-0026) en el postproceso a
   640×360, antes del blit, leyendo el alfa del color como máscara. **Solo en los cortes
   cargados que cortan y en la cámara del tajo,** y con una opción para apagarlos.
   Dispararlos en cada tajo, o sin la opción, es `importante` (fotosensibilidad).
@@ -1118,6 +1148,80 @@ Qué mirar:
   recortes truncados en ImGui.
 - Los tests de los VFX y el TDD del campo de distancia los audita `testing`; el
   presupuesto (0,5 ms de GPU; 0,2 ms de CPU que corren en cada paso), `arquitectura`.
+
+## ui
+
+**ADRs:** 0026 (UI, HUD y menús). También la fe de erratas que hizo en el ADR-0010 (la
+región de UI), el ADR-0019 (las fuentes OFL), el ADR-0021 (el menú de opciones), el
+ADR-0022 (la pasada de UI) y el ADR-0025 (el color de acento de la sangre y de las
+siluetas).
+
+Qué mirar:
+
+- ***Immediate mode* propio:** cada pantalla es una función que llama a sus controles
+  cada frame; el estado de la UI es el foco, y el valor de cada opción vive en el juego.
+  **Estado por ID solo para lo que se anima,** en un arreglo fijo. Un árbol de controles
+  que se guarda (*retained*), una biblioteca de UI (RmlUi, microui) o Dear ImGui en las
+  pantallas del juego son una decisión nueva. **ImGui solo en desarrollo:** una pantalla
+  del juego que lo use no compila en Release (lo audita también `build-y-licencias`).
+  Cuando ImGui tiene el foco del teclado o del mouse, la UI del juego no recibe ese
+  input.
+- **A 640×360, en su pasada, después del postproceso y antes del blit:** una sola llamada
+  por frame, con alfa premultiplicado y **sin escribir el alfa del destino** (la máscara
+  de personajes del ADR-0025). Dibujar la UI del juego a la resolución nativa (después del
+  blit) es una decisión nueva; escribir el alfa del destino es `importante`; dibujarla
+  antes del postproceso es `importante` (los *frames* de impacto la invierten).
+- **Las fuentes:** Jersey 10 (texto, 18 px por em) y Jacquard 12 (títulos, 21 px por
+  em), cocinadas en su grilla exacta, en ×1 (18 y 21 px por em) y ×2 (36 y 42). **El ×2 es una
+  opción para los subtítulos, los avisos de botón y el HUD; los menús quedan en ×1.**
+  **Sin opción de otra fuente** (decisión del autor). Una tercera fuente o una opción de
+  fuente es una decisión nueva.
+- **Los textos:** nunca en el código; siempre un ID de la tabla del idioma. Un texto que
+  ve el jugador escrito en el código es `importante`. Los plurales van por la regla de
+  cada idioma. **Las tablas de todos los idiomas se cargan al iniciar:** cambiar de idioma
+  en vivo no carga nada; cargar un archivo al cambiarlo es `importante` (pide memoria en
+  el frame, ADR-0010).
+- **0 HUD por defecto.** Las ayudas (energía, carga, avisos de botón) se prenden **una
+  por una** y van en el cuerpo (por defecto), junto a la mira o en las esquinas. **La
+  línea del tajo se ve siempre que se apunta.** Una ayuda prendida por defecto es
+  `importante`. **El juego nunca presenta las ayudas como dificultad:** un texto que
+  diga "fácil" o "difícil" al prenderlas es `importante`.
+- **Ningún dato depende solo del color** (Game Accessibility Guidelines, básico): las
+  barras son color hueso sobre una placa oscura, y la energía baja parpadea. Un dato que
+  solo cambia de color es `importante`. **Los acentos rojos leen el color de acento**
+  (rojo, magenta o cian); un rojo fijo es `importante`.
+- **Contraste (ISO/IEC 40500:2025, WCAG 2.2),** medido contra la parte de menos
+  contraste del fondo: 4,5:1 para todo el texto y 3:1 para las barras, los arcos, los
+  íconos y el foco. Un elemento nuevo sin su medición en la lista viva
+  (`docs/ui/accesibilidad.md`) es un hallazgo.
+- **Subtítulos siempre:** el jugador elige el estilo (con fondo, por defecto, con
+  opacidad ajustable, o sin fondo) y el tamaño, **pero no los puede apagar**. Una opción
+  que los apague es `bloqueante` (decisión del autor). El nombre de quien habla, en hueso,
+  no en rojo. Los subtítulos de sonidos son aparte y sí se apagan.
+- **La pausa:** una pila de pantallas; solo la de arriba recibe input. La pausa deja el
+  paso fijo en 0 pasos, congela el bus del mundo y deja sonar el de la UI (ADR-0024).
+  Avanzar pasos durante la pausa es `bloqueante` (cambia el *replay*). **Una opción que
+  cambia la simulación** (mantener en vez de presionar rápido, la sensibilidad) se graba
+  como evento del paso si cambia durante una grabación; no grabarla es `bloqueante`.
+  Grabar las que no la cambian (ayudas, subtítulos, idioma, color) es un hallazgo menor.
+- **La navegación:** listas con un índice de foco, *hover* del mouse, el stick con
+  repetición (0,35 s y después cada 0,12 s) e íconos del último dispositivo, dibujados
+  con primitivas. Una pantalla que no se puede manejar sin mouse es `bloqueante`.
+- **Las opciones** (Decisión 6) tienen las ayudas, los subtítulos, el idioma, el color de
+  acento, el tamaño del texto, la opacidad de las placas, los *frames* de impacto, los
+  volúmenes del ADR-0024 y los controles del ADR-0032. Dónde se guardan es del ADR-0028.
+- **Memoria y presupuesto:** la región de UI con topes fijos (8192 vértices por frame,
+  más las tablas de las fuentes y de los textos);
+  **0 asignaciones por frame** (el corte de línea se hace cuando cambia el subtítulo, no
+  cada frame). Un `std::string` armado cada frame es un hallazgo (lo audita también
+  `memoria`). Metas: 0,2 ms de GPU y 0,1 ms de CPU.
+- **Los valores** (posiciones, tiempos, colores, la repetición del stick) son CVars,
+  constantes en Release. Un número fijo en el código es un hallazgo.
+- **Depuración (ADR-0021):** un panel de ImGui con los controles, el foco, el idioma y el
+  dispositivo, y las cajas de cada control en el dibujo de depuración.
+- Las fuentes y los textos en el cocinador los audita `assets`; sus licencias,
+  `build-y-licencias`; los tests, `testing`; las acciones y la reasignación de controles,
+  el ADR-0032 cuando se acepte.
 
 ## herramientas
 

@@ -44,6 +44,20 @@
   `tools/third_party/`. Se
   corrige en Consecuencias ("Dependencias nuevas", "El cocinador falla el build" y "Las
   fuentes y los textos").
+- **Fe de erratas:** 2026-11-02 (#41): el ADR-0027 decide los niveles. El mundo se
+  arma en Blender, partido en zonas: un `.blend` por zona (piezas como *collection
+  instances* y marcadores como *empties* con propiedades), un texto por zona con sus
+  fases y triggers, y un texto del mundo con las zonas, sus vecinas y el tope de zonas
+  cargadas. El cocinador ve el mundo entero: aplana las instancias, da a cada nodo un id
+  (el hash del camino completo, único en el mundo), ordena cada sección por id, genera la
+  navmesh del mundo y la parte por zona, y escribe un binario por zona y uno del mundo.
+  Falla el build por un tipo, marcador o evento desconocido, una referencia que no existe
+  o que apunta a otra zona, dos caminos con el mismo id, un marcador fuera de la navmesh,
+  una vecina olvidada (otra zona a menos de la distancia de entrada desde la navmesh de
+  una zona, sin estar en su lista) o un punto de la navmesh con más zonas a menos de la
+  distancia de salida que el tope menos uno (así el tope nunca bloquea). Se corrige en
+  Consecuencias ("El cocinador falla el build", "La navmesh del escenario", "El
+  escenario", "Los niveles", nuevo, y Abierto).
 
 ## Contexto y problema
 
@@ -558,14 +572,23 @@ LFS.
     mono y que la tabla de sonidos no nombre una toma que no existe;
   - en los textos (ADR-0026): que cada idioma tenga todos los IDs, que la fuente tenga
     cada carácter y que cada texto quepa en su ancho máximo, que sale del archivo de
-    anchos de los assets (no del código del juego, que el cocinador no enlaza).
+    anchos de los assets (no del código del juego, que el cocinador no enlaza);
+  - en los niveles (ADR-0027): que cada tipo de zombie, de marcador y de evento sea
+    conocido; que cada marcador que nombra un texto exista y sea de su zona; que cada
+    patrón encuentre un marcador; que cada fase diga cómo termina; que dos caminos no den
+    el mismo id; que los spawns, los puntos de invocación, los checkpoints y el inicio
+    caigan en la navmesh; que desde la navmesh de una zona no haya otra zona a menos de
+    la distancia de entrada sin estar en su lista de vecinas; y que en ningún punto de
+    la navmesh haya más zonas a menos de la distancia de salida que el tope menos uno.
 - **La navmesh del escenario** (ADR-0023): el cocinador la genera desde la colisión
   (`UBX_`, `UCP_`, `USP_`) y el piso, inflada por el radio del zombie más ancho, y la
   escribe en el binario cocinado: polígonos convexos con vértices en 3D, sus portales, una
-  grilla para ubicar un punto y el radio de inflado, que recibe como parámetro del nivel.
-  Cocinar dos veces la misma escena da los mismos bytes. Es código del cocinador, así que
-  lleva su TDD. Necesita ver la colisión del nivel armado; cómo se arma un nivel, y dónde
-  queda la navmesh dentro de lo cocinado, lo decide el ADR-0027.
+  grilla para ubicar un punto y el radio de inflado, que recibe como parámetro **del
+  mundo** (el mismo en todas las zonas, ADR-0027). Cocinar dos veces la misma escena da
+  los mismos bytes. Es código del cocinador, así que lleva su TDD. **La genera para el
+  mundo armado entero y la parte por zona** (ADR-0027): cada zona guarda sus polígonos en
+  su binario, con los portales hacia los polígonos de sus vecinas, nombrados por zona y
+  polígono.
 - **Los sonidos** (ADR-0024): los fuentes son FLAC, en la carpeta de assets. El
   cocinador los lee con dr_flac y deja los efectos en PCM16 mono a 48 kHz y la música en
   Vorbis estéreo a 48 kHz, codificada con libvorbis. También cocina la tabla de sonidos
@@ -581,6 +604,28 @@ LFS.
   640×360, y el tamaño en que se valida); el cocinador lo guarda en la tabla cocinada, y
   el juego lo lee de ahí. Cocinar dos veces da los mismos bytes, y lleva el TDD del
   cocinador.
+- **Los niveles** (ADR-0027): el mundo se parte en zonas. Cada zona es un `.blend` en
+  coordenadas del mundo, con las piezas como *collection instances* y los marcadores
+  (spawns, triggers, checkpoints, sonidos de ambiente) como *empties* con propiedades,
+  que llegan al glTF como `extras`; más un texto con sus fases y triggers. Un texto del
+  mundo dice qué zonas hay, sus vecinas, el inicio, el radio de inflado, el tope de
+  zonas cargadas y las distancias de carga y de simulación. El cocinador:
+  - **ve todas las zonas a la vez** y aplana las instancias, con la transformación del
+    mundo de cada nodo pasada al espacio del engine como `M' = R·M·R` (la misma
+    conjugación que las matrices de *bind*);
+  - da a cada nodo un **id: el FNV-1a de 64 bits del camino completo**, que empieza con
+    el nombre de la zona; **ordena cada sección por id**, así lo cocinado no depende del
+    orden de los nodos en Blender;
+  - escribe **un binario por zona** (instancias, colisión, luces, marcadores, navmesh,
+    fases, triggers y, en los builds de desarrollo, los nombres de depuración) y **uno
+    del mundo** (las zonas, sus límites, sus vecinas, el inicio, el tope y las cuatro
+    distancias de carga y de simulación, más **la curva del peor caso** —cuántas zonas
+    hay como máximo a menos de cada distancia de salida, de metro en metro— y **la
+    entrada máxima** sin una vecina olvidada, para que el juego valide en vivo un cambio
+    de esos valores);
+  - un cambio solo en un texto se recocina sin abrir Blender.
+
+  Cocinar dos veces da los mismos bytes, y lleva el TDD del cocinador.
 - **El formato del binario:** una cabecera con una firma y una versión, y secciones
   planas con offsets relativos. Como lo cocinado no se versiona, **no hay compatibilidad
   hacia atrás**: si el formato cambia, sube la versión y todo se recocina. El cargador
@@ -626,8 +671,9 @@ LFS.
     se decide al implementarlo, probando qué exporta Blender a los `extras`. Un editor
     visual de cápsulas, como el de Unreal, es una herramienta posible del ADR-0021.
 - **El escenario:** el cocinador ajusta cada primitiva a los vértices de su objeto, y
-  falla si no calza (por ejemplo, una esfera con escala no uniforme). Cómo se arma un
-  nivel con esas piezas lo decide el ADR-0027.
+  falla si no calza (por ejemplo, una esfera con escala no uniforme). Las piezas
+  reutilizables llevan su colisión, y el nivel se arma con ellas como dice "Los niveles"
+  (ADR-0027).
 - **Las texturas** ocupan ~3 % de la memoria de la GPU sin comprimir. La sección de
   texturas del binario guarda su `VkFormat`: `R8G8B8A8_SRGB` para el color y
   `R8G8B8A8_UNORM` para los datos, según el material glTF. El ADR-0022 pide mipmaps: el
@@ -702,7 +748,8 @@ LFS.
   - la carga en runtime y el *hot reload* de assets (ADR-0028). Las texturas no se
     pueden usar directo desde el archivo: en las dos rutas del ADR-0005 (incluida la GPU
     integrada) se copian a una imagen con *tiling* óptimo;
-  - el formato de las escenas y los niveles (ADR-0027);
+  - el formato de las escenas y los niveles (decidido en el ADR-0027: un binario por
+    zona y uno del mundo, ver "Los niveles");
   - Blender en la CI (decidido en el ADR-0029: tarball oficial con la versión de parche
     fijada);
   - las herramientas visuales dentro del engine (decidido en el ADR-0021: usan Dear

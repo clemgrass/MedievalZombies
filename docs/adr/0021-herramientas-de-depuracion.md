@@ -12,6 +12,21 @@
 - **Fe de erratas:** 2026-11-02 (#40): el menú de opciones que ve el jugador lo decide el
   ADR-0026; dónde se guardan las opciones sigue siendo del ADR-0028. Se corrige en Fuera
   de alcance.
+- **Fe de erratas:** 2026-11-02 (#41): el ADR-0027 decide los niveles: un mundo partido
+  en zonas, con checkpoints ligados a fases. **El encabezado del *replay*** guarda el
+  mundo, el checkpoint de partida (la zona, la fase y qué fases terminaron) y los valores
+  del mundo en uso, en vez de "el escenario o nivel". **El registro por frame** suma un contador: los frames en que
+  la simulación esperó a una zona (0 pasos). Esos frames llevan su propio contador, se
+  reportan aparte y nunca se descartan; no son frames de recuperación de un tirón
+  externo, así que no cambian cómo se calcula R1 (ADR-0020). **Los valores del mundo
+  (las distancias de carga y de simulación y el tope) son una excepción a la Decisión 7:**
+  son datos de los assets, no CVars. Su fuente es el texto del mundo, en Release vienen
+  del binario cocinado, y en desarrollo **un panel del mundo** los cambia en vivo,
+  validados contra el binario (el tope nunca pasa el del binario), y escribe los aceptados en el
+  texto del mundo. Un cambio de la entrada o la salida durante una grabación se graba
+  como evento del paso, porque cambia la simulación. **Un test de *replay*** inyecta
+  tiempos de carga al azar y exige el mismo hash. Se corrige en las Decisiones 4, 7 y 8
+  y en Consecuencias ("Los contadores del juego en el registro").
 
 ## Contexto y problema
 
@@ -366,11 +381,11 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 | 1 | Interfaz | **Dear ImGui, dibujado por el renderer propio.** Sin sus backends de SDL3 ni de Vulkan: el input llega desde `platform::` (ADR-0004), y sus listas de vértices se dibujan con un pipeline propio, el atlas de la fuente como textura y los datos por el *ring buffer* (ADR-0005). Sus asignaciones van a la región de depuración, con `ImGui::SetAllocatorFunctions` |
 | 2 | CPU | **Tracy detrás de una macro de zona propia, con `TRACY_ON_DEMAND` siempre.** El engine no nombra a Tracy fuera de un módulo por capa. **`perf`** para el muestreo |
 | 3 | GPU | **Timestamps propios** para el registro por frame, **zonas de GPU de Tracy** para diagnosticar y **RenderDoc en XWayland**, con una tecla que dispara la captura por su API *in-app*. Las validation layers, como ya decidieron el ADR-0005 y el ADR-0006 |
-| 4 | R1 a R4 | **Un registro por frame propio**, que no depende de Tracy, para el protocolo. Además de los tiempos y la memoria, guarda **contadores del juego**: zombies activos, pedazos vivos, ragdolls activos y, en cada paso, los cortes procesados y los que esperan. Tracy, para entender un pico. **Los frames de recuperación se marcan y se reportan aparte, nunca se descartan** |
+| 4 | R1 a R4 | **Un registro por frame propio**, que no depende de Tracy, para el protocolo. Además de los tiempos y la memoria, guarda **contadores del juego**: zombies activos, pedazos vivos, ragdolls activos y, en cada paso, los cortes procesados y los que esperan; y si el frame esperó a una zona del mundo (ADR-0027). Tracy, para entender un pico. **Los frames de recuperación se marcan y se reportan aparte, nunca se descartan** |
 | 5 | Logging | **Cinco niveles** (error, aviso, info, debug, traza) y **una categoría por módulo**. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, que se vacía a un archivo una vez por frame y siempre ante un error fatal. Sin formato diferido y sin spdlog. Lo que no corresponde a cada preset se elimina al compilar |
 | 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame. Del corte muestra: el plano del tajo y su barrido; las cápsulas de cada hueso, y cuáles tocó la hoja; la recta donde se detuvo la hoja y la espada clavada; el contorno del corte; la cuña y el abanico del fondo de la hendidura; las normales de la tapa ya des-deformadas y las de los vértices nuevos; y los pedazos coloreados por grupo de huesos. Los presupuestos de memoria van en el panel (dimensión 9) |
-| 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante** |
-| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el escenario, la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques. Controles de tiempo: pausa, avance de un paso y cámara lenta |
+| 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante.** Excepción (ADR-0027): los valores del mundo (distancias de carga y de simulación y tope) son datos de los assets, con su propio panel que valida contra el binario del mundo |
+| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el mundo, el checkpoint de partida (zona, fase y fases terminadas) y los valores del mundo en uso (ADR-0027), la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques. Controles de tiempo: pausa, avance de un paso y cámara lenta |
 | 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. En el registro por frame, la escala de R4 del ADR-0020: **`RssAnon` (de `/proc/self/statm`) más el `heapUsage` de `VK_EXT_memory_budget`**, y R4 es el máximo por frame de esa suma. `TracyAllocN` solo para el pool de pedazos |
 | 10 | Presets | **Una macro por herramienta**, con la combinación de cada preset fijada en `CMakePresets.json`. La macro de zona alimenta a Tracy en `relwithdebinfo` y a la traza del verificador del ADR-0030 en `debug` |
 
@@ -460,6 +475,10 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 - **Los contadores del juego en el registro** explican un pico sin abrir Tracy: un frame
   de 20 ms con 4 cortes procesados y 80 pedazos vivos cuenta otra historia que uno con
   ninguno. También muestran en qué carga se midió cada escenario, para comparar con R5.
+  **Un frame que esperó a una zona** (ADR-0027) queda marcado: la simulación corrió
+  0 pasos porque la zona no había llegado. Lleva su propio contador y se reporta
+  aparte; no es un frame de recuperación de un tirón externo, así que no cambia cómo se
+  calcula R1 (ADR-0020).
   Cada fila del registro queda en ~128 B: 7 minutos (~25 000 frames) son ~3,2 MB.
 - **Los tiempos de presentación llegan tarde:** `vkGetPastPresentationTimingEXT` devuelve
   frames ya presentados, varios frames después. El registro guarda cada frame con su

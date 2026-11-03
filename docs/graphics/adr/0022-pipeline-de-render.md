@@ -16,6 +16,12 @@
   2026-11-02 (#40): el ADR-0026 suma **una pasada de UI a 640×360** (HUD, subtítulos y
   menús), después del postproceso y antes del blit: una llamada, con alfa premultiplicado
   y sin escribir el alfa del destino. Se corrige el orden del frame en Consecuencias.
+  2026-11-02 (#41): el ADR-0027 parte el mundo en zonas que se cargan mientras se camina.
+  **El culling suma dos reglas** a la esfera contra el frustum: solo se dibuja lo que
+  está antes del final de la niebla (lo que está más lejos no se ve) y solo la zona
+  actual y sus vecinas. **Las 16 antorchas del frame son las más cercanas a la cámara**,
+  entre las zonas cargadas, y una antorcha que entra o sale se desvanece. Se corrige en
+  Consecuencias (lo que se sacrifica y los tickets).
 
 ## Contexto y problema
 
@@ -411,7 +417,8 @@ borroso.
 - **Lo que se sacrifica:**
   - las sombras con la forma del cuerpo: el blob no sigue la silueta;
   - más de 16 antorchas a la vez: con más, hay que elegir las N más cercanas a cada
-    objeto, o pasar a clustered;
+    objeto, o pasar a clustered (decidido en el ADR-0027: las 16 más cercanas a la
+    cámara, entre las zonas cargadas, con un fundido al entrar o salir);
   - ~0,35 ms de GPU de bindless frente al modelo clásico, a cambio de una CPU más simple;
   - la imagen no llena las pantallas sin factor entero.
 - **Features que el engine verifica al iniciar,** junto a las del ADR-0005:
@@ -442,7 +449,8 @@ borroso.
   5. *dithering* y vértices que tiemblan, con la CVar de la grilla y la de las texturas
      afines;
   6. el blit al swapchain, con el factor entero y los bordes negros;
-  7. el culling por esfera;
+  7. el culling por esfera, hasta el final de la niebla y solo en la zona actual y sus
+     vecinas (ADR-0027);
   8. los pedazos con dos llamadas y la tapa procedural (junto al ADR-0007);
   9. las sombras blob;
   10. el *screen-door* de la caballera;

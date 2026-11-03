@@ -22,6 +22,19 @@
   actual y sus vecinas. **Las 16 antorchas del frame son las más cercanas a la cámara**,
   entre las zonas cargadas, y una antorcha que entra o sale se desvanece. Se corrige en
   Consecuencias (lo que se sacrifica y los tickets).
+  2026-11-03 (#42): el ADR-0028 decide la carga. **Antes de las pasadas, el frame graba
+  la subida de las zonas:** copias del slot de la CPU (memoria visible y con caché, que
+  hace de *staging*) al slot de la GPU, con un presupuesto de 2 MB por frame (~0,6 ms,
+  de la reserva de GPU). **Cada slot reserva un rango fijo de índices del arreglo de
+  texturas** de la Decisión 7, y hay otro para el global (con el binario de arranque) y
+  otro para la región de recarga; las imágenes se ligan dentro del bloque de su slot, sin una asignación de
+  Vulkan por recurso. **El `VkPipelineCache` vive en la carpeta de caché** (XDG), con
+  una cabecera propia (firma, versión, `vendorID`, `deviceID`, `driverVersion`,
+  `pipelineCacheUUID`, tamaño y hash); si no coincide, se empieza con uno vacío. Medido:
+  crear los pipelines del prototipo baja de 1,3 s a 0,55 ms. En desarrollo, un shader
+  recompilado se recarga en caliente con un pipeline nuevo, y el viejo se retira con la
+  cola por número de frame. Se corrige en Consecuencias (el orden del frame y los índices
+  del arreglo de texturas por slot) y en Abierto.
 
 ## Contexto y problema
 
@@ -379,6 +392,7 @@ borroso.
 - **El frame tiene cinco pasos, en este orden:**
 
   ```
+  antes:    subida de las zonas, 2 MB por frame (ADR-0028)
   640×360:  color y profundidad (opacos, screen-door y los VFX del ADR-0025)
             → dibujo de depuración → postproceso (si hay)
             → UI del ADR-0026 (HUD, subtítulos y menús)
@@ -389,6 +403,12 @@ borroso.
   par de timestamps (ADR-0021). Dentro de la pasada de color, los VFX van después de lo
   opaco, en el orden del ADR-0025. La UI va después del postproceso, así que los *frames*
   de impacto no la invierten (fe de erratas, ADR-0026).
+- **Las texturas de las zonas en el arreglo *bindless*** (ADR-0028): cada slot de zona
+  reserva un rango fijo de índices del arreglo de texturas de la Decisión 7, y hay otro
+  rango para el global (que incluye el binario de arranque: la fuente y el fondo de la
+  pantalla de carga) y otro para la región de recarga. Las imágenes de una zona se
+  ligan dentro del bloque de su slot, respetando la alineación que pide el driver, sin
+  una asignación de Vulkan por recurso.
 - **El canal alfa del color es la máscara de personajes** (ADR-0025): el shader de los
   personajes escribe 0 y el resto escribe 1. Las mezclas de los VFX conservan el alfa del
   destino, y el postproceso de los *frames* de impacto lo lee. **El swapchain usa
@@ -466,7 +486,8 @@ borroso.
     (visión y ADR-0025; decidido en el ADR-0025: siluetas en blanco, negro y rojo, en el
     postproceso, solo en los cortes cargados y en la cámara del tajo);
   - el *instancing* de los zombies y el *skin cache*, si una medición los pide;
-  - dónde se guarda el `VkPipelineCache` (ADR-0028);
+  - dónde se guarda el `VkPipelineCache` (decidido en el ADR-0028: en la carpeta de
+    caché, con una cabecera propia que se valida antes de usarlo);
   - el tamaño de la grilla del temblor, la fracción del radio de la cápsula que es hueso
     y la textura de detalle de la carne, que se ajustan mirando el juego.
 

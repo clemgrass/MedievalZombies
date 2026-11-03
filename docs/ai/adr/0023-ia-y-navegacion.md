@@ -14,6 +14,12 @@
   camina hacia una zona sin colisión ni navmesh. Los spawns y los puntos de invocación
   del mago son marcadores de la zona, y la fase del jefe dice cuáles usa. Se corrige en
   Consecuencias ("La navmesh, en el cocinador" y el mago) y en Abierto.
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 reparte la memoria de las zonas en
+  slots fijos, reservados al iniciar; ya no hay una memoria "del nivel" que se reserve
+  al cargarlo. **La navmesh de cada zona vive en el slot de su zona.** **La memoria de
+  A*** (costos, padres y cola abierta) **se reserva al iniciar**, con el tamaño del peor
+  caso: la mayor cantidad de polígonos entre las zonas cargadas a la vez, que reporta el
+  cocinador. Se corrige en Consecuencias ("La memoria de A*").
 
 ## Contexto y problema
 
@@ -426,9 +432,9 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
   polígonos a lo largo del segmento, como el `raycast` de Detour. No es el rayo de la
   física, porque lo que importa es si se puede caminar, no si hay algo en medio. **La
   vista de la percepción sí usa el rayo de la física.**
-- **La memoria de A*** (costos, padres y la cola abierta) tiene el tamaño de la cantidad
-  de polígonos del nivel y se reserva al cargarlo, en la memoria del nivel (ADR-0010 y
-  ADR-0028). Una búsqueda no asigna nada.
+- **La memoria de A*** (costos, padres y la cola abierta) tiene el tamaño del peor caso
+  de polígonos entre las zonas cargadas a la vez, que reporta el cocinador, y **se
+  reserva al iniciar** (ADR-0010 y ADR-0028). Una búsqueda no asigna nada.
 - **ORCA**, con los valores del prototipo para empezar: hasta 10 vecinos a menos de 3 m y
   un horizonte de 1 s. Cada uno asume la mitad del esquive; contra la caballera y contra
   un zombie quieto (preparando el ataque, agarrando, congelado o ensartado), todo el

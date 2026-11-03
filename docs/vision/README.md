@@ -358,11 +358,12 @@ Números propuestos para el engine (los fija el ADR-0020):
 - **Valores configurables sin recompilar** (cámara, controles, carga): decidido en el
   ADR-0021. Los valores de ajuste (distancia y altura de la cámara, campo de visión,
   ventanas de input, carga) son CVars, y en Release quedan como constantes. Las opciones
-  del jugador (sensibilidad, invertir un eje) son del ADR-0028.
-- **Checkpoints:** el ADR-0028 (recursos en runtime y guardado). Decidido en el
-  ADR-0027: un checkpoint es un marcador de una zona, ligado a una fase; volver es entrar
-  en esa fase desde cero, y reintentarla la repite igual. Cómo se guarda sigue siendo
-  del ADR-0028.
+  del jugador (sensibilidad, invertir un eje): el menú es del ADR-0026, y se guardan en un
+  texto en la carpeta de configuración (ADR-0028).
+- **Checkpoints:** decidido en el ADR-0027: un checkpoint es un marcador de una zona,
+  ligado a una fase; volver es entrar en esa fase desde cero, y reintentarla la repite
+  igual. Decidido en el ADR-0028: se guarda en una tarjeta de memoria de 8 KB, con un bit
+  que dice si hay partida; una sola partida, que cada checkpoint pisa.
 
 ## Referencias
 

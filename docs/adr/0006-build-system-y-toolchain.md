@@ -18,6 +18,13 @@
 - **Fe de erratas:** 2026-11-02 (#40): el ADR-0026 suma `stb_truetype`, copiado en
   `tools/third_party/`, solo en el cocinador, para rasterizar las fuentes. Se corrige en
   la Decisión 5.
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 mete los assets dentro del
+  ejecutable en Release. **El preset `release` enlaza el paquete cocinado** (el mundo, el
+  global, las zonas, el binario de arranque y el de la música) en una sección propia del
+  ejecutable, con `.incbin` en un archivo
+  de ensamblador que CMake regenera cuando cambia el paquete. Medido: enlazar 227 MB
+  tarda 3,7 s. Los presets de desarrollo (`debug` y `relwithdebinfo`) no lo enlazan:
+  leen los archivos sueltos de la carpeta de lo cocinado. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -165,6 +172,9 @@ generado.
 - **Los shaders son parte del build:** cada `.vert`/`.frag`/`.comp` se compila a
   `.spv` con `glslc`, que registra las dependencias de `#include` para recompilar solo
   lo que cambió.
+- **El paquete de assets va dentro del ejecutable en Release** (ADR-0028): el preset
+  `release` lo enlaza en una sección propia con `.incbin`; los presets de desarrollo
+  leen los archivos sueltos.
 - **Dos compiladores:** el código tiene que compilar sin warnings con Clang y con GCC.
   La CI, cuando exista, compila con los dos.
 - **`compile_commands.json`** se genera siempre, para que `clangd` y `clang-tidy`

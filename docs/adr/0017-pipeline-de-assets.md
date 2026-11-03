@@ -58,6 +58,32 @@
   distancia de salida que el tope menos uno (así el tope nunca bloquea). Se corrige en
   Consecuencias ("El cocinador falla el build", "La navmesh del escenario", "El
   escenario", "Los niveles", nuevo, y Abierto).
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 decide la carga. El cocinador sigue
+  cocinando cada asset en su binario (la recarga en caliente los usa), y además **arma un
+  binario por zona y uno global** con esos assets, cada uno con **una parte de la CPU y
+  una de la GPU**. **Reparte:** va al global lo que usan los personajes, la UI, los VFX y
+  los sonidos comunes, y todo asset que use más de una zona; lo demás, a la zona que lo
+  usa. **Lee del texto del mundo** el tamaño del slot (CPU y GPU) y el presupuesto del
+  global, los copia al binario del mundo, reporta los tamaños y **falla el build** si una
+  zona no entra (dos medidas: el binario entero contra el slot de la CPU y la parte de
+  la GPU contra el de la GPU) o si una parte del global, sumada a la del binario de
+  arranque, pasa su presupuesto. **Copia el
+  índice estable de cada fase** de la lista del texto del mundo (a la que solo se le
+  agregan filas; las fases borradas quedan como retiradas; cada fila nombra la fase por
+  el id de su zona y su nombre de fase, nunca por su número de orden) al binario del
+  mundo, y falla si una fase no tiene fila, si una fila no retirada no tiene fase, si un
+  número se repite o si la lista pasa de 256 (la tarjeta de memoria guarda las fases
+  como bits). **Arma también el binario de
+  arranque** (la fuente, "Cargando…" en cada idioma y el fondo de la pantalla de carga)
+  **y el de la música**. **Calcula el peor caso de polígonos** de
+  navmesh entre las zonas cargadas a la vez y lo escribe en el binario del mundo (la
+  memoria de A*, ADR-0023). **Escribe cada archivo a un temporal
+  y lo renombra**, para que la recarga nunca lea uno a medias. **En Release, el mundo, el
+  global, las zonas, el binario de arranque y el de la música van en un paquete dentro
+  del ejecutable.** La tabla de secciones
+  guarda el codec (0 = crudo): hoy nada se comprime. Se corrige en Consecuencias ("El
+  cocinador falla el build", "El formato del binario", "Los binarios de la carga", nuevo,
+  y Abierto).
 
 ## Contexto y problema
 
@@ -573,6 +599,12 @@ LFS.
   - en los textos (ADR-0026): que cada idioma tenga todos los IDs, que la fuente tenga
     cada carácter y que cada texto quepa en su ancho máximo, que sale del archivo de
     anchos de los assets (no del código del juego, que el cocinador no enlaza);
+  - en la carga (ADR-0028): que ninguna zona pase los tamaños de slot fijados en el
+    texto del mundo (el binario entero contra el de la CPU y la parte de la GPU contra
+    el de la GPU), que el global más el binario de arranque no pasen el presupuesto del
+    global (en la CPU y en la GPU), y que cada fase esté en la
+    lista de fases del texto del mundo (por el id de su zona y su nombre de fase), que
+    cada fila no retirada tenga su fase, sin números repetidos y sin pasar de 256;
   - en los niveles (ADR-0027): que cada tipo de zombie, de marcador y de evento sea
     conocido; que cada marcador que nombra un texto exista y sea de su zona; que cada
     patrón encuentre un marcador; que cada fase diga cómo termina; que dos caminos no den
@@ -630,7 +662,27 @@ LFS.
   planas con offsets relativos. Como lo cocinado no se versiona, **no hay compatibilidad
   hacia atrás**: si el formato cambia, sube la versión y todo se recocina. El cargador
   revisa la firma, la versión y que cada offset caiga dentro del archivo antes de usarlo.
-  Cómo se carga y se administra en runtime lo decide el ADR-0028.
+  La tabla de secciones guarda el codec de cada sección (0 = crudo; hoy nada se
+  comprime, ADR-0028). **El cocinador escribe cada archivo a un temporal y lo renombra.**
+- **Los binarios de la carga** (ADR-0028): con los assets ya cocinados, el cocinador
+  arma **un binario por zona y uno global**, cada uno con **una parte de la CPU**
+  (instancias, colisión, navmesh, marcadores, fases, triggers y sonidos) **y una de la
+  GPU** (vértices, índices y texturas). Va al global lo que usan los personajes (la
+  caballera, los tipos de zombie, la espada), la UI, los VFX y los sonidos comunes, y
+  todo asset que use más de una zona; lo demás, a la zona que lo usa. **La música** va en
+  su propio binario, que se carga al arrancar a la región de audio (ADR-0024). **El
+  binario de arranque** tiene la fuente, "Cargando…" en cada idioma y el fondo de la
+  pantalla de carga, para la etapa cero del arranque (la fuente queda repetida con la
+  del global a propósito); vive al principio del global y cuenta dentro de su
+  presupuesto. Lee del texto del mundo el tamaño del slot y el presupuesto
+  del global, y los copia al binario del mundo junto con **el índice estable de cada
+  fase** (de la lista del texto del mundo) y **el peor caso de polígonos de navmesh**
+  entre las zonas cargadas a la vez (para la memoria de A*, ADR-0023). Reporta el tamaño
+  de cada zona y del global. **En Release**, el
+  mundo, el global, las zonas, el binario de arranque y el de la música van en **un
+  paquete dentro del ejecutable**, en una
+  sección propia; en desarrollo quedan sueltos, junto con el binario de cada asset, que
+  usa la recarga en caliente.
 - **El orden del cocinador:** primero la rotación de ejes, así todo lo demás (el
   recorte, el ajuste de cápsulas y de primitivas) ya trabaja en el espacio del engine.
 - **El rig queda abstraído:** el cocinador no conoce los nombres de Quaternius. Cada rig
@@ -745,9 +797,10 @@ LFS.
     CPU (ADR-0007);
   - si el corte necesita un índice que una los vértices duplicados en las costuras
     (ADR-0007);
-  - la carga en runtime y el *hot reload* de assets (ADR-0028). Las texturas no se
-    pueden usar directo desde el archivo: en las dos rutas del ADR-0005 (incluida la GPU
-    integrada) se copian a una imagen con *tiling* óptimo;
+  - la carga en runtime y el *hot reload* de assets (decidido en el ADR-0028: binarios
+    por zona y uno global, slots fijos, un hilo de I/O y la recarga con inotify). Las
+    texturas no se pueden usar directo desde el archivo: en las dos rutas del ADR-0005
+    (incluida la GPU integrada) se copian a una imagen con *tiling* óptimo;
   - el formato de las escenas y los niveles (decidido en el ADR-0027: un binario por
     zona y uno del mundo, ver "Los niveles");
   - Blender en la CI (decidido en el ADR-0029: tarball oficial con la versión de parche

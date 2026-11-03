@@ -44,6 +44,20 @@
   cómo se carga lo decide el ADR-0028. **La capacidad fija del ECS** cubre las entidades
   de las zonas cargadas a la vez. Se corrige en la Decisión 6, en Consecuencias (el mapa
   de la memoria: los recursos de la GPU y los datos en la CPU de cada zona) y en Abierto.
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 reparte la memoria de las zonas en
+  **slots fijos**: tantos como el tope de zonas, cada uno del tamaño fijado en el texto
+  del mundo (el cocinador falla si una zona no entra). **Los slots de la CPU son memoria
+  de Vulkan visible desde la CPU y con caché**
+  (`HOST_CACHED`), reservada con `gpu::Allocator` y mapeada siempre: la parte de la CPU
+  de la zona se usa ahí, y la parte de la GPU se copia desde ahí. Los de la GPU son un
+  bloque partido en slots iguales. Los dos se reservan y se tocan al iniciar, así que la
+  garantía del tope (ADR-0027) cubre también la memoria. Suma el global (lo compartido,
+  todo el programa) y una región de recarga solo de desarrollo. El hilo de I/O no usa
+  allocators: escribe en los slots. **El global** guarda en la CPU solo su parte de la
+  CPU; su parte de la GPU sube al arrancar a través de los slots de zona, que todavía
+  están libres. El binario de arranque (la fuente, "Cargando…" y el fondo) vive al
+  principio del global. Se corrige en la Decisión 2, en Consecuencias (el mapa de la memoria y lo
+  que se toca al iniciar) y en Abierto.
 
 ## Contexto y problema
 
@@ -412,7 +426,7 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
 | # | Dimensión | Elección |
 |---|---|---|
 | 1 | Organización | **Por sistema y por tiempo de vida.** Cada región tiene un sistema dueño y una sola vida (permanente, paso, frame, o la de lo que guarda), y cae en una fila de `presupuestos.md` |
-| 2 | De dónde sale y cuándo se toca | **Cada región que usa el frame** (arenas, pools, pedazos, *ring buffer*) **se reserva al iniciar y se toca entera en ese momento.** En la CPU, con `mmap` y `MAP_POPULATE`, a través de `platform::`. En la GPU, con los bloques grandes de `gpu::Allocator` (dimensión 6). En el frame no se pide memoria al sistema operativo ni al driver. La memoria que vive un nivel la decide el ADR-0028 |
+| 2 | De dónde sale y cuándo se toca | **Cada región que usa el frame** (arenas, pools, pedazos, *ring buffer*) **se reserva al iniciar y se toca entera en ese momento.** En la CPU, con `mmap` y `MAP_POPULATE`, a través de `platform::`. En la GPU, con los bloques grandes de `gpu::Allocator` (dimensión 6). En el frame no se pide memoria al sistema operativo ni al driver. La memoria que vivía un nivel vive una zona, en slots fijos que también se reservan y se tocan al iniciar (ADR-0028) |
 | 3 | Memoria temporal | **Una arena por paso de simulación**, que se reinicia al terminar cada paso; **una arena por frame para el render**, que se reinicia al terminar el frame; y **dos arenas *scratch* con marcador** para el trabajo interno de una función, como los temporales de cada corte |
 | 4 | Objetos de tamaño fijo | **Pools con lista libre y handles con generación** (ADR-0009) |
 | 5 | Pedazos | **Un allocator de offsets propio, tipo TLSF:** O(1), une los bloques vecinos libres y no toca la memoria que administra |
@@ -442,8 +456,10 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   | UI (ADR-0026) | La UI | Todo el programa | Capacidad fija: 8192 vértices por frame, el estado por ID, los subtítulos cortados y las tablas de las fuentes y de los textos de todos los idiomas; llena, aborta |
   | Atlas de las fuentes (ADR-0026) | La UI y `engine/gpu` | Todo el programa | Un bloque de `gpu::Allocator` |
   | *Ring buffer* | `engine/gpu` | Un frame en vuelo | Anillo |
-  | Recursos de la GPU que viven una zona (ADR-0027) | `engine/gpu` | Una zona | Dimensionado por el tope de zonas cargadas. Las zonas no se liberan en orden, así que no es un solo bloque lineal. Cómo se reparte y se carga lo decide el ADR-0028 |
-  | Datos de las zonas en la CPU (ADR-0027): instancias, colisión, navmesh, marcadores, fases y triggers | El mundo | Una zona | Dimensionado por el tope de zonas cargadas, como la fila anterior. Cómo se reparte y se carga lo decide el ADR-0028 |
+  | Slots de zona en la GPU (ADR-0027, ADR-0028): vértices, índices y texturas | `engine/gpu` | Una zona, más los frames en vuelo | **Slots fijos:** un bloque de `gpu::Allocator` partido en tantos slots como el tope de zonas, cada uno del tamaño fijado en el texto del mundo para la GPU |
+  | Slots de zona en la CPU (ADR-0027, ADR-0028): el binario entero de la zona (instancias, colisión, navmesh, marcadores, fases, triggers y sonidos, más la parte de la GPU como origen de la copia) | La carga | Una zona, más los frames en vuelo | **Slots fijos** del tamaño fijado en el texto del mundo para la CPU, en memoria de Vulkan visible desde la CPU y con caché (`HOST_CACHED`), mapeada siempre. El hilo de I/O escribe ahí sin allocator |
+  | Global (ADR-0028): lo que usan los personajes o más de una zona, incluidos los sonidos comunes | La carga y `engine/gpu` | Todo el programa | Una región (solo la parte de la CPU) y un bloque (la parte de la GPU, que sube al arrancar a través de los slots de zona), cada uno del presupuesto fijado en el texto del mundo. **El binario de arranque vive al principio de los dos** y cuenta dentro de ese presupuesto |
+  | Región de recarga (ADR-0028), solo en desarrollo | La carga y `engine/gpu` | La de la zona del recurso recargado | Offsets, tipo TLSF |
 
 - **El frame,** con las arenas en su lugar. Es una fe de erratas del ADR-0012, que
   reiniciaba una sola arena al terminar el frame:
@@ -469,8 +485,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   necesita otra temporal: usa la que no le pasaron (Fleury).
 - **Al iniciar se toca lo que usa el frame:** las arenas, los pools, el pool de pedazos y
   el *ring buffer*. Medido: de 0,4 a 0,7 ms por MiB, del orden de 15 a 45 ms en total. Si falta memoria,
-  falla al arrancar y no a mitad de una horda. La memoria que vive un nivel la decide el
-  ADR-0028.
+  falla al arrancar y no a mitad de una horda. Los slots de las zonas y el global
+  (ADR-0028) también se reservan y se tocan al iniciar.
 - **Reservar y tocar memoria es una función de `platform::`** (`mmap` y `MAP_POPULATE` en
   Linux; en Windows sería `VirtualAlloc`). `engine/core` la usa, como permiten las capas
   del ADR-0012, y no llama al sistema operativo directamente.
@@ -515,7 +531,7 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   `gpu::Allocator`, en `engine/gpu`, usa el mismo allocator de offsets sobre sus bloques
   de Vulkan. Ningún allocator se comparte entre hilos (ADR-0012): cuando haya más de un
   hilo que use allocators, cada uno tendrá sus *scratch*. Un hilo que no usa allocators,
-  como el de audio (ADR-0024), no las necesita.
+  como el de audio (ADR-0024) o el de I/O (ADR-0028), no las necesita.
 - **Las revisiones de desarrollo:**
   - solo en Debug: cada arena y cada pool envenena lo que reinicia o devuelve, con zonas
     rojas entre asignaciones (alineadas a 8 bytes como mínimo, por ASan; fuera de ASan,
@@ -566,8 +582,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   - índices de 16 o de 32 bits en los pedazos (decidido en el ADR-0022: 16 bits, con dos
     llamadas por pedazo). La subida y el pool bajan casi a la mitad, más ~20 KB por corte
     de copias de los vértices del borde. Los tamaños se miden con el protocolo;
-  - la memoria que vive un nivel y la carga de los assets (ADR-0028). Con el ADR-0027, lo
-    que vive es una zona, con un tope de zonas cargadas a la vez;
+  - la memoria que vive un nivel y la carga de los assets (decidido en el ADR-0028: slots
+    fijos por zona, tantos como el tope, en la CPU y en la GPU, más el global);
   - cómo se ven los picos y el uso de cada región durante el juego (decidido en el
     ADR-0021: contadores en todos los builds y un panel en los de desarrollo);
   - el máximo de entidades del ECS y los valores de los patrones (sus tickets);

@@ -86,7 +86,8 @@ salida. El reparto sigue las pasadas del ADR-0022.
 | Blit *nearest* a la pantalla | 2,0 ms | Hipótesis. El prototipo midió 1,3–1,6 ms a 700 MHz |
 | UI a 640×360: HUD, subtítulos y menús (ADR-0026) | 0,2 ms | Hipótesis. El prototipo del ADR-0026 midió 0,02 ms el HUD con subtítulos y 0,14 ms el menú de pausa, con el reloj libre (~300 MHz en promedio) |
 | ImGui (solo en desarrollo) | 0,5 ms | Hipótesis |
-| Reserva | 2,6 ms | — |
+| Subida de las zonas, 2 MB por frame, antes de las pasadas (ADR-0028) | 0,6 ms | Hipótesis. El prototipo del ADR-0028 midió ~0,3 ms por MB, a buffer o a textura, con el reloj libre (300 a 520 MHz). Solo en los frames en que hay una zona subiendo |
+| Reserva | 2,0 ms | — |
 | **Total** | **13,3 ms** | |
 
 ## Memoria
@@ -103,7 +104,7 @@ cada byte se cuenta una sola vez: la RAM anónima del proceso más la memoria de
 | Arenas temporales: la del paso, la del frame y las *scratch* (ADR-0010) | 16 MiB | Hipótesis. El reparto entre las tres se fija midiendo |
 | Subida de geometría dinámica, por frame en vuelo | N × 8 MiB | Hipótesis. N = 2 frames en vuelo (ADR-0007), así que son 2 × 8 MiB. Incluye las matrices de los huesos: 74 KB por frame con 50 zombies (ADR-0017). La cuenta del ADR-0010 para el peor caso (32 cortes, las matrices de los zombies, 10 ragdolls y 100 pedazos rígidos) da ~2,3 MB por frame |
 | Audio | 64 MiB | Hipótesis |
-| Herramientas de depuración (solo `debug` y `relwithdebinfo`, ADR-0021) | 8 MiB de región + ~14 MiB de Tracy | La región es una hipótesis: log (~0,5 MiB), dibujo de depuración (~1 MiB), ImGui (unos MiB) y los bloques del registro y del *replay* (2 × 64 KiB por flujo; se vuelcan a disco, así que no crecen con la sesión). Tracy (*on demand*, sin servidor) se midió en laboratorio, fuera del protocolo: ~14 MiB de RAM anónima. Las dos cuentan en R4 porque el protocolo mide en `relwithdebinfo`; en Release no existen |
+| Herramientas de depuración (solo `debug` y `relwithdebinfo`, ADR-0021) | 8 MiB de región + ~14 MiB de Tracy + 32 MiB de recarga | La región es una hipótesis: log (~0,5 MiB), dibujo de depuración (~1 MiB), ImGui (unos MiB) y los bloques del registro y del *replay* (2 × 64 KiB por flujo; se vuelcan a disco, así que no crecen con la sesión). Tracy (*on demand*, sin servidor) se midió en laboratorio, fuera del protocolo: ~14 MiB de RAM anónima. La región de recarga en caliente del ADR-0028 (en la CPU y en la GPU) es una hipótesis. Las tres cuentan en R4 porque el protocolo mide en `relwithdebinfo`; en Release no existen |
 | Ejecutable, driver y reserva | el resto, hasta 1 GiB | — |
 
 Las filas de pedazos, arenas temporales y subida son regiones del ADR-0010 que usa el
@@ -115,11 +116,23 @@ bloques de la GPU que viven todo el programa y caen en "Recursos de la GPU". La 
 de UI del ADR-0026 (~200 KB, con las tablas de las fuentes y de los textos) cae en "Mundo y ECS", y el atlas de sus fuentes (~165 KB),
 en "Recursos de la GPU"; sus vértices viajan por la subida (160 KB por frame). Con el
 ADR-0027, la memoria que antes vivía "un nivel" vive **una zona**, y se dimensiona por el
-tope de zonas cargadas a la vez (5, de partida): los recursos de la GPU de cada zona caen
-en "Recursos de la GPU", y sus datos en la CPU (instancias, colisión, navmesh,
-marcadores, fases y triggers; ~11 KB de ECS por zona en el prototipo, con mallas de
-juguete), en "Mundo y ECS". Cómo se reparte y se carga (recursos de la GPU, assets y
-audio) lo decide el ADR-0028.
+tope de zonas cargadas a la vez (5, de partida). El ADR-0028 la reparte en **slots
+fijos**, tantos como el tope, cada uno del tamaño fijado (ver abajo), reservados y
+tocados al iniciar. **Los slots de la CPU** guardan el binario entero de cada zona
+(instancias, colisión, navmesh, marcadores, fases, triggers y sonidos, más la parte de
+la GPU como origen de la copia) y caen en "Assets en la CPU"; **los de la GPU** (vértices,
+índices y texturas) caen en "Recursos de la GPU". **El global** (lo que usan los
+personajes o más de una zona) cae en esas mismas dos filas: en la CPU guarda solo su
+parte de la CPU, porque su parte de la GPU sube al arrancar a través de los slots de
+zona, que todavía están libres. El binario de arranque vive al principio del global y
+cuenta dentro de su presupuesto. Las entidades de las zonas
+cargadas siguen en "Mundo y ECS" (~11 KB de ECS por zona en el prototipo del ADR-0027).
+Los sonidos comunes van en el global ("Assets en la CPU"), y los de una sola zona en
+su slot; la música sigue en "Audio", cargada entera al arrancar. **Los tamaños se fijan
+en el texto del mundo** (ADR-0028), y el cocinador falla si una zona o el global no
+entran. Hipótesis de partida: **slots de 24 MiB en la CPU y 24 MiB en la GPU** (con el
+tope de 5, 120 MiB en cada fila) y **un global de 64 MiB en la CPU y 128 MiB en la
+GPU**. Las zonas sintéticas del prototipo pesaban hasta 12 MB.
 Las cuentas del ADR-0010 son estimaciones, no mediciones del protocolo: las metas
 cambian recién con una medición.
 
@@ -131,6 +144,17 @@ cambian recién con una medición.
 | Pedazos a la vez | 100 | Sin medir |
 | Cortes en un mismo paso de simulación | 4 | Sin medir |
 | Cortes por segundo | 8 | Sin medir |
+
+## Tiempos de carga
+
+El ADR-0020 no fija un requisito de carga. El ADR-0028 suma metas, en frío (el archivo
+fuera de la caché de páginas), en la máquina de referencia:
+
+| Qué | Meta | Estado |
+|---|---|---|
+| Del arranque al primer frame jugable | ≤ 3 s | Hipótesis. Sin caché de pipelines, crearlos tardó 1,3 s en el prototipo; con el `VkPipelineCache`, 0,55 ms |
+| Volver a un checkpoint, detrás de la pantalla de carga | ≤ 1 s | Hipótesis. En el prototipo, leer en frío la zona del checkpoint y las que necesita la simulación tardó de 8 a 15 ms de disco |
+| Lo que la carga le cuesta al hilo principal, por frame | Sin fila propia | Entra en la reserva del frame: el prototipo midió ~0,001 ms de mediana y ≤ 0,06 ms de máximo con el hilo de I/O |
 
 ## Historial
 
@@ -148,3 +172,4 @@ cambian recién con una medición.
 | 2026-11-02 | #39 | Metas nuevas para los VFX del ADR-0025 (hipótesis): 0,2 ms de CPU por frame, que salen de la reserva del frame (de 0,5 a 0,3 ms), y 0,5 ms de GPU, que salen de la reserva de GPU (de 3,3 a 2,8 ms). Los *frames* de impacto entran en la fila de postproceso. Como la integración corre en cada paso, el frame con dos pasos pasa de 15,8 a 16,0 ms. La memoria de los VFX cae en "Mundo y ECS" (partículas, ~330 KB) y en "Recursos de la GPU" (marcas y campos de distancia, ~0,9 MB). Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con la GPU fija en 700 MHz |
 | 2026-11-02 | #40 | Metas nuevas para la UI del ADR-0026 (hipótesis): 0,1 ms de CPU por frame, que salen de la reserva del frame (de 0,3 a 0,2 ms), y 0,2 ms de GPU, que salen de la reserva de GPU (de 2,8 a 2,6 ms). La región de UI (~200 KB) cae en "Mundo y ECS" y el atlas de las fuentes (~165 KB), en "Recursos de la GPU". Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con el reloj de la GPU libre |
 | 2026-11-02 | #41 | Con el ADR-0027, la memoria que vivía "un nivel" vive una zona, dimensionada por el tope de zonas cargadas a la vez (5, de partida): los recursos de la GPU de cada zona caen en "Recursos de la GPU" y sus datos en la CPU, en "Mundo y ECS". Ninguna meta ni total cambia | Ninguna |
+| 2026-11-03 | #42 | Meta nueva para la subida de las zonas del ADR-0028 (hipótesis): 0,6 ms de GPU por frame (2 MB), que salen de la reserva de GPU (de 2,6 a 2,0 ms). Los slots de las zonas y el global caen en "Assets en la CPU" y "Recursos de la GPU"; las entidades de las zonas siguen en "Mundo y ECS". La región de recarga en caliente (32 MiB, hipótesis) se suma a la fila de depuración y sale de "Ejecutable, driver y reserva". Los tamaños se fijan en el texto del mundo, con estas hipótesis: slots de 24 MiB en la CPU y 24 MiB en la GPU (120 MiB en cada fila con el tope de 5) y un global de 64 MiB en la CPU y 128 MiB en la GPU; los sonidos comunes pasan de "Audio" al global, y la música sigue en "Audio". Sección nueva: tiempos de carga (≤ 3 s al arrancar y ≤ 1 s al volver a un checkpoint, hipótesis). Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con el reloj libre |

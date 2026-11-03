@@ -12,6 +12,16 @@
   alertados, y el jefe lo marca su fase. **Los sonidos de ambiente** son marcadores de la
   zona, y el de cada antorcha va en la pieza "antorcha", con su luz y su fuego. Se
   corrige en Consecuencias ("La música") y en Abierto.
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 decide la carga. **Los sonidos que usa
+  una sola zona viven en el slot de esa zona** y se liberan con ella, con la regla de
+  siempre (parar las voces que los leen antes de liberar). **Los comunes y los de más
+  de una zona viven en el global** (ADR-0028), todo el programa, y el audio los lee ahí,
+  sin copiarlos. **La música es la excepción:** suena entre zonas con *crossfade*, así
+  que no puede vivir en el slot de una zona que se descarga; va en su propio binario,
+  que se carga al arrancar a la región de audio, con todos sus *tracks*. **La tabla de sonidos se recarga
+  con inotify** en los builds de desarrollo, como los demás recursos. Se corrige en la
+  Decisión 9, en Consecuencias ("Liberar sonidos", "La tabla de sonidos", "La memoria" y
+  los tickets) y en Abierto.
 
 ## Contexto y problema
 
@@ -416,7 +426,7 @@ que tampoco se corta con un tirón.
 | 6 | Música | **Comprimida en memoria y decodificada en el callback.** **Cambia por estado** (exploración, combate, jefe) **con *crossfade***, con un tiempo mínimo en cada estado para que no cambie a cada rato |
 | 7 | Sonido del corte | **Capas cocinadas según el material y la fuerza,** con **varias tomas por capa** (*round robin* sin repetir la última) y **±5 % de *pitch* y de volumen.** El azar sale de **un hash del paso, la entidad y la capa**, no del generador de la simulación. **La pausa de impacto no congela el audio:** el golpe suena al empezar la pausa. **En la cámara del tajo, el bus del mundo baja el tono** (valor de partida ×0,6, configurable) con algo de pasa bajos |
 | 8 | Relación con la simulación | **Lo puntual va por eventos del paso; lo continuo, por emisores** (un componente que el audio lee una vez por frame, con la posición interpolada). **Cada evento lleva el tiempo de su paso** y suena en ese tiempo **más una latencia fija** |
-| 9 | Datos y autoría | **Una tabla de sonidos en un archivo de texto que cocina el build,** que **se puede recargar en los builds de desarrollo** (cómo, lo decide el ADR-0028). **Los sonidos del corte los grabo yo o salen de CC0;** el resto, de CC0, de CC BY o de síntesis propia |
+| 9 | Datos y autoría | **Una tabla de sonidos en un archivo de texto que cocina el build,** que **se puede recargar en los builds de desarrollo** (con inotify, como los demás recursos, ADR-0028). **Los sonidos del corte los grabo yo o salen de CC0;** el resto, de CC0, de CC BY o de síntesis propia |
 | 10 | Memoria, presupuesto, pruebas y depuración | **Una región de audio** reservada y tocada al iniciar (ADR-0010). **La fila "Audio" de `presupuestos.md` se parte** en hilo principal e hilo de audio. **Buffer del dispositivo de 512** (10,7 ms), configurable. **Tests de las piezas y un render offline contra un hash.** **Un panel de ImGui** con las voces, y contadores de robos y faltantes en el registro por frame |
 
 ## Consecuencias
@@ -456,9 +466,10 @@ que tampoco se corta con un tirón.
   así que la regla del ADR-0010 (ningún allocator compartido entre hilos) se cumple sin
   *scratch* propias.
 - **Liberar sonidos:** un sonido cocinado no se libera mientras una voz lo lee. Antes de
-  liberar (al cambiar de nivel), el hilo principal para las voces que lo usan y espera a
-  que el reloj del audio pase el bloque en el que se aplicó la orden. Cuándo se cargan y
-  se liberan los sonidos de un nivel lo decide el ADR-0028.
+  liberar (al descargar una zona), el hilo principal para las voces que lo usan y espera
+  a que el reloj del audio pase el bloque en el que se aplicó la orden. **Dónde viven**
+  (ADR-0028): los sonidos que usa una sola zona, en el slot de esa zona, y se liberan
+  con ella; los comunes y los de más de una zona, en lo global, todo el programa.
 - **Los eventos de sonido del paso** van en **un arreglo fijo del sistema de audio,
   con vida de frame** (por ejemplo, 256 eventos: hasta 8 pasos por frame). La simulación
   lo escribe y el audio lo lee y lo vacía al final del frame. No son las colas del
@@ -576,11 +587,13 @@ que tampoco se corta con un tirón.
   de instancias, los rangos de *pitch* y de volumen, si es 3D (con `ref` y `max`) y si
   es un bucle. El formato del archivo lo fija su ticket. **En los builds de desarrollo,
   la tabla tiene que poder recargarse** sin cerrar el juego, y los cambios valen para
-  los sonidos que empiezan después. **Cómo se recarga** lo decide el ADR-0028, que
-  decide la recarga en caliente de los recursos (ADR-0017). Una toma nueva pide volver a
-  cocinar.
-- **La memoria:** la región de audio guarda los sonidos cocinados del nivel, la música
-  comprimida, los dos decodificadores (2 × 256 KiB), las 64 voces y su copia en el hilo
+  los sonidos que empiezan después. **Cómo se recarga** (ADR-0028): el cocinador
+  escribe la tabla a un temporal y la renombra, y el juego la ve con inotify, como a los
+  demás recursos. Una toma nueva pide volver a cocinar.
+- **La memoria:** los sonidos cocinados no viven en la región de audio: los comunes
+  están en el global y los de una sola zona en el slot de su zona (ADR-0028), y el audio
+  los lee ahí. La región de audio guarda la música comprimida (todos los *tracks*,
+  cargados al arrancar), los dos decodificadores (2 × 256 KiB), las 64 voces y su copia en el hilo
   principal, la cola de comandos, el arreglo de eventos y los buffers de mezcla. Todo
   se reserva y se toca al iniciar. **La meta sigue en 64 MiB, como hipótesis:** entran
   ~11 min de efectos en mono PCM16 más la música comprimida.
@@ -642,18 +655,19 @@ que tampoco se corta con un tirón.
   8. la música: los decodificadores, los estados y el *crossfade*;
   9. los sonidos del corte: los eventos del combate y sus capas;
   10. el panel, los contadores, Tracy y el dibujo de depuración;
-  11. la recarga de la tabla en desarrollo, cuando el ADR-0028 decida cómo se recargan
-      los recursos.
+  11. la recarga de la tabla en desarrollo, con inotify (ADR-0028).
 - **Abierto:**
   - todos los valores de partida, que se ajustan escuchando y jugando: la latencia fija,
     el buffer, las prioridades de cada sonido, los límites, los rangos de variación, las
     distancias, el corte del pasa bajos, el tono de la cámara del tajo, el *crossfade* y
     el tiempo mínimo de cada estado de la música;
   - el formato del archivo de la tabla (su ticket);
-  - cómo se recarga la tabla en desarrollo (ADR-0028);
+  - cómo se recarga la tabla en desarrollo (decidido en el ADR-0028: inotify, con el
+    cocinador escribiendo a un temporal y renombrando);
   - dónde espera el render (la *fence* y el *present*) respecto del audio, para que el
     margen de 33 ms alcance (el ticket del game loop);
-  - qué sonidos carga cada nivel y cuánto viven (ADR-0028), el ambiente y la música de
+  - qué sonidos carga cada nivel y cuánto viven (decidido en el ADR-0028: los de una
+    zona viven en su slot, los comunes todo el programa), el ambiente y la música de
     cada nivel (decidido en el ADR-0027: la música va por zona y el ambiente son
     marcadores de la zona) y los volúmenes en las opciones (ADR-0026);
   - los golpes de los pedazos contra el suelo, que necesitan eventos de contacto de la

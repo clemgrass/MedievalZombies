@@ -8,6 +8,15 @@
   audio. SDL3 solo abre el dispositivo y llama a una función propia del engine
   (`SDL_OpenAudioDeviceStream` con callback); la mezcla, el sonido 3D y la
   decodificación son propios. Se cierra en Consecuencias.
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 suma a `platform::` **los archivos y
+  los hilos**: las primitivas de archivo (`open`, `pread`, `pwrite`, `fsync`, `rename`) y
+  la de crear un hilo (el de I/O, que vive encima de `engine/core`); las carpetas del usuario (la de datos con `SDL_GetPrefPath`; la de
+  configuración, la de caché y la de estado con la especificación XDG, que SDL3 no da),
+  **inotify** para la recarga en
+  caliente (solo en desarrollo) y **la lectura del paquete que va dentro del propio
+  ejecutable** en Release (dónde empieza su sección en el archivo). `SDL_AsyncIO` no se
+  usa: en el prototipo, el frame que pide las lecturas costó de 10 a 15 ms. Se corrige
+  en Consecuencias.
 
 ## Contexto y problema
 
@@ -180,6 +189,14 @@ integraciones que trae SDL3, en vez de resolverlos yo.
 - **El alcance de SDL3 en audio:** solo la salida al dispositivo, con un callback. La
   mezcla es propia y corre en ese callback (ADR-0024). `platform::` le pasa al engine
   un buffer de float estéreo, sin tipos de SDL.
+- **Los archivos y los hilos** (ADR-0028): `platform::` da las primitivas de archivo
+  (`open`, `pread`, `pwrite`, `fsync`, `rename`) y la de crear un hilo, y las carpetas
+  del usuario (datos con `SDL_GetPrefPath`; configuración, caché y estado con XDG). Mira
+  la carpeta de lo cocinado con
+  inotify (solo en desarrollo) y sabe dónde empieza, dentro del propio ejecutable, la
+  sección del paquete de Release. `SDL_AsyncIO` no se usa: en el prototipo, el frame que
+  pide las lecturas costó de 10 a 15 ms, como io_uring sin `IOSQE_ASYNC` (con los datos
+  en la caché, la copia ocurre dentro del pedido).
 - Un backend propio sobre Wayland queda como posible proyecto aparte, fuera del
   alcance de este.
 

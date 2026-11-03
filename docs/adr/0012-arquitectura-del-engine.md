@@ -36,6 +36,16 @@
   ese paso (según su polígono de la navmesh, o su posición si no tienen uno) se
   destruyen en orden de id. Así el disco decide cuándo se ve una zona, nunca qué pasa en la simulación. Cómo se
   carga sin cortar el frame lo decide el ADR-0028. Se corrige en Consecuencias.
+  2026-11-03 (#42): el ADR-0028 carga con **un hilo de I/O propio, la tercera excepción
+  al hilo único:** abre, lee y escribe archivos en memoria reservada al iniciar, por dos
+  colas sin locks, sin tocar el estado del juego ni usar allocators. Son dos piezas: el
+  hilo de I/O y sus colas, encima de `engine/core`, y el cargador (los slots, la
+  validación y la subida), un sistema encima de `engine/gpu`; las primitivas de archivo
+  y de hilo están en `platform::`. También escribe los archivos de depuración del ADR-0021, para que el
+  hilo principal nunca espere al disco. Al empezar el frame,
+  el hilo principal mira sus avisos y decide los pedidos; antes de las pasadas del
+  render, graba la subida de las zonas (2 MB por frame). Se corrige en el orden del
+  frame, la Decisión 5 y Consecuencias.
 
 ## Contexto y problema
 
@@ -128,11 +138,13 @@ Orden propuesto dentro de un frame:
 
 ```
 1. platform: vaciar la cola de eventos → estado de input        (ADR-0004)
+   carga: avisos del hilo de I/O → validar → pedidos nuevos      (ADR-0027, ADR-0028)
 2. mientras el acumulador ≥ paso fijo:
      simulación: gameplay → combate → corte → física → animación
      VFX: eventos del paso → partículas (fuera del estado)        (ADR-0025)
      reiniciar la arena del paso                                 (ADR-0010)
 3. render: interpolar el estado → grabar comandos → enviar a la GPU  (ADR-0005)
+           (primero la subida de las zonas, 2 MB por frame)       (ADR-0028)
 4. audio: eventos de los pasos → voces → comandos al callback   (ADR-0024)
 5. fin de frame: reiniciar la arena del frame                    (ADR-0010)
 ```
@@ -201,7 +213,7 @@ docs/      documentación
 | 2 | Módulos | **Capas estrictas** (`platform` → `core` → `gpu` → sistemas → `game`), que CMake hace cumplir: cada módulo es un target y solo enlaza con los de abajo |
 | 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo |
 | 4 | Comunicación | **Colas de eventos entre sistemas** para las órdenes que cambian el estado, guardadas en la arena del paso (ADR-0010). Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
-| 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida. Hay dos excepciones, y ninguna toca el estado del juego: los hilos de Tracy en los builds de desarrollo (ADR-0021) y el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (ADR-0024) |
+| 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida. Hay tres excepciones, y ninguna toca el estado del juego: los hilos de Tracy en los builds de desarrollo (ADR-0021), el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (ADR-0024), y el hilo de I/O, que solo lee y escribe archivos en memoria reservada al iniciar (ADR-0028) |
 | 6 | Monorepo | `engine/`, `game/`, `tools/`, `shaders/`, `tests/`, `docs/` |
 
 ## Consecuencias
@@ -236,6 +248,14 @@ docs/      documentación
   atómicos. No asigna memoria, no toma locks y no hace I/O. El sistema de audio del hilo
   principal corre después del render, con la cámara y las posiciones que el render ya
   interpoló.
+- **El hilo de I/O** (ADR-0028) recibe pedidos por una cola de un productor y un
+  consumidor sin locks y devuelve avisos por otra. Abre, lee y escribe archivos (la
+  partida y las opciones, con su `fsync`, y el log, el registro por frame y el *replay*
+  del ADR-0021) en memoria que se reservó al iniciar. Vive encima de `engine/core` y no
+  conoce la GPU; **el cargador** (los slots, la validación y la subida) es un sistema
+  encima de `engine/gpu`. Sus primitivas de archivo y de hilo están en `platform::`. No toca
+  el estado del juego y no usa allocators. El hilo principal mira sus avisos una vez por
+  frame, al empezar, y graba la subida de las zonas antes de las pasadas del render.
 - **Los VFX** (ADR-0025) corren en cada paso, después de la animación, pero no son
   estado de la simulación: leen sus eventos y sus poses, nunca escriben en ella, y el
   hash del *replay* no los incluye. Quitarlos no cambia la simulación.

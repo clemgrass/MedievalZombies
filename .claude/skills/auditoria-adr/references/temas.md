@@ -18,9 +18,9 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el reparto y el paquete) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026 y 0027 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos y el mundo, la cola del audio y la lógica pura de la UI; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI y las fases; el *replay* con tiempos de carga al azar) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027 y 0028 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador y la tarjeta de memoria; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI y las fases; el *replay* con tiempos de carga al azar; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
@@ -28,6 +28,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [vfx](#vfx) | 0025 | `engine/vfx/**`, los shaders de partículas, marcas, estela o postproceso, `game/**`, o código que emita, integre o dibuje partículas, marcas de sangre, la estela, los *frames* de impacto o las capas de la tapa |
 | [ui](#ui) | 0026 | `engine/ui/**`, los shaders de la UI, `game/**`, los archivos de textos y las fuentes en `assets/**`, `docs/ui/**`, o código que dibuje el HUD, los subtítulos o los menús, mida o corte texto, mueva el foco o pause el juego |
 | [niveles](#niveles) | 0027 | `engine/world*/**`, `game/**`, los `.blend` y los textos de zona y de mundo en `assets/**`, `docs/levels/**`, o código que cargue, active o descargue zonas, cree las entidades de una zona, ejecute fases o triggers, elija las antorchas del frame o recorte por la niebla o las vecinas |
+| [recursos](#recursos) | 0028 | `engine/io*/**`, `engine/resource*/**`, `engine/save*/**`, `engine/platform/**`, `game/**`, `CMakePresets.json`, o código que lea o escriba archivos, pida o libere zonas, use el hilo de I/O o los slots, suba datos de una zona a la GPU, cree o guarde el `VkPipelineCache`, recargue en caliente, o lea o escriba la tarjeta de memoria o las opciones |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -58,6 +59,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | VFX, partículas, sangre, salpicadura, chispas, polvo, fuego, *decals* o marcas, la estela de la espada, los *frames* de impacto, las capas de la tapa, el campo de distancia | `vfx` |
 | UI, HUD, menús, pausa, subtítulos, fuentes, texto, idiomas, traducción, foco, íconos de botones, accesibilidad, contraste, daltonismo, el color de acento | `ui` |
 | Niveles, escenas, el mundo, zonas, vecinas, *streaming*, precarga, spawns, oleadas, fases, triggers, checkpoints, marcadores, *empties*, *collection instances*, *prefabs* o piezas, la pantalla de carga, el culling por la niebla | `niveles` |
+| La carga de recursos, el hilo de I/O, io_uring, `pread`, `mmap`, los slots, el paquete o el ejecutable con los assets, la subida a la GPU, el *staging*, la recarga en caliente (*hot reload*), inotify, el `VkPipelineCache`, la partida, la tarjeta de memoria, el guardado, las opciones del jugador, las carpetas XDG, `SDL_GetPrefPath`, `fsync` | `recursos` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -133,8 +135,8 @@ Qué mirar:
   `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, decidir cómo se carga una zona o el *hot
-  reload* antes del ADR-0028, o quién controla la cámara antes del ADR-0031.
+  pendiente es un hallazgo. Por ejemplo, decidir quién controla la cámara antes del
+  ADR-0031, o cómo se firman y publican las releases antes del ADR-0035.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo
@@ -195,11 +197,13 @@ Qué mirar:
   (fe de erratas del ADR-0012, por el ADR-0010), para las órdenes que cambian el estado. Las consultas de solo lectura (rayos, barridos, el
   barrido del tajo) son llamadas directas hacia abajo (fe de erratas del ADR-0012, por
   el ADR-0016).
-- **Un solo hilo** por ahora. Hay dos excepciones, y ninguna toca el estado del juego:
+- **Un solo hilo** por ahora. Hay tres excepciones, y ninguna toca el estado del juego:
   los hilos de Tracy en los builds de desarrollo (fe de erratas del ADR-0012, por el
-  ADR-0021) y el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (fe de
-  erratas del ADR-0012, por el ADR-0024; sus reglas las audita `audio`). Cualquier otro
-  hilo es una decisión nueva.
+  ADR-0021), el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (fe de
+  erratas del ADR-0012, por el ADR-0024; sus reglas las audita `audio`), y el hilo de
+  I/O, que solo lee y escribe archivos en memoria reservada (fe de erratas del ADR-0012,
+  por el ADR-0028; sus reglas las audita `recursos`). Cualquier otro hilo es una decisión
+  nueva.
 - **Los VFX corren al final de cada paso, fuera del estado** (fe de erratas del ADR-0012,
   por el ADR-0025): después de la animación y antes de reiniciar la arena del paso. No
   entran en el hash del *replay* y nunca escriben en la simulación; sus reglas las
@@ -225,11 +229,14 @@ Qué mirar:
   reservan al iniciar y se tocan enteras en ese momento: en la CPU, con `mmap` y
   `MAP_POPULATE` a través de `platform::` (`engine/core` no llama al sistema operativo
   directamente); en la GPU, con los bloques de `gpu::Allocator`. Pedir memoria al
-  sistema operativo o al driver dentro del paso o del render es un hallazgo. La memoria
-  que vive un nivel la decide el ADR-0028. **Con el ADR-0027, lo que vive es una zona**,
-  con un tope de zonas cargadas a la vez: se dimensiona por ese tope. Como las zonas no se
-  liberan en el orden en que se cargaron, un solo bloque lineal para todas es
-  `importante`.
+  sistema operativo o al driver dentro del paso o del render es un hallazgo. **Con el
+  ADR-0027, lo que vive es una zona**, con un tope de zonas cargadas a la vez, y el
+  ADR-0028 la reparte en **slots fijos**: tantos como el tope, cada uno del tamaño
+  fijado en el texto del mundo, en la CPU (memoria de Vulkan visible y con caché) y en la GPU,
+  reservados y tocados al iniciar. Un solo bloque lineal para todas las zonas, un montón
+  general (TLSF o *buddy*) para ellas, o pedir la memoria de una zona al cargarla son
+  `importante`: pierden la garantía del tope (P4 del ADR-0028). La región de recarga
+  (solo en desarrollo) es la excepción: usa el allocator de offsets.
 - **`gpu::Allocator`:** bloques grandes por tiempo de vida (lo que vive una zona, el
   *ring buffer* para el frame, el allocator de offsets para los pedazos). Una
   asignación de Vulkan por recurso es un hallazgo.
@@ -507,7 +514,8 @@ Qué mirar:
 
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027
-(el mundo: zonas, marcadores y fases).
+(el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el
+reparto y el paquete de Release).
 
 Qué mirar:
 
@@ -610,6 +618,37 @@ Qué mirar:
   el tope menos uno. Avisar en vez de
   fallar es `importante`. Un cambio solo en un texto no abre Blender. Cocinar dos veces da
   los mismos bytes, también con los nodos en otro orden.
+- **Los binarios de la carga** (ADR-0028): con los assets ya cocinados, el cocinador arma
+  **un binario por zona y uno global**, cada uno con **una parte de la CPU y una de la
+  GPU**. **Va al global** lo que usan los personajes, la UI, los VFX y los sonidos
+  comunes, y **todo asset que use más de una zona**; lo demás, a su zona. Un asset
+  repetido en dos binarios de zona, o un conteo de uso en runtime para decidirlo, es
+  `importante`. **La música** no va al global: va en su propio binario, que se carga a
+  la región de audio (ADR-0024). **El binario de arranque** (la fuente, "Cargando…" en
+  cada idioma y el fondo) es uno solo para todos los idiomas, y su fuente repetida con
+  la del global es a propósito; vive al principio del global, comparte su rango de
+  índices y cuenta dentro de su presupuesto (una región propia sin fila en
+  `presupuestos.md` es un hallazgo de `memoria`). **Lee del texto del mundo** el tamaño del slot (CPU y
+  GPU) y el presupuesto del global, los copia al binario del mundo, reporta los tamaños
+  y **falla el build** si una zona no entra, **revisando dos medidas** (el binario entero
+  contra el slot de la CPU y la parte de la GPU contra el de la GPU), o si una parte del
+  global, sumada a la del binario de arranque, se pasa (medir solo el global es
+  `importante`); usar "la zona más grande" como tamaño del slot es `importante` (la
+  falla nunca ocurriría). **El índice estable de cada fase vive en el texto del mundo**,
+  en una lista a la que solo se le agregan filas (las borradas quedan como retiradas),
+  y **cada fila nombra la fase por el id de su zona y un nombre de fase**, nunca por su
+  número de orden (insertar una fase lo correría): el cocinador lo copia y falla si una
+  fase no tiene fila, si una fila no retirada no tiene fase, si un número se repite o si
+  la lista pasa de 256. Un índice que asigna el cocinador sin esa lista, o que sale del
+  orden del mundo, es `importante` (corre los bits de las tarjetas guardadas). **Escribe en el
+  binario del mundo el peor caso de polígonos** entre las zonas cargadas a la vez (la
+  memoria de A*, ADR-0023). **Cada
+  archivo se escribe a un temporal y se renombra** (la recarga en caliente nunca lee uno
+  a medias): escribirlo directo es `importante`. **Sin compresión:** la tabla de
+  secciones guarda el codec (0 = crudo); comprimir es una decisión nueva. **En Release,**
+  el mundo, el global, las zonas, el binario de arranque y el de la música van en un
+  paquete dentro del ejecutable; en
+  desarrollo quedan sueltos, junto al binario de cada asset.
 - **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
   de carga.
 - **Un asset de terceros que solo existe como `.glb`** se versiona importado a `.blend`,
@@ -709,10 +748,10 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026 y 0027
-(reparto del TDD en el corte, la memoria, la animación, la física y el cocinador de
-assets; los tests del combate, de la IA, del audio, de los VFX, de la UI y de los
-niveles).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027 y
+0028 (reparto del TDD en el corte, la memoria, la animación, la física, el cocinador de
+assets, el cargador y la tarjeta de memoria; los tests del combate, de la IA, del audio,
+de los VFX, de la UI, de los niveles y del guardado).
 
 Qué mirar:
 
@@ -833,6 +872,18 @@ Qué mirar:
   fases y triggers lleva tests después**, con el *replay* de cada fase. **Un test de
   *replay* inyecta tiempos de carga al azar** y exige el mismo hash; sin él, las zonas
   que se cargan al caminar no tienen prueba de determinismo (`importante`).
+- **En la carga y el guardado (ADR-0028):** **TDD estricto** en el cargador (validar la
+  cabecera y los offsets, con archivos rotos a propósito), en el cocinador de los
+  binarios de la carga (el reparto, los tamaños y sus fallas) y en **la tarjeta de
+  memoria** (el diseño de los bytes, el CRC, los bloques A y B, el bit de partida y la
+  lectura de tarjetas de cada versión guardadas como datos de prueba). Código nuevo ahí
+  sin test es `bloqueante`. **Un test mata el proceso mientras guarda** y exige una
+  partida válida al cargar; sin él, la robustez del guardado no tiene prueba
+  (`importante`). **Un test enlaza un paquete chico en un ejecutable de prueba** y lo
+  lee por `platform::`, en `debug`; sin él, el camino de Release no se prueba nunca
+  (`importante`). **También TDD estricto** en los slots (memoria del núcleo, ADR-0011) y
+  en las dos colas sin locks del hilo de I/O (como la cola del audio). La recarga en
+  caliente lleva tests después.
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -1007,8 +1058,9 @@ Qué mirar:
 - **Caminos:** A* sobre los polígonos y *funnel*. Si el zombie ve a su objetivo, camina
   directo; esa línea de vista es **un rayo sobre la navmesh**, no el de la física.
   Seguimiento reactivo hacia un punto más adelante. El camino es un arreglo fijo de 32
-  esquinas en `nav_agent`. La memoria de A* se reserva al cargar el nivel; que una
-  búsqueda asigne memoria lo audita `memoria`.
+  esquinas en `nav_agent`. **La memoria de A* se reserva al iniciar**, con el peor caso
+  de polígonos que el cocinador escribe en el binario del mundo (ADR-0023, ADR-0028);
+  reservarla al cargar una zona, o que una búsqueda asigne memoria, lo audita `memoria`.
 - **El recálculo** se reparte por **el índice estable del *handle***, cada 30 pasos
   (configurable) o antes si el objetivo se aleja del final del camino. Repartir por la
   posición en el arreglo denso del *sparse set* es `importante`: esa posición cambia
@@ -1243,7 +1295,10 @@ Qué mirar:
   con primitivas. Una pantalla que no se puede manejar sin mouse es `bloqueante`.
 - **Las opciones** (Decisión 6) tienen las ayudas, los subtítulos, el idioma, el color de
   acento, el tamaño del texto, la opacidad de las placas, los *frames* de impacto, los
-  volúmenes del ADR-0024 y los controles del ADR-0032. Dónde se guardan es del ADR-0028.
+  volúmenes del ADR-0024 y los controles del ADR-0032. Se guardan en `opciones.txt` (el
+  formato y dónde los audita `recursos`). "Continuar" solo aparece si la tarjeta de
+  memoria tiene el bit de partida, y "Nueva partida" pide confirmar si lo tiene
+  (ADR-0028).
 - **Memoria y presupuesto:** la región de UI con topes fijos (8192 vértices por frame,
   más las tablas de las fuentes y de los textos);
   **0 asignaciones por frame** (el corte de línea se hace cuando cambia el subtítulo, no
@@ -1330,8 +1385,8 @@ Qué mirar:
   (la más cercana primero, con el tope) y entrar en la fase desde cero; las fases
   terminadas siguen terminadas. Cargar de golpe la zona y todas sus vecinas es
   `importante` (puede pasar el tope). **La semilla de una fase sale del id de la zona y del número de la fase:**
-  una semilla que cambie entre intentos es una decisión nueva. Cómo se guarda es del
-  ADR-0028.
+  una semilla que cambie entre intentos es una decisión nueva. Cómo se guarda (la
+  tarjeta de memoria del ADR-0028) lo audita `recursos`.
 - **Lo que se dibuja:** lo cargado, con la esfera contra el frustum, **hasta el final de
   la niebla**, y solo la zona actual y sus vecinas. **Las 16 antorchas** son las más
   cercanas a la cámara entre las zonas cargadas, con fundido al entrar o salir. La
@@ -1347,8 +1402,129 @@ Qué mirar:
   contador de frames que esperaron a una zona en el registro por frame.
 - El cocinador del mundo (validaciones, secciones, navmesh) lo audita `assets`; sus
   tests, `testing`; la memoria de las zonas, `memoria`; el culling y las antorchas en el
-  renderer, `graficos`; cómo se carga una zona sin cortar el frame, el ADR-0028 cuando se
-  acepte.
+  renderer, `graficos`; cómo se carga una zona sin cortar el frame (el hilo de I/O, los
+  slots y la subida), `recursos`.
+
+## recursos
+
+**ADRs:** 0028 (recursos en runtime y guardado). También la fe de erratas que hizo en el
+ADR-0004 (los archivos en `platform::`), el ADR-0006 (el paquete en Release), el ADR-0012
+(el hilo de I/O y el orden del frame), el ADR-0021 (el corte de la grabación), el
+ADR-0022 (la subida y el `VkPipelineCache`), el ADR-0024 (los sonidos en los slots), el
+ADR-0026 (la pantalla de carga, el indicador y "Continuar") y el ADR-0027 (qué es una
+zona cargada y el checkpoint guardado). La memoria de los slots la audita `memoria`; el
+cocinador de los binarios, `assets`; sus tests, `testing`.
+
+Qué mirar:
+
+- **El hilo principal nunca espera al disco.** Leer o escribir un archivo en el hilo
+  principal (`read`, `fread`, `pread`, `fsync`, cargar "de una vez"), tocar como memoria
+  un archivo mapeado (`mmap`: las faltas de página caen en quien lo toca) o usar
+  `SDL_AsyncIO` es `bloqueante` (P1: de 2 a 36 ms por frame; `SDL_AsyncIO`, de 10 a
+  15 ms en el frame que pide). io_uring como reemplazo del hilo es una decisión nueva.
+  **Vale también para los archivos de depuración:** el log, el registro por frame y los
+  bloques del *replay* (ADR-0021) se le entregan al hilo de I/O, y en desarrollo también
+  el archivo de CVars cambiadas y los valores que el panel del mundo escribe en el texto
+  del mundo (los únicos que escriben dentro del repo). **Hay dos excepciones, y no son
+  hallazgos:** la etapa cero del arranque (antes del primer frame, el hilo principal
+  espera `opciones.txt` y el binario de arranque) y un error fatal (el hilo principal
+  espera a que el hilo de I/O vacíe el log antes de abortar).
+- **El hilo de I/O:** abre, lee (`pread` en bloques de 1 MB) y escribe (con su `fsync`),
+  y nada más. **No toca el estado del juego, no usa allocators y solo escribe en memoria
+  reservada al iniciar.** Se comunica por **dos colas de un productor y un consumidor sin
+  locks**: pedidos y avisos. Un lock, un `std::mutex`, una asignación de memoria o un
+  acceso al ECS desde ese hilo es `bloqueante`. El orden de los pedidos lo decide el hilo
+  principal (la zona más cercana primero, ADR-0027); el hilo los atiende en orden.
+  **Las primitivas de archivo y de hilo están en `platform::`.** **Son dos piezas:** el
+  hilo de I/O con sus colas, encima de `engine/core` y sin conocer la GPU, y **el
+  cargador** (los slots, la validación y la subida), un sistema encima de `engine/gpu`.
+  Llamar a POSIX o crear un hilo fuera de `platform::`, o que el hilo de I/O use
+  `gpu::`, es `importante`.
+- **El orden del frame:** al empezar, el hilo principal mira los avisos, valida la
+  cabecera y los offsets de lo que llegó y decide los pedidos; antes de las pasadas del
+  render, graba la subida. Mirar los avisos en medio del paso fijo es `importante`.
+- **Usado tal como llega:** el binario no se parsea ni se copia; se valida (firma,
+  versión y que cada offset caiga dentro) y se usa en el slot. Copiar recurso por recurso
+  a asignaciones propias es `importante` (P2: de 2 a 4 ms por zona).
+- **Los slots y la subida:** el slot de la CPU es memoria de Vulkan **visible y con
+  caché** (`HOST_CACHED`); usar un tipo sin caché para leer la navmesh o la colisión es
+  `importante` (memoria de escritura combinada, lenta para leer). **El slot de la CPU es
+  el *staging*:** un buffer de *staging* aparte o un `memcpy` en el hilo principal es un
+  hallazgo. **La subida tiene un presupuesto de 2 MB por frame**; subir una zona entera
+  en un frame es `importante`. **Una zona está cargada cuando llegó del disco y su subida
+  terminó en la GPU**: hacerla entrar a la simulación o dibujarla antes es `bloqueante`.
+  Al descargarla, primero se paran las voces que leen sus sonidos (ADR-0024). El slot de
+  la GPU se libera con la cola por número de frame; **el de la CPU espera además a que el
+  reloj del audio pase el bloque de la orden de parar**. Liberarlo solo con la cola por
+  frame es `importante` (el audio tiene más latencia que dos frames). **Cada slot tiene
+  un rango fijo de índices del arreglo de texturas** (más uno para el global y otro para
+  la recarga), y las imágenes se ligan dentro de su bloque: una asignación de Vulkan por
+  textura es un hallazgo.
+- **El global:** se carga al arrancar y vive todo el programa. Liberar algo del global
+  con una zona es un hallazgo. **Su región de la CPU guarda solo su parte de la CPU:**
+  la parte de la GPU sube al arrancar a través de los slots de zona, que todavía están
+  libres; un *staging* propio del global, o su parte de la GPU guardada también en la
+  CPU, es `importante` (no entra en su presupuesto). Los sonidos comunes viven ahí y el
+  audio los lee sin copiarlos; **la música es la excepción**: su propio binario, en la
+  región de audio (ADR-0024).
+- **El paquete de Release** va dentro del ejecutable, en una sección propia, y **el hilo
+  de I/O lo lee del propio ejecutable con `pread`**. Usar el símbolo de esa sección como
+  memoria (es `mmap`) es `bloqueante`. Un paquete pegado al final del ejecutable, o
+  archivos sueltos en Release, es una decisión nueva. **El juego nunca escribe junto al
+  ejecutable.**
+- **El arranque:** primero la etapa cero (`opciones.txt`, el binario de arranque y su
+  pipeline, antes del primer frame); después, detrás de la pantalla de carga, el mundo,
+  el global (su parte de la GPU, por los slots de zona), la música, los pipelines y la
+  zona de la partida. **El `VkPipelineCache`** vive en la carpeta de caché, con **una
+  cabecera propia** (firma, versión, `vendorID`, `deviceID`, `driverVersion`,
+  `pipelineCacheUUID`, tamaño y hash) que se valida antes de pasárselo al driver; pasarle
+  los bytes sin validar es `importante`. Si no coincide, se empieza con uno vacío. Se
+  escribe con temporal y `rename`, en el hilo de I/O.
+- **La pantalla de carga es fija** (el fondo y "Cargando…"), sin barra. **Si la
+  simulación espera a una zona,** el frame queda quieto y el indicador aparece **pasados
+  0,5 s**.
+- **La recarga en caliente, solo en desarrollo:** inotify sobre la carpeta de lo
+  cocinado, una vez por frame, a través de `platform::`. Se recargan los shaders, las
+  texturas (también las de los VFX y el atlas de las fuentes), las mallas y las tablas de
+  sonidos y de textos. **Lo viejo se retira con la cola por número de frame:** destruir
+  un pipeline, una imagen o un buffer que un frame en vuelo puede usar es `bloqueante`
+  (el prototipo lo hizo con una textura). Un set de descriptores se actualiza solo al
+  empezar su frame, nunca en vuelo. Lo recargado va a la región de recarga, no al slot.
+  **Recargar algo que cambia la simulación (una malla) corta la grabación del *replay***
+  en ese paso, con una nota en el registro; seguir grabando es `bloqueante` (el *replay*
+  ya no reproduce). La recarga compilada en Release es un hallazgo.
+- **La tarjeta de memoria:** `tarjeta.bin`, **8 KB fijos**, en la carpeta de datos
+  (`SDL_GetPrefPath`), con **dos bloques de 4 KB, A y B**. Cada bloque: firma, versión,
+  secuencia, banderas (**el bit 0 dice si hay partida**), hash del mundo, zona, fase
+  (por su índice estable; su número de orden dentro de la zona es `importante`), fases
+  terminadas (256 bits, cada uno según el índice estable de la fase, de la lista
+  del texto del mundo), bytes reservados en cero y CRC-32 al final; en
+  *little-endian*, con el diseño fijado por `static_assert`. **Guardar pisa el bloque más
+  viejo** (`pwrite` y `fsync`, en el hilo de I/O); **cargar se queda con el válido de
+  secuencia más alta.** Escribir los dos bloques en el mismo guardado, escribir encima del
+  único válido, o guardar sin CRC es `bloqueante` (P7: escribir encima perdió el 52 % de
+  las partidas). **Una sola partida**, que cada checkpoint pisa; **nada se guarda al
+  salir**, y volver al morir no escribe. Un campo nuevo solo ocupa bytes reservados;
+  cambiar el lugar de uno existente es `bloqueante` (rompe las tarjetas viejas). **Si la
+  zona del checkpoint ya no existe** en el mundo, se vuelve al checkpoint anterior que
+  exista, o al principio. **Guardar dentro del ejecutable es una decisión nueva**
+  (descartado: una actualización lo borra).
+- **Las opciones:** `opciones.txt` en la carpeta de configuración
+  (`$XDG_CONFIG_HOME/<juego>/`, por defecto `~/.config/<juego>/`), separado de la
+  partida. Texto `clave = valor`, UTF-8, con la versión primero y sin CRC. Al leer: una
+  clave desconocida se ignora, una que falta toma su valor por defecto, un valor fuera de
+  rango se lleva al rango y una línea rota se ignora y se registra. Abortar o perder
+  todas las opciones por una línea rota es `importante`. Se escriben al salir de su
+  pantalla, con temporal, `fsync` y `rename`, en el hilo de I/O.
+- **Las carpetas:** datos con `SDL_GetPrefPath`; configuración, caché y estado (el log,
+  el registro y los *replays*) con XDG, armadas por `platform::`. Escribir en otra carpeta (la del ejecutable, `$HOME` suelto) es
+  `importante`. Los nombres de la organización y del juego, una vez elegidos, no
+  cambian.
+- **Depuración:** el panel de ImGui de la carga (pedidos en vuelo y lo que tardó cada
+  uno, los slots y su zona, la subida por frame y las recargas) y zonas de Tracy en el
+  hilo de I/O. **Las metas de carga** (≤ 3 s al arrancar, ≤ 1 s al volver a un
+  checkpoint) son hipótesis de `presupuestos.md`: cambian con una medición del
+  protocolo.
 
 ## herramientas
 
@@ -1387,8 +1563,9 @@ Qué mirar:
   0 pasos). Esos frames llevan su propio contador y no cambian cómo se calcula R1
   (ADR-0020); contarlos como de recuperación es un hallazgo. Usar `VmRSS` o `VmHWM` para R4 es un
   hallazgo: cuentan dos veces la memoria de Vulkan mapeada. El registro se escribe en
-  bloques fijos de la región de depuración que se vuelcan a disco al llenarse, así que
-  no crece con la sesión. Leer el protocolo desde una captura de Tracy contradice la
+  bloques fijos de la región de depuración; el que se llena se le entrega al hilo de I/O
+  (ADR-0028), que lo escribe en la carpeta de estado, así que no crece con la sesión y
+  el hilo principal no espera al disco. Leer el protocolo desde una captura de Tracy contradice la
   Decisión 4.
 - **Los frames de recuperación de un tirón externo** se marcan y se reportan aparte (R1
   con y sin ellos, y cuántos). Descartarlos es un hallazgo.
@@ -1399,8 +1576,9 @@ Qué mirar:
   (`SDL_VIDEO_DRIVER=x11`), con una tecla que dispara la captura por su API *in-app*.
 - **Logging:** cinco niveles (error, aviso, info, debug, traza) y una categoría por
   módulo. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, sin
-  asignar memoria, y se vacía a un archivo una vez por frame y siempre antes de abortar
-  por un error fatal. `printf` en el engine, spdlog o un formato diferido contradicen la
+  asignar memoria, y una vez por frame (y siempre antes de abortar por un error fatal)
+  se le entrega al hilo de I/O, que lo escribe en la carpeta de estado (ADR-0028).
+  Escribir el log desde el hilo principal es un hallazgo. `printf` en el engine, spdlog o un formato diferido contradicen la
   Decisión 5. Por preset: los cinco niveles en `debug`, hasta info en `relwithdebinfo`,
   y solo error y aviso en `release`; los demás se eliminan al compilar.
 - **Dibujo de depuración:** *immediate mode*, con duración opcional en pasos, en la

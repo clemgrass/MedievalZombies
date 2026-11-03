@@ -92,5 +92,6 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0025](graphics/adr/0025-vfx-y-particulas.md) | VFX y partículas (en la CPU en el paso fijo, sangre con *screen-door*, *decals* de malla, capas de la tapa con un campo de distancia) | Gráficos | Aceptado |
 | [ADR-0026](ui/adr/0026-ui-hud-y-menus.md) | UI, HUD y menús (*immediate mode* propio a 640×360, fuentes de píxeles OFL, 0 HUD por defecto con ayudas opcionales, subtítulos que no se apagan, color de acento para el daltonismo) | UI | Aceptado |
 | [ADR-0027](levels/adr/0027-niveles-y-escenas.md) | Niveles y escenas (Blender como editor, un mundo continuo por zonas que entran a la simulación en un paso fijo, fases en texto, culling hasta la niebla) | Niveles | Aceptado |
+| [ADR-0028](adr/0028-recursos-en-runtime-y-guardado.md) | Recursos en runtime y guardado (hilo de I/O propio, slots fijos por zona, paquete dentro del ejecutable en Release, recarga en caliente de lo visual, tarjeta de memoria de 8 KB) | Transversal | Aceptado |
 | [ADR-0029](adr/0029-ci-cd.md) | CI/CD (contenedor de Arch con fecha fija, etapas con `ci-ok`, CD con el Steam Linux Runtime si se logra) | Transversal | Aceptado |
 | [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |

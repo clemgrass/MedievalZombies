@@ -10,6 +10,11 @@
   marcas) y el rojo de las siluetas de los *frames* de impacto leen ese color** de un
   valor del frame, en vez de un rojo fijo. Se corrigen las Decisiones 4 y 8 y
   Consecuencias.
+- **Fe de erratas:** 2026-11-03 (#42): el ADR-0028 decide la carga. **Las texturas de
+  los VFX van en lo global** (se cargan al arrancar y viven todo el programa), y en los
+  builds de desarrollo **se recargan en caliente** como las demás texturas: con
+  inotify, una imagen nueva y la vieja retirada con la cola por número de frame. Se
+  corrige en Abierto.
 
 ## Contexto y problema
 
@@ -478,6 +483,8 @@ nada a la GPU.
 - **Abierto:**
   - las partículas en la GPU, si un efecto masivo de ambiente las pide;
   - un formato de datos para los efectos, si dejan de caber en el código;
+  - la carga y la recarga de las texturas de los VFX (decidido en el ADR-0028: van en lo
+    global y se recargan con inotify en los builds de desarrollo);
   - la sangre sobre los cuerpos y sobre la hoja (un valor por objeto que el shader mezcla
     con un ruido);
   - las marcas en las paredes (la caja orientada con la normal del impacto);

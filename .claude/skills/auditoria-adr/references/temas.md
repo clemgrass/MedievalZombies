@@ -18,15 +18,16 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025 y 0026 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes y los textos, la cola del audio y la lógica pura de la UI; tests después en el combate, la IA, el resto del audio, los VFX y las pantallas de la UI) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026 y 0027 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos y el mundo, la cola del audio y la lógica pura de la UI; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI y las fases; el *replay* con tiempos de carga al azar) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
 | [audio](#audio) | 0024 | `engine/audio/**`, el audio de `engine/platform/**`, `game/**`, o código que abra el dispositivo de audio, mezcle, emita o lea eventos de sonido, maneje voces, emisores o música, o decodifique sonido |
 | [vfx](#vfx) | 0025 | `engine/vfx/**`, los shaders de partículas, marcas, estela o postproceso, `game/**`, o código que emita, integre o dibuje partículas, marcas de sangre, la estela, los *frames* de impacto o las capas de la tapa |
 | [ui](#ui) | 0026 | `engine/ui/**`, los shaders de la UI, `game/**`, los archivos de textos y las fuentes en `assets/**`, `docs/ui/**`, o código que dibuje el HUD, los subtítulos o los menús, mida o corte texto, mueva el foco o pause el juego |
+| [niveles](#niveles) | 0027 | `engine/world*/**`, `game/**`, los `.blend` y los textos de zona y de mundo en `assets/**`, `docs/levels/**`, o código que cargue, active o descargue zonas, cree las entidades de una zona, ejecute fases o triggers, elija las antorchas del frame o recorte por la niebla o las vecinas |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -56,6 +57,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Audio, sonido, mezclador, voces, callback de audio, hilo de audio, música, Vorbis, FLAC, paneo, atenuación, el oyente, emisores | `audio` |
 | VFX, partículas, sangre, salpicadura, chispas, polvo, fuego, *decals* o marcas, la estela de la espada, los *frames* de impacto, las capas de la tapa, el campo de distancia | `vfx` |
 | UI, HUD, menús, pausa, subtítulos, fuentes, texto, idiomas, traducción, foco, íconos de botones, accesibilidad, contraste, daltonismo, el color de acento | `ui` |
+| Niveles, escenas, el mundo, zonas, vecinas, *streaming*, precarga, spawns, oleadas, fases, triggers, checkpoints, marcadores, *empties*, *collection instances*, *prefabs* o piezas, la pantalla de carga, el culling por la niebla | `niveles` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -131,8 +133,8 @@ Qué mirar:
   `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, fijar el formato de las escenas antes del
-  ADR-0027, o decidir el *hot reload* antes del ADR-0028.
+  pendiente es un hallazgo. Por ejemplo, decidir cómo se carga una zona o el *hot
+  reload* antes del ADR-0028, o quién controla la cámara antes del ADR-0031.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo
@@ -224,8 +226,11 @@ Qué mirar:
   `MAP_POPULATE` a través de `platform::` (`engine/core` no llama al sistema operativo
   directamente); en la GPU, con los bloques de `gpu::Allocator`. Pedir memoria al
   sistema operativo o al driver dentro del paso o del render es un hallazgo. La memoria
-  que vive un nivel la decide el ADR-0028.
-- **`gpu::Allocator`:** bloques grandes por tiempo de vida (lineal para el nivel, el
+  que vive un nivel la decide el ADR-0028. **Con el ADR-0027, lo que vive es una zona**,
+  con un tope de zonas cargadas a la vez: se dimensiona por ese tope. Como las zonas no se
+  liberan en el orden en que se cargaron, un solo bloque lineal para todas es
+  `importante`.
+- **`gpu::Allocator`:** bloques grandes por tiempo de vida (lo que vive una zona, el
   *ring buffer* para el frame, el allocator de offsets para los pedazos). Una
   asignación de Vulkan por recurso es un hallazgo.
 - **Arenas temporales:** la del paso se reinicia al terminar cada paso (ahí van las colas
@@ -346,7 +351,10 @@ Qué mirar:
   pipelines se compilan al arrancar**, con un `VkPipelineCache`; crear un pipeline
   durante el juego es `importante` (causa tirones).
 - **Luz estilizada por píxel:** Lambert con atenuación hasta el radio, ambiente frío, sin
-  especular, y un arreglo global de **hasta 16 antorchas** en el uniform del frame.
+  especular, y un arreglo global de **hasta 16 antorchas** en el uniform del frame:
+  **las 16 más cercanas a la cámara** entre las zonas cargadas, con un fundido al entrar
+  o salir (fe de erratas del ADR-0027). Elegirlas por otro criterio, o sin fundido, es un
+  hallazgo.
   Sombras ***blob***, sin shadow map, dibujadas con *screen-door* en la pasada de color,
   después del piso y con *depth bias*.
 - **El look PSX:** texturas *nearest* con mipmaps *nearest* entre niveles; *dithering* a
@@ -356,7 +364,10 @@ Qué mirar:
   antialiasing.
 - **Bindless:** un *descriptor set* global con el arreglo de objetos (un SSBO por frame
   en vuelo) y el de texturas (*descriptor indexing*, *partially bound*); el índice del
-  objeto va en un *push constant*. Una llamada por objeto; culling por esfera en la CPU.
+  objeto va en un *push constant*. Una llamada por objeto; culling por esfera en la CPU,
+  **hasta el final de la niebla y solo en la zona actual y sus vecinas** (fe de erratas
+  del ADR-0027). Dibujar más allá de la niebla o zonas que no son vecinas es un
+  hallazgo.
   El engine verifica al iniciar `descriptorIndexing`, `runtimeDescriptorArray`,
   `descriptorBindingPartiallyBound`, `shaderSampledImageArrayNonUniformIndexing` y
   `shaderDemoteToHelperInvocation` (la usa el `discard` del *screen-door*; fe de erratas
@@ -495,7 +506,8 @@ Qué mirar:
 ## assets
 
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
-(mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos).
+(mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027
+(el mundo: zonas, marcadores y fases).
 
 Qué mirar:
 
@@ -559,10 +571,12 @@ Qué mirar:
   la tiene. En el escenario, solo `UBX_`, `UCP_` y `USP_`, más el prefijo que retoca la
   navmesh (ADR-0023).
 - **La navmesh del escenario** (ADR-0023) la genera el cocinador desde la colisión y el
-  piso, con el radio de inflado como parámetro del nivel, y la escribe en el binario
-  cocinado: polígonos convexos con vértices en 3D, sus portales, una grilla para ubicar
-  un punto y el radio, guardado en la sección de la navmesh. Necesita ver la colisión del
-  nivel armado; cómo se arma un nivel lo decide el ADR-0027.
+  piso, con el radio de inflado como parámetro **del mundo** (el mismo en todas las
+  zonas), y la escribe en el binario cocinado: polígonos convexos con vértices en 3D, sus
+  portales, una grilla para ubicar un punto y el radio, guardado en la sección de la
+  navmesh. **La genera para el mundo armado entero y la parte por zona** (ADR-0027), con
+  portales hacia los polígonos de las vecinas. Un radio de inflado por zona es una
+  decisión nueva (los bordes no coincidirían).
   Es determinista (los mismos bytes dos veces). Generarla al cargar el nivel o en el
   juego, o leer una navmesh hecha a mano como fuente única, es una decisión nueva.
 - **Los sonidos** (ADR-0024): los fuentes son FLAC (un WAV, MP3 u Ogg como fuente es
@@ -584,6 +598,18 @@ Qué mirar:
   `game/` (ADR-0017). `stb_truetype` en el juego, o
   rasterizar fuentes al cargar, es una decisión nueva. Cocinar dos veces da los mismos
   bytes.
+- **El mundo** (ADR-0027): el cocinador **ve todas las zonas a la vez**, aplana las
+  instancias con `M' = R·M·R`, da a cada nodo el id del hash del camino completo y
+  **ordena cada sección por id**; escribe un binario por zona y uno del mundo. Cocinar
+  zona por zona sin ver las demás es `importante` (no puede validar ids únicos, vecinas
+  ni la navmesh entre zonas). **Falla el build** por un tipo, marcador o evento
+  desconocido, una referencia que no existe o que apunta a otra zona, un patrón sin
+  marcadores, una fase sin final, dos caminos con el mismo id, un marcador fuera de la
+  navmesh, una vecina olvidada (otra zona a menos de la distancia de entrada sin estar en
+  la lista) o un punto de la navmesh con más zonas a menos de la distancia de salida que
+  el tope menos uno. Avisar en vez de
+  fallar es `importante`. Un cambio solo en un texto no abre Blender. Cocinar dos veces da
+  los mismos bytes, también con los nodos en otro orden.
 - **La definición del formato** (cabecera y secciones) vive en `engine/core`, sin lógica
   de carga.
 - **Un asset de terceros que solo existe como `.glb`** se versiona importado a `.blend`,
@@ -683,9 +709,10 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024 y 0025 (reparto del TDD
-en el corte, la memoria, la animación, la física y el cocinador de assets; los tests del
-combate, de la IA, del audio y de los VFX).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026 y 0027
+(reparto del TDD en el corte, la memoria, la animación, la física y el cocinador de
+assets; los tests del combate, de la IA, del audio, de los VFX, de la UI y de los
+niveles).
 
 Qué mirar:
 
@@ -799,6 +826,13 @@ Qué mirar:
   de línea, foco y repetición del stick. Código nuevo ahí sin test es `bloqueante`. **Las
   pantallas llevan tests después,** con capturas de referencia comparadas con la
   tolerancia que fije el ADR-0011.
+- **En los niveles (ADR-0027):** **TDD estricto** en el cocinador del mundo (cada
+  validación con su caso que falla, ids ordenados, y que cocinar dos veces, o con los
+  nodos en otro orden, dé los mismos bytes) y en cargar una zona al ECS (las entidades en
+  orden de id, el mismo hash). Código nuevo ahí sin test es `bloqueante`. **El sistema de
+  fases y triggers lleva tests después**, con el *replay* de cada fase. **Un test de
+  *replay* inyecta tiempos de carga al azar** y exige el mismo hash; sin él, las zonas
+  que se cargan al caminar no tienen prueba de determinismo (`importante`).
 - **Cobertura del 100 % de líneas y ramas** en el core y en las zonas con TDD. Las
   ramas de los `assert` se cubren con *death tests*. Una línea imposible de cubrir lleva
   una justificación escrita junto al código.
@@ -967,7 +1001,7 @@ Qué mirar:
 - **La navmesh:** polígonos convexos con portales, generada por el cocinador (lo audita
   `assets`). Una grilla, *waypoints* o un campo de flujo como representación son una
   decisión nueva. **Recast/Detour no es una dependencia:** incluirlo lo audita
-  `build-y-licencias`. **Al cargar el nivel,** el juego verifica que ningún radio de las
+  `build-y-licencias`. **Al cargar el mundo,** el juego verifica que ningún radio de las
   tablas de tipos supere el radio de inflado guardado en la navmesh, y si lo supera,
   falla con un mensaje; que falte esa verificación es un hallazgo.
 - **Caminos:** A* sobre los polígonos y *funnel*. Si el zombie ve a su objetivo, camina
@@ -1223,6 +1257,99 @@ Qué mirar:
   `build-y-licencias`; los tests, `testing`; las acciones y la reasignación de controles,
   el ADR-0032 cuando se acepte.
 
+## niveles
+
+**ADRs:** 0027 (niveles y escenas). También la fe de erratas que hizo en el ADR-0010 (la
+vida de una zona y el tope), el ADR-0012 (la zona entra a la simulación en un paso; 0
+pasos si no llegó), el ADR-0017 (el mundo en el cocinador), el ADR-0021 (el encabezado
+del *replay* y el contador de esperas), el ADR-0022 (el culling y las 16 antorchas), el
+ADR-0023 (la navmesh partida por zona), el ADR-0024 (la música por zona), el ADR-0026
+(la pantalla de carga) y la visión (el mundo continuo).
+
+Qué mirar:
+
+- **Blender es el editor.** Las piezas van como *collection instances*; los marcadores
+  (spawns, puntos de invocación, triggers, checkpoints, inicio, sonidos de ambiente),
+  como *empties* con la propiedad `tipo` y sus valores propios. Un editor de niveles
+  propio, TrenchBroom u otro formato de escena son una decisión nueva. Un complemento de
+  Blender necesita su ticket.
+- **El mundo, partido en zonas:** un `.blend` y un texto por zona, y un texto del mundo
+  (zonas, vecinas, inicio, radio de inflado, tope de zonas cargadas y las cuatro
+  distancias de carga y de simulación). **El corte
+  vertical es un mundo de una zona.** Un nivel suelto que no sea una zona del mundo es
+  una decisión nueva.
+- **"Dónde" va en el glTF y "cuándo y cuántos" en el texto.** Fases, oleadas o
+  condiciones escritas como propiedades en Blender son un hallazgo; posiciones escritas
+  a mano en el texto, también.
+- **Los ids:** el FNV-1a de 64 bits del camino completo, que empieza con la zona; únicos
+  en el mundo. **Cada sección se ordena por id y las entidades se crean en ese orden.**
+  Crear entidades en el orden del glTF (o de cualquier recorrido de Blender) es
+  `bloqueante`: cambia los *handles* y el hash del *replay*. **Un texto de zona solo
+  nombra objetos de su zona:** una vecina puede estar cargada sin simular.
+- **Las fases son datos:** una lista cerrada de comandos (aparecer, gotear por un grupo,
+  subir el máximo, el jefe y sus puntos de invocación) y de finales (todos muertos, N
+  muertes, el jefe muerto), ejecutada por un sistema genérico de `game/`. **No hay C++
+  por zona:** una función de `game/` con las fases de una zona es `importante`; algo
+  nuevo suma una palabra a la lista, con su test. **Sin lenguaje de *script* y sin
+  director adaptativo:** cualquiera de los dos es una decisión nueva. Los grupos
+  (`puerta.*`) se recorren en orden de nombre.
+- **Los triggers** son un volumen (la escala del *empty*) y un evento de una lista
+  cerrada, revisados **en el paso fijo** contra la posición de la caballera. Revisarlos
+  en el render o con el estado interpolado es `bloqueante`.
+- **El disco nunca decide qué pasa. Cargada no es lo mismo que simulando:**
+  - **la carga** (el disco): una vecina de la zona actual se pide a menos de 35 m de su
+    borde y se descarga a más de 65 m, si no simula;
+  - **la simulación** (el paso fijo): una zona entra (su colisión, su navmesh, sus
+    triggers, sus entidades) a menos de 10 m, y si no llegó, **el frame corre 0 pasos**
+    y el acumulador no avanza; sale a más de 20 m, y **las entidades que están en la
+    zona en ese paso** (según su polígono de la navmesh, o su posición si no tienen
+    uno) se destruyen en orden de id; no las que creó la zona y siguieron a la
+    caballera. **Las fases y la
+    música empiezan al cruzar el borde** (0 m, revisado en el paso fijo), no al entrar a
+    la simulación (10 m); usar "entrar" sin decir cuál es un hallazgo.
+
+  Activar una zona cuando termina de cargar, o crear o destruir sus entidades fuera del
+  paso fijo, es `bloqueante` (P8: un hash distinto por cada disco). **Los portales de la
+  navmesh hacia una zona que no simula están cerrados.** **El tope de zonas cargadas:**
+  se pide primero la más cercana, y con el tope lleno solo se descarga una más lejana
+  que no simula; nunca se aborta. Pedir en otro orden, o descargar una zona más cercana
+  que la que se pide, es `bloqueante` (P8b: se bloqueó en todas las corridas). **Las
+  distancias y el tope son datos del mundo:** una sola fuente, el texto del mundo, y el
+  juego usa los del binario, que también guarda la curva del peor caso y la entrada
+  máxima. Una CVar o un número fijo en el código que los cambie sin pasar por esa
+  validación es `importante` (rompe la garantía del cocinador). En desarrollo, **el
+  panel del mundo** los cambia en vivo, valida cada cambio contra la curva (una salida no
+  entera usa el metro siguiente) y rechaza el que rompa la garantía; exige entrada <
+  salida y carga < descarga; **el tope en vivo nunca pasa el del binario**, con el que se
+  reservó la memoria al iniciar (pasarlo en vivo es `importante`: pide memoria fuera del
+  inicio, ADR-0010). Un cambio de la entrada o la salida durante una grabación
+  se graba como evento del paso. El panel escribe los valores aceptados en el texto del
+  mundo.
+- **Los checkpoints:** un marcador de una zona ligado a una fase. Volver es cargar la
+  zona del checkpoint detrás de la pantalla de carga, aplicar desde ahí la regla de carga
+  (la más cercana primero, con el tope) y entrar en la fase desde cero; las fases
+  terminadas siguen terminadas. Cargar de golpe la zona y todas sus vecinas es
+  `importante` (puede pasar el tope). **La semilla de una fase sale del id de la zona y del número de la fase:**
+  una semilla que cambie entre intentos es una decisión nueva. Cómo se guarda es del
+  ADR-0028.
+- **Lo que se dibuja:** lo cargado, con la esfera contra el frustum, **hasta el final de
+  la niebla**, y solo la zona actual y sus vecinas. **Las 16 antorchas** son las más
+  cercanas a la cámara entre las zonas cargadas, con fundido al entrar o salir. La
+  antorcha es una pieza (luz, fuego y sonido), y su radio es la propiedad `radio`; usar
+  la intensidad del glTF es un hallazgo (llega en unidades físicas).
+- **La música va por zona** (en su texto) y un trigger puede cambiar el *track*; los
+  estados (exploración, combate, jefe) siguen el ADR-0024.
+- **La pantalla de carga** aparece al empezar y al volver a un checkpoint, **nunca al
+  caminar**.
+- **Depuración (ADR-0021):** el dibujo de la navmesh, la colisión, los radios de las
+  antorchas, los triggers, los marcadores por fase y los bordes de las zonas con su
+  estado; un panel con las zonas cargadas, las esperas y el tiempo de cada carga; el
+  contador de frames que esperaron a una zona en el registro por frame.
+- El cocinador del mundo (validaciones, secciones, navmesh) lo audita `assets`; sus
+  tests, `testing`; la memoria de las zonas, `memoria`; el culling y las antorchas en el
+  renderer, `graficos`; cómo se carga una zona sin cortar el frame, el ADR-0028 cuando se
+  acepte.
+
 ## herramientas
 
 **ADRs:** 0021 (herramientas de depuración, profiling y logging). También la fila de la
@@ -1256,7 +1383,9 @@ Qué mirar:
   frames después), la memoria con la escala de R4 del ADR-0020 (`RssAnon` de
   `/proc/self/statm` más el `heapUsage` de `VK_EXT_memory_budget`), el driver de video y
   los contadores del juego (zombies activos, pedazos vivos, ragdolls activos y, por paso,
-  los cortes procesados y los que esperan). Usar `VmRSS` o `VmHWM` para R4 es un
+  los cortes procesados y los que esperan) y **si el frame esperó a una zona** (ADR-0027:
+  0 pasos). Esos frames llevan su propio contador y no cambian cómo se calcula R1
+  (ADR-0020); contarlos como de recuperación es un hallazgo. Usar `VmRSS` o `VmHWM` para R4 es un
   hallazgo: cuentan dos veces la memoria de Vulkan mapeada. El registro se escribe en
   bloques fijos de la región de depuración que se vuelcan a disco al llenarse, así que
   no crece con la sesión. Leer el protocolo desde una captura de Tracy contradice la
@@ -1285,10 +1414,15 @@ Qué mirar:
   valor de tuning editable en Release, o leído de un archivo en Release, contradice la
   Decisión 7. Los valores de ajuste de la cámara y los controles que fija la visión
   (distancia, altura, campo de visión, ventanas de input) son CVars; las opciones del
-  jugador (sensibilidad, invertir un eje) no lo son (ADR-0028).
+  jugador (sensibilidad, invertir un eje) no lo son (ADR-0028). **Excepción (ADR-0027):**
+  los valores del mundo (distancias de carga y de simulación y tope) son datos de los
+  assets, no CVars: vienen del binario del mundo y en desarrollo los cambia el panel del
+  mundo, que valida contra el binario y no deja que el tope pase el del binario. Registrarlos como CVars
+  editables sin esa validación es `importante`.
 - ***Replay*:** graba el input de cada paso (no los eventos de SDL ni el input del
-  frame), con un encabezado (versión del formato, commit, escenario, semilla y todas las
-  CVars del inicio) y un hash de control cada 60 pasos. En desarrollo, cada sesión se
+  frame), con un encabezado (versión del formato, commit, el mundo, el checkpoint de
+  partida, es decir zona, fase y fases terminadas, y los valores del mundo en uso
+  (ADR-0027), semilla y todas las CVars del inicio) y un hash de control cada 60 pasos. En desarrollo, cada sesión se
   graba entera desde que empieza el nivel, volcada a disco por bloques. Un anillo con
   solo los últimos minutos es un hallazgo: no se puede reproducir sin el estado del
   comienzo de su ventana. Un cambio de una CVar que afecta

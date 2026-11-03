@@ -4,6 +4,16 @@
 - **Fecha:** 2026-11-01
 - **Ticket:** #37
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-02 (#41): el ADR-0027 decide los niveles. El mundo se parte
+  en zonas que se cargan mientras se camina. El cocinador ve el mundo armado entero,
+  genera la navmesh del mundo y **la parte por zona**: cada zona guarda sus polígonos y
+  los portales hacia los de sus vecinas, nombrados por zona y polígono. **El radio de
+  inflado es un parámetro del mundo,** el mismo en todas las zonas, para que los bordes
+  coincidan. La navmesh de una zona entra y sale de la simulación con su zona, en un paso
+  fijo; **un portal hacia una zona que no simula está cerrado**, así que ningún zombie
+  camina hacia una zona sin colisión ni navmesh. Los spawns y los puntos de invocación
+  del mago son marcadores de la zona, y la fase del jefe dice cuáles usa. Se corrige en
+  Consecuencias ("La navmesh, en el cocinador" y el mago) y en Abierto.
 
 ## Contexto y problema
 
@@ -355,8 +365,9 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
   soldados con cota de malla o con armadura completa se distinguen por los números de
   su tabla (velocidad, umbrales del ADR-0018). **El guardaespaldas tiene su propio
   árbol**, cuya primera rama es interponerse entre el mago y la caballera. **El mago es
-  una FSM:** se aleja de la caballera, invoca zombies y llama al guardaespaldas. Dónde
-  aparecen los invocados lo decide el ADR-0027.
+  una FSM:** se aleja de la caballera, invoca zombies y llama al guardaespaldas. Los
+  invocados aparecen en los puntos de invocación que nombra la fase del jefe (ADR-0027),
+  en orden de nombre; cada cuánto invoca es un número de la tabla del mago.
 - **El ruido sobrevive de un paso al siguiente.** El combate corre después del gameplay,
   así que un tajo del paso N se oye en el paso N+1. Las colas del ADR-0012 viven en la
   arena del paso y desaparecen al terminarlo, así que **el ruido va en un arreglo fijo
@@ -393,18 +404,22 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
   - lee las cajas, cápsulas y esferas de la colisión (ADR-0017) y el piso, y **la
     escribe en el binario cocinado** (ADR-0017): polígonos convexos con vértices en 3D,
     portales entre vecinos y una grilla para encontrar en qué polígono está un punto.
-    **Pide al ADR-0027** que la colisión del nivel armado quede al alcance del
-    cocinador; dónde queda la navmesh dentro de lo cocinado lo fija ese ADR;
+    **El cocinador ve el mundo armado entero** (ADR-0027): genera la navmesh del mundo
+    y **la parte por zona**. Cada zona guarda sus polígonos en su binario, con los
+    portales hacia los polígonos de sus vecinas, nombrados por zona y polígono. La
+    navmesh de una zona entra y sale de la simulación con su zona, y **un portal hacia
+    una zona que no simula está cerrado** (la búsqueda de camino no lo cruza);
   - es **determinista:** cocinar dos veces la misma escena da los mismos bytes;
   - **el radio de inflado tiene una sola fuente:** el cocinador lo recibe como parámetro
-    del nivel y lo guarda en la sección de la navmesh. Al cargar el nivel, el juego
+    **del mundo** (el mismo en todas las zonas, para que los bordes coincidan) y lo
+    guarda en la sección de la navmesh. Al cargar el mundo, el juego
     verifica que ningún radio de las tablas de tipos lo supere, y si alguno lo supera,
     falla con el nombre del tipo y los dos radios, nunca en silencio. Así subir el radio
     de una tabla sin recocinar no deja zombies pasando por huecos donde no caben;
   - **crece por partes.** Para la arena plana del corte vertical basta una versión simple
     (el suelo en una grilla, inflada por el radio, y celdas fusionadas en polígonos).
     Las alturas, pisos y escaleras del castillo piden el resto del algoritmo de Recast
-    (campo de alturas, regiones y contornos), cuando el ADR-0027 defina los niveles;
+    (campo de alturas, regiones y contornos), cuando se armen las zonas del castillo;
   - el nombre del prefijo nuevo lo fija el ticket del cocinador. Como el ADR-0017 hace
     fallar el build con cualquier prefijo desconocido, el prefijo se suma a su lista.
 - **La línea de vista para caminar directo es un rayo sobre la navmesh,** que recorre los
@@ -494,10 +509,11 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
     anillo, la distancia y el ángulo de la vista, el radio del contagio, los radios de
     ruido, el descuento de la cámara, el intervalo de recálculo, el punto adelantado del
     seguimiento y los parámetros de ORCA;
-  - el resto del algoritmo de Recast (alturas, pisos, escaleras), cuando el ADR-0027
-    defina el castillo;
+  - el resto del algoritmo de Recast (alturas, pisos, escaleras), cuando se armen las
+    zonas del castillo;
   - cómo llega la colisión del nivel armado al cocinador y dónde queda la navmesh dentro
-    de lo cocinado (ADR-0027);
+    de lo cocinado (decidido en el ADR-0027: el cocinador ve el mundo entero y parte la
+    navmesh por zona, con portales entre zonas);
   - una navmesh por tamaño, con el caballo;
   - si los zombies del castillo pueden olvidar a la caballera;
   - los comportamientos fuera del corte vertical: el escudo, el soldado con espada que

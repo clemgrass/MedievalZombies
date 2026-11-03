@@ -113,8 +113,13 @@ del ADR-0010 (pedidos de corte, cuerpos y ragdolls, ECS y las partículas de los
 de sangre (384 KB) y los campos de distancia de las tapas (512 KB) del ADR-0025 son
 bloques de la GPU que viven todo el programa y caen en "Recursos de la GPU". La región
 de UI del ADR-0026 (~200 KB, con las tablas de las fuentes y de los textos) cae en "Mundo y ECS", y el atlas de sus fuentes (~165 KB),
-en "Recursos de la GPU"; sus vértices viajan por la subida (160 KB por frame). La
-memoria que vive un nivel (recursos de la GPU, assets y audio) la decide el ADR-0028.
+en "Recursos de la GPU"; sus vértices viajan por la subida (160 KB por frame). Con el
+ADR-0027, la memoria que antes vivía "un nivel" vive **una zona**, y se dimensiona por el
+tope de zonas cargadas a la vez (5, de partida): los recursos de la GPU de cada zona caen
+en "Recursos de la GPU", y sus datos en la CPU (instancias, colisión, navmesh,
+marcadores, fases y triggers; ~11 KB de ECS por zona en el prototipo, con mallas de
+juguete), en "Mundo y ECS". Cómo se reparte y se carga (recursos de la GPU, assets y
+audio) lo decide el ADR-0028.
 Las cuentas del ADR-0010 son estimaciones, no mediciones del protocolo: las metas
 cambian recién con una medición.
 
@@ -142,3 +147,4 @@ cambian recién con una medición.
 | 2026-11-01 | #38 | La fila de audio por frame pasa a ser "Audio en el hilo principal", con la misma meta. Meta nueva: el hilo de audio del ADR-0024, 0,5 ms por cada 16,7 ms de audio, en otro núcleo (hipótesis). Ninguna otra meta cambia | Ninguna del protocolo: prototipo de laboratorio, fuera del protocolo |
 | 2026-11-02 | #39 | Metas nuevas para los VFX del ADR-0025 (hipótesis): 0,2 ms de CPU por frame, que salen de la reserva del frame (de 0,5 a 0,3 ms), y 0,5 ms de GPU, que salen de la reserva de GPU (de 3,3 a 2,8 ms). Los *frames* de impacto entran en la fila de postproceso. Como la integración corre en cada paso, el frame con dos pasos pasa de 15,8 a 16,0 ms. La memoria de los VFX cae en "Mundo y ECS" (partículas, ~330 KB) y en "Recursos de la GPU" (marcas y campos de distancia, ~0,9 MB). Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con la GPU fija en 700 MHz |
 | 2026-11-02 | #40 | Metas nuevas para la UI del ADR-0026 (hipótesis): 0,1 ms de CPU por frame, que salen de la reserva del frame (de 0,3 a 0,2 ms), y 0,2 ms de GPU, que salen de la reserva de GPU (de 2,8 a 2,6 ms). La región de UI (~200 KB) cae en "Mundo y ECS" y el atlas de las fuentes (~165 KB), en "Recursos de la GPU". Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con el reloj de la GPU libre |
+| 2026-11-02 | #41 | Con el ADR-0027, la memoria que vivía "un nivel" vive una zona, dimensionada por el tope de zonas cargadas a la vez (5, de partida): los recursos de la GPU de cada zona caen en "Recursos de la GPU" y sus datos en la CPU, en "Mundo y ECS". Ninguna meta ni total cambia | Ninguna |

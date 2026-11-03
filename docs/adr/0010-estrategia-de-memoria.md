@@ -33,6 +33,17 @@
   el atlas de las fuentes en la GPU. **Llena, la región aborta** con su nombre, como una
   arena: lo que dibuja la UI lo decide el autor, no el jugador, así que es un error de
   dimensionamiento. Se corrige en Consecuencias (el mapa de la memoria y la región).
+- **Fe de erratas:** 2026-11-02 (#41): el ADR-0027 parte el mundo en zonas que se cargan
+  y se descargan mientras se camina, con un **tope de zonas cargadas a la vez**. El juego
+  nunca lo pasa (pide primero la zona más cercana y descarga una más lejana que no
+  simula; si no hay, espera) y el cocinador garantiza que nunca bloquee. **La vida "un
+  nivel" pasa a ser "una zona":** las zonas no se
+  liberan en el orden en que se cargaron (se va la primera y se queda la tercera), así
+  que un solo bloque lineal por nivel no alcanza. Lo que vive una zona (sus recursos de
+  la GPU y sus datos en la CPU) se dimensiona por el tope de zonas; cómo se reparte y
+  cómo se carga lo decide el ADR-0028. **La capacidad fija del ECS** cubre las entidades
+  de las zonas cargadas a la vez. Se corrige en la Decisión 6, en Consecuencias (el mapa
+  de la memoria: los recursos de la GPU y los datos en la CPU de cada zona) y en Abierto.
 
 ## Contexto y problema
 
@@ -405,7 +416,7 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
 | 3 | Memoria temporal | **Una arena por paso de simulación**, que se reinicia al terminar cada paso; **una arena por frame para el render**, que se reinicia al terminar el frame; y **dos arenas *scratch* con marcador** para el trabajo interno de una función, como los temporales de cada corte |
 | 4 | Objetos de tamaño fijo | **Pools con lista libre y handles con generación** (ADR-0009) |
 | 5 | Pedazos | **Un allocator de offsets propio, tipo TLSF:** O(1), une los bloques vecinos libres y no toca la memoria que administra |
-| 6 | Memoria de la GPU | **Bloques grandes por tiempo de vida** (lineal para lo que vive un nivel, el *ring buffer* para lo que vive un frame, el allocator de offsets para los pedazos) y una **cola de liberación por número de frame**. El *ring buffer* se dimensiona para el peor caso (ADR-0005) |
+| 6 | Memoria de la GPU | **Bloques grandes por tiempo de vida** (lo que vive una zona del mundo, dimensionado por el tope de zonas cargadas del ADR-0027; el *ring buffer* para lo que vive un frame, el allocator de offsets para los pedazos) y una **cola de liberación por número de frame**. El *ring buffer* se dimensiona para el peor caso (ADR-0005) |
 | 7 | Contenedores | **Propios, de capacidad fija, sin `std::pmr`.** Reciben su memoria al crearse y nunca crecen. La arena se pasa como parámetro explícito |
 | 8 | Cuando se acaba | **Según el tipo de memoria.** Las arenas y las tablas del engine abortan con el nombre de la región y su pico. Los pools que llena el juego degradan con su regla, y el juego pregunta antes si hay lugar |
 | 9 | Detección de errores | **En Debug: envenenamiento manual para ASan, patrones de relleno, guardas y la comprobación al cerrar.** RelWithDebInfo y Release no los llevan, para que las mediciones del ADR-0020 no paguen su costo. En todos los builds: la generación de los handles y el uso y el pico de cada región |
@@ -424,14 +435,15 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   | Metadatos de los pedazos | El corte | La del pedazo | Pool con handles |
   | Geometría de los pedazos (CPU y GPU) | El corte y `engine/gpu` | La del pedazo, más los frames en vuelo | Offsets, tipo TLSF |
   | Cuerpos y ragdolls | La física | La del cuerpo | Pools con handles, con el tope del ADR-0016 |
-  | ECS | `engine/core` | Todo el programa | Capacidad fija |
+  | ECS | `engine/core` | Todo el programa | Capacidad fija, que cubre las entidades de las zonas cargadas a la vez (ADR-0027) |
   | Partículas (ADR-0025) | Los VFX | Todo el programa | Dos pools fijos en SoA: chicas y grandes |
   | Marcas de sangre (ADR-0025) | Los VFX y `engine/gpu` | La de la marca, más los frames en vuelo | Anillo de lugares fijos en un buffer persistente de la GPU, con la cola por número de frame |
   | Campos de distancia de las tapas (ADR-0025) | El corte y `engine/gpu` | La de la última tapa que lo usa, más los frames en vuelo | Pool de capas de un arreglo de texturas; lleno, se reusa el más viejo |
   | UI (ADR-0026) | La UI | Todo el programa | Capacidad fija: 8192 vértices por frame, el estado por ID, los subtítulos cortados y las tablas de las fuentes y de los textos de todos los idiomas; llena, aborta |
   | Atlas de las fuentes (ADR-0026) | La UI y `engine/gpu` | Todo el programa | Un bloque de `gpu::Allocator` |
   | *Ring buffer* | `engine/gpu` | Un frame en vuelo | Anillo |
-  | Recursos de la GPU que viven un nivel | `engine/gpu` | Un nivel | Lineal, por bloques. Cómo se cargan lo decide el ADR-0028 |
+  | Recursos de la GPU que viven una zona (ADR-0027) | `engine/gpu` | Una zona | Dimensionado por el tope de zonas cargadas. Las zonas no se liberan en orden, así que no es un solo bloque lineal. Cómo se reparte y se carga lo decide el ADR-0028 |
+  | Datos de las zonas en la CPU (ADR-0027): instancias, colisión, navmesh, marcadores, fases y triggers | El mundo | Una zona | Dimensionado por el tope de zonas cargadas, como la fila anterior. Cómo se reparte y se carga lo decide el ADR-0028 |
 
 - **El frame,** con las arenas en su lugar. Es una fe de erratas del ADR-0012, que
   reiniciaba una sola arena al terminar el frame:
@@ -554,7 +566,8 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   - índices de 16 o de 32 bits en los pedazos (decidido en el ADR-0022: 16 bits, con dos
     llamadas por pedazo). La subida y el pool bajan casi a la mitad, más ~20 KB por corte
     de copias de los vértices del borde. Los tamaños se miden con el protocolo;
-  - la memoria que vive un nivel y la carga de los assets (ADR-0028);
+  - la memoria que vive un nivel y la carga de los assets (ADR-0028). Con el ADR-0027, lo
+    que vive es una zona, con un tope de zonas cargadas a la vez;
   - cómo se ven los picos y el uso de cada región durante el juego (decidido en el
     ADR-0021: contadores en todos los builds y un panel en los de desarrollo);
   - el máximo de entidades del ECS y los valores de los patrones (sus tickets);

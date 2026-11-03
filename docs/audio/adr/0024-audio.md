@@ -4,6 +4,14 @@
 - **Fecha:** 2026-11-01
 - **Ticket:** #38
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-02 (#41): el ADR-0027 parte el mundo en zonas. **El *track*
+  de la música va por zona,** en el texto de la zona, y cambia con el *crossfade* de
+  este ADR cuando la caballera cruza el borde de otra zona (en el paso fijo); un trigger
+  también puede cambiarlo. Los estados
+  (exploración, combate y jefe) siguen como acá: el combate sale de los zombies
+  alertados, y el jefe lo marca su fase. **Los sonidos de ambiente** son marcadores de la
+  zona, y el de cada antorcha va en la pieza "antorcha", con su luz y su fuego. Se
+  corrige en Consecuencias ("La música") y en Abierto.
 
 ## Contexto y problema
 
@@ -530,7 +538,10 @@ que tampoco se corta con un tirón.
   - **los estados:** exploración, combate y jefe. Para empezar, "combate" es que algún
     zombie esté alertado (ADR-0023) a menos de una distancia; el jefe lo marca su
     encuentro. **Un tiempo mínimo en cada estado** (por ejemplo, 4 s) y **un *crossfade*
-    de ~2 s**, los dos configurables. Qué track tiene cada nivel lo decide el ADR-0027.
+    de ~2 s**, los dos configurables. **El track va por zona** (ADR-0027): lo dice el
+    texto de la zona, y cambia con el *crossfade* cuando la caballera cruza el borde de
+    otra zona o con un
+    trigger.
 - **El sonido del corte.** El combate (ADR-0018) emite los eventos, y la tabla dice qué
   capas suenan:
 
@@ -643,7 +654,8 @@ que tampoco se corta con un tirón.
   - dónde espera el render (la *fence* y el *present*) respecto del audio, para que el
     margen de 33 ms alcance (el ticket del game loop);
   - qué sonidos carga cada nivel y cuánto viven (ADR-0028), el ambiente y la música de
-    cada nivel (ADR-0027) y los volúmenes en las opciones (ADR-0026);
+    cada nivel (decidido en el ADR-0027: la música va por zona y el ambiente son
+    marcadores de la zona) y los volúmenes en las opciones (ADR-0026);
   - los golpes de los pedazos contra el suelo, que necesitan eventos de contacto de la
     física (ADR-0016);
   - la oclusión, la HRTF, el Doppler y las voces virtuales, si el juego los pide;

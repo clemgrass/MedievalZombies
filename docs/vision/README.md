@@ -1,7 +1,9 @@
 # Visión del juego
 
-- **Versión:** 3 (2026-10-22): la espada clavada como secuencia, el agarre, el
-  cansancio que cancela la carga y la regla de vivo o muerto (#31). Versión 2
+- **Versión:** 4 (2026-11-02): el recorrido es un mundo continuo y explorable, sin
+  pantallas de carga entre zonas (#41, ADR-0027). Versión 3 (2026-10-22): la espada
+  clavada como secuencia, el agarre, el cansancio que cancela la carga y la regla de vivo
+  o muerto (#31). Versión 2
   (2026-10-20): se suma la hoja que queda clavada (#11). Versión 1: 2026-10-18.
 - **Ticket:** #13 (`modo:dirigido`: las ideas son del autor y Claude las redacta)
 - **Qué es este documento:** el diseño del juego. **No es un ADR.** Les da a las
@@ -49,7 +51,9 @@ Un pilar sirve para decir que no: si una idea no respeta los pilares, espera.
   del castillo, donde está atrapada la princesa. Mientras la observa, aparecen los
   zombies, y tiene que ir a salvarla.
 - **El recorrido.** Atraviesa el castillo y varias zonas a su alrededor, en orden y de
-  forma lineal, hasta llegar a la torre.
+  forma lineal, hasta llegar a la torre. **Es un mundo caminable y explorable:** se
+  siente que sale de A y camina hasta Z, recorriendo un castillo completo, sin pantallas
+  de carga entre zonas (ADR-0027).
 - **El jefe final** es **el mago zombie**. Un **dragón zombie** es una posibilidad, no un
   compromiso.
 - **El final.** Se revela que el soldado es una mujer, y que ella y la princesa son
@@ -355,7 +359,10 @@ Números propuestos para el engine (los fija el ADR-0020):
   ADR-0021. Los valores de ajuste (distancia y altura de la cámara, campo de visión,
   ventanas de input, carga) son CVars, y en Release quedan como constantes. Las opciones
   del jugador (sensibilidad, invertir un eje) son del ADR-0028.
-- **Checkpoints:** el ADR-0028 (recursos en runtime y guardado).
+- **Checkpoints:** el ADR-0028 (recursos en runtime y guardado). Decidido en el
+  ADR-0027: un checkpoint es un marcador de una zona, ligado a una fase; volver es entrar
+  en esa fase desde cero, y reintentarla la repite igual. Cómo se guarda sigue siendo
+  del ADR-0028.
 
 ## Referencias
 

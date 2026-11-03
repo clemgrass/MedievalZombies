@@ -27,6 +27,15 @@
   animación y antes de reiniciar la arena del paso, para leer los eventos y las poses de
   ese paso. Los VFX no son estado de la simulación: no entran en el hash del *replay* y
   nunca escriben en ella. Se corrige en el orden del frame y en Consecuencias.
+  2026-11-02 (#41): el ADR-0027 parte el mundo en zonas que se cargan mientras se camina.
+  **Cargada no es lo mismo que simulando.** Una zona **entra a la simulación en un
+  paso** (cuando la caballera, en ese paso, está a menos de la distancia de entrada de su
+  borde): sus entidades se crean en ese paso, en orden de id. **Si la zona no llegó, el
+  frame corre 0 pasos** y el acumulador no avanza, como en la pausa (ADR-0026). **Sale en
+  un paso** (a más de la distancia de salida), y las entidades que están en la zona en
+  ese paso (según su polígono de la navmesh, o su posición si no tienen uno) se
+  destruyen en orden de id. Así el disco decide cuándo se ve una zona, nunca qué pasa en la simulación. Cómo se
+  carga sin cortar el frame lo decide el ADR-0028. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -230,6 +239,14 @@ docs/      documentación
 - **Los VFX** (ADR-0025) corren en cada paso, después de la animación, pero no son
   estado de la simulación: leen sus eventos y sus poses, nunca escriben en ella, y el
   hash del *replay* no los incluye. Quitarlos no cambia la simulación.
+- **Las zonas del mundo** (ADR-0027) entran a la simulación en un paso fijo, cuando la
+  caballera está a menos de la distancia de entrada de su borde, y sus entidades se
+  crean en orden de id. **Si los datos de la zona no llegaron, el frame corre 0 pasos** y
+  el acumulador no avanza, como en la pausa. Salen en otro paso, a más de la distancia de
+  salida, y las entidades que están en la zona en ese paso (según su polígono de la
+  navmesh, o su posición si no tienen uno) se destruyen en orden de id. Que una zona
+  esté cargada solo
+  cambia lo que se ve; la simulación no depende de cuándo llegó.
 - **La estructura del monorepo** se crea con el primer ticket de código. Hoy solo
   existen `docs/`, `.github/` y `tools/`.
 

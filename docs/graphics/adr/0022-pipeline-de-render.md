@@ -35,6 +35,14 @@
   recompilado se recarga en caliente con un pipeline nuevo, y el viejo se retira con la
   cola por número de frame. Se corrige en Consecuencias (el orden del frame y los índices
   del arreglo de texturas por slot) y en Abierto.
+  2026-11-03 (#73): el ADR-0031 cierra los rayos X con **la herida que se abre:** en el
+  tajo especial, mientras la hoja cruza, se dibujan los dos pedazos; la tapa se ve solo
+  del lado por donde ya pasó la hoja (**un semiplano en el espacio del objeto, en el
+  shader de la tapa, que descarta el resto**), y el pedazo de arriba gira alrededor del
+  borde del lado sin barrer. **El giro es solo del render:** se suma a la transformación
+  del pedazo al dibujarlo y no toca la física; al salir la hoja vuelve a 0 con un resorte.
+  No hay huesos semitransparentes ni pasada propia. El *screen-door* de la caballera no
+  cambia. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -481,7 +489,8 @@ borroso.
     de 64² por corte, que llena el corte);
   - la cámara de rayos X. De ella depende lo que pide la visión para la cámara del tajo:
     ver el interior mientras la hoja atraviesa el cuerpo. Con esta Decisión, el interior
-    se ve en la tapa, después de que pasa la hoja;
+    se ve en la tapa, después de que pasa la hoja (decidido en el ADR-0031: la herida se
+    abre mientras la hoja cruza, con la tapa recortada por un semiplano en el shader);
   - los *frames* de impacto estilo anime, si se usan: irían en el postproceso a 640×360
     (visión y ADR-0025; decidido en el ADR-0025: siluetas en blanco, negro y rojo, en el
     postproceso, solo en los cortes cargados y en la cámara del tajo);

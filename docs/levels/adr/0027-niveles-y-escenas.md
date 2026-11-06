@@ -19,6 +19,14 @@
   de polígonos de navmesh para A* (ADR-0023). **El botón del panel del mundo** escribe
   el texto del mundo por el hilo de I/O. Se corrige en las Decisiones 3, 9 y 10 y en
   Abierto.
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 suma un estilo de cámara con **cámaras
+  fijas y rieles por sector**. Son marcadores de la zona, como los demás: **una cámara
+  fija** (un *empty* con su posición y su orientación) o **un riel** (una cadena de
+  *empties* en orden, porque glTF no tiene curvas), cada uno con **el volumen del
+  sector** en el que manda (la escala de un *empty*, como los triggers). Se colocan en
+  todas las zonas, aunque el jugador elija otro estilo. El cocinador valida que no queden
+  dentro del escenario y que **todo el piso de la navmesh de la zona esté cubierto** por
+  algún volumen. Se corrige en Consecuencias ("La cámara por zona").
 
 ## Contexto y problema
 
@@ -453,7 +461,10 @@ cuándo se ve.
   - **lo que el jugador cambió en una fase antes de morir** (una puerta abierta) vuelve
     a su estado inicial, salvo que la fase lo diga.
 - **La cámara por zona:** si el ADR-0031 elige una cámara colocada por el nivel, sus
-  zonas o rieles serían marcadores de la zona, con las mismas reglas.
+  zonas o rieles serían marcadores de la zona, con las mismas reglas (decidido en el
+  ADR-0031: las cámaras fijas y los rieles son un estilo que elige el jugador; cada uno
+  es un marcador con el volumen de su sector, en todas las zonas, y el cocinador valida
+  que cubran todo el piso de la navmesh).
 - **Fe de erratas en otros ADRs.** Al aceptar este ADR se corrigieron, como fe de
   erratas (ADR-0014, regla 11):
   - **ADR-0017:** el cocinador suma el mundo: aplana las instancias, cocina un binario

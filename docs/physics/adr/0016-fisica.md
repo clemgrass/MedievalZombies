@@ -38,6 +38,12 @@
   la horda. La IA calcula con ORCA una velocidad deseada que no choca con los vecinos, y
   el controlador se mueve con ella. El controlador sigue sacando a los zombies de lo que
   penetran, como red de seguridad. Se corrige en Abierto.
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 hace que el tajo especial se resuelva
+  al soltar. **La predicción reutiliza la prueba de la Decisión 7** (el segmento de una
+  cápsula contra el sector de anillo), pero sobre **el arco completo** y contra las poses
+  de ese paso, como una consulta de solo lectura. Cuándo y cómo se predice lo decide el
+  ADR-0018. La cámara usa el barrido de esfera desde el render, de solo lectura, contra el
+  escenario estático. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -425,6 +431,8 @@ contra el escenario y el golpe de la espada.
     ragdoll mientras quede lugar en el tope; si no, también caen rígidos, como una tabla
     (ADR-0018).
 - **Abierto:**
+  - **la predicción del tajo especial** (ADR-0031): la misma prueba sector contra cápsula
+    sobre el arco completo, al soltar; cuándo y cómo, el ADR-0018;
   - si un pedazo con muchos huesos podría pasar a ragdoll (decidido en el ADR-0018);
   - qué pasa entre los controladores y los pedazos del suelo: si los empujan, los
     ignoran o los frenan (decidido en el ADR-0018);

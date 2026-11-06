@@ -18,9 +18,9 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
-| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el reparto y el paquete) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
+| [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el reparto y el paquete), 0031 (las cámaras fijas y los rieles) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027 y 0028 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador y la tarjeta de memoria; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI y las fases; el *replay* con tiempos de carga al azar; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028 y 0031 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador, la tarjeta de memoria y el resorte y el barrido de la cámara; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI, las fases y el sistema de cámara; el *replay* con tiempos de carga al azar; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
@@ -29,6 +29,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [ui](#ui) | 0026 | `engine/ui/**`, los shaders de la UI, `game/**`, los archivos de textos y las fuentes en `assets/**`, `docs/ui/**`, o código que dibuje el HUD, los subtítulos o los menús, mida o corte texto, mueva el foco o pause el juego |
 | [niveles](#niveles) | 0027 | `engine/world*/**`, `game/**`, los `.blend` y los textos de zona y de mundo en `assets/**`, `docs/levels/**`, o código que cargue, active o descargue zonas, cree las entidades de una zona, ejecute fases o triggers, elija las antorchas del frame o recorte por la niebla o las vecinas |
 | [recursos](#recursos) | 0028 | `engine/io*/**`, `engine/resource*/**`, `engine/save*/**`, `engine/platform/**`, `game/**`, `CMakePresets.json`, o código que lea o escriba archivos, pida o libere zonas, use el hilo de I/O o los slots, suba datos de una zona a la GPU, cree o guarde el `VkPipelineCache`, recargue en caliente, o lea o escriba la tarjeta de memoria o las opciones |
+| [camara](#camara) | 0031 | `engine/camera*/**`, `game/**`, `docs/camera/**`, los marcadores de cámara en `assets/**`, o código que calcule la cámara, su colisión, la cámara del tajo, la herida que se abre o la sacudida, que apunte la espada o que lea la cámara desde la simulación |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -60,6 +61,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | UI, HUD, menús, pausa, subtítulos, fuentes, texto, idiomas, traducción, foco, íconos de botones, accesibilidad, contraste, daltonismo, el color de acento | `ui` |
 | Niveles, escenas, el mundo, zonas, vecinas, *streaming*, precarga, spawns, oleadas, fases, triggers, checkpoints, marcadores, *empties*, *collection instances*, *prefabs* o piezas, la pantalla de carga, el culling por la niebla | `niveles` |
 | La carga de recursos, el hilo de I/O, io_uring, `pread`, `mmap`, los slots, el paquete o el ejecutable con los assets, la subida a la GPU, el *staging*, la recarga en caliente (*hot reload*), inotify, el `VkPipelineCache`, la partida, la tarjeta de memoria, el guardado, las opciones del jugador, las carpetas XDG, `SDL_GetPrefPath`, `fsync` | `recursos` |
+| Cámara, estilos de cámara, tercera o primera persona, cámaras fijas, rieles, FOV, colisión de la cámara, la cámara del tajo, cámara lenta, rayos X, la herida que se abre, sacudida, trauma, la mira, apuntar la espada, el punto apuntado | `camara` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -135,8 +137,8 @@ Qué mirar:
   `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, decidir quién controla la cámara antes del
-  ADR-0031, o cómo se firman y publican las releases antes del ADR-0035.
+  pendiente es un hallazgo. Por ejemplo, decidir cómo entra el input al paso antes del
+  ADR-0032, o cómo se firman y publican las releases antes del ADR-0035.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo
@@ -428,9 +430,17 @@ Qué mirar:
 
 ## animacion
 
-**ADRs:** 0015 (sistema de animación).
+**ADRs:** 0015 (sistema de animación), con la fe de erratas del ADR-0031 (la guía de la
+espada).
 
 Qué mirar:
+
+- **La guía de la espada** (fe de erratas, ADR-0031): cuando no ataca, la caballera es
+  clips; al apuntar y mientras carga, el ratón o el stick guían la espada con la IK del
+  tajo, **limitada por lo que puede hacer el cuerpo, lenta, precisa y con peso**. Copiar
+  el input directo a la IK en cada frame (sin resorte, sin tope de velocidad, sin
+  límites de articulación) es `importante`: es lo que se siente "espagueti". **Todos sus
+  valores son CVars.**
 
 - **Por capas:** clips para la base, procedural encima (la espada, el torso, los
   agarres) y física para lo que ya no tiene control.
@@ -460,9 +470,15 @@ Qué mirar:
 
 ## fisica
 
-**ADRs:** 0016 (física).
+**ADRs:** 0016 (física), con la fe de erratas del ADR-0031 (la predicción del tajo
+especial).
 
 Qué mirar:
+
+- **La predicción del tajo especial** (fe de erratas, ADR-0031): reutiliza la prueba
+  sector contra cápsula de la Decisión 7 sobre el arco completo, al soltar, contra las
+  poses de ese paso, y es de solo lectura. Una predicción que escriba en el estado o que
+  use otra prueba distinta de la del barrido es un hallazgo.
 
 - **Física propia.** Una biblioteca de física (Jolt, Bullet, PhysX) contradice la
   Decisión 1 y necesita su propio ADR.
@@ -515,9 +531,17 @@ Qué mirar:
 **ADRs:** 0017 (pipeline de assets), 0007 (lo que el cocinador hace para el corte), 0022
 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027
 (el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el
-reparto y el paquete de Release).
+reparto y el paquete de Release), 0031 (las cámaras fijas y los rieles).
 
 Qué mirar:
+
+- **Las cámaras fijas y los rieles** (ADR-0031): el cocinador los lee del glTF exportado
+  de cada zona, como *empties* (una cámara es un *empty*; un riel, una cadena de
+  *empties*, porque glTF no tiene curvas; el volumen de su sector, la escala de un
+  *empty*). Leer el `.blend` directo o exportar el riel como una curva convertida en malla
+  es un hallazgo. **Falla el build** si una cámara o un riel
+  queda dentro del escenario o si algún polígono del piso de la navmesh queda sin
+  volumen de cámara. Se colocan en todas las zonas, aunque el jugador elija otro estilo.
 
 - **El camino:** `.blend` → `blender -b` → `.glb` → cocinador → binario. Lo exportado y
   lo cocinado viven en el directorio de build: un `.glb` o un binario cocinado
@@ -748,10 +772,16 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027 y
-0028 (reparto del TDD en el corte, la memoria, la animación, la física, el cocinador de
-assets, el cargador y la tarjeta de memoria; los tests del combate, de la IA, del audio,
-de los VFX, de la UI, de los niveles y del guardado).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028
+y 0031 (reparto del TDD en el corte, la memoria, la animación, la física, el cocinador de
+assets, el cargador, la tarjeta de memoria y el resorte y el barrido de la cámara; los
+tests del combate, de la IA, del audio, de los VFX, de la UI, de los niveles, del guardado
+y del sistema de cámara).
+
+- **La cámara** (ADR-0031): el resorte críticamente amortiguado y el barrido de esfera son
+  matemática del núcleo, en TDD estricto (sin test es `bloqueante`); el sistema de cámara
+  lleva tests después. Un test de *replay* que cambie de estilo de cámara tiene que dar el
+  mismo hash.
 
 Qué mirar:
 
@@ -841,8 +871,8 @@ Qué mirar:
   escrito que falla el build. Código nuevo del generador sin test es `bloqueante`. **La
   IA y la navegación en el juego llevan tests después,** con casos calculados a mano: A*
   y el *funnel* sobre una navmesh armada a mano, el programa lineal de ORCA (dos agentes
-  de frente que no chocan), el reparto de fichas (cercanía, ventaja de la cámara,
-  desempate) y la evaluación de un árbol chico. La horda entera tiene tests de *replay*
+  de frente que no chocan), el reparto de fichas (cercanía, ventaja del cono de la
+  caballera, desempate) y la evaluación de un árbol chico. La horda entera tiene tests de *replay*
   con el hash del estado.
 - **En el audio (ADR-0024):** **la cola de comandos de un productor y un consumidor es
   un contenedor y lleva TDD estricto** (llena, vacía, la vuelta del índice). **Los pasos
@@ -972,11 +1002,20 @@ Qué mirar:
   dentro del solver es un hallazgo. Un zombie con un pedido de corte en la cola queda con
   escala 0 hasta que se procese.
 - **El plano del tajo** pasa por el pecho de la caballera y por el punto apuntado, con la
-  dirección de la línea dibujada, y el centro del arco es el pecho. El punto apuntado es
-  el primer impacto del rayo de la cámara contra las cápsulas, con un punto de reserva si
-  no toca nada. Un plano que contenga el rayo de la cámara contradice la Decisión 6. El
-  90° del arco (ADR-0015) es la dirección del pecho al punto apuntado, sin su componente
-  sobre la línea.
+  dirección de la línea dibujada, y el centro del arco es el pecho. **El punto apuntado es
+  el primer impacto del rayo que sale del pecho** (fe de erratas, ADR-0031) contra las
+  cápsulas, con un punto de reserva si no toca nada. **Usar la cámara para apuntar es
+  `bloqueante`:** la cámara es una opción del jugador y está fuera de la simulación.
+  **Por fases:** al apuntar, el ratón o el stick mueven el punto dentro de un cono
+  alrededor del rumbo; al cargar, **la dirección del rayo queda fija respecto del rumbo**
+  (no un punto del mundo) y giran la línea; la guía termina al soltar, y **el rayo se
+  vuelve a lanzar al soltar**. Fijar un punto del mundo al cargar es un hallazgo. El 90° del arco (ADR-0015) es la dirección del pecho al punto apuntado, sin
+  su componente sobre la línea.
+- **El tajo especial se resuelve al soltar** (fe de erratas, ADR-0031): el combate
+  predice el barrido entero contra las poses de ese paso, con una consulta de solo
+  lectura; si cumple las reglas, los pedidos de corte salen en ese paso. Una predicción
+  que escriba en el estado, o que use la cámara o el reloj, es `bloqueante`. Los tajos
+  normales piden el corte al salir o detenerse la hoja.
 - **La espada clavada** es una secuencia: el zombie avanza por la hoja **con el esqueleto
   fijo en la pose del corte** (solo se mueve su raíz), los demás van a una escala de
   tiempo baja, y cada pulsación gasta energía. Terminar el corte es un `slice_request`
@@ -1041,7 +1080,9 @@ Qué mirar:
   contador lo registra. Un ruido que se pierde sin contarlo es un hallazgo (lo audita
   `memoria`). En el corte vertical, un zombie alertado no olvida.
 - **Fichas de ataque** (3 para empezar, configurable): la ficha va al más cercano, con
-  un descuento si está dentro de la cámara del paso anterior, y el desempate es por
+  un descuento si está dentro del **cono alrededor del rumbo de la caballera** del paso
+  anterior (fe de erratas, ADR-0031; leer la cámara es `bloqueante`: elegir otro estilo
+  cambiaría la partida), y el desempate es por
   entidad. Se toma al empezar a preparar el ataque y se devuelve al terminar de
   recuperarse, **o antes** si su dueño muere, pierde los brazos útiles, queda ensartado
   o pasa a escala 0 por un pedido de corte. Una ficha que no vuelve en esos casos es
@@ -1240,9 +1281,16 @@ Qué mirar:
 **ADRs:** 0026 (UI, HUD y menús). También la fe de erratas que hizo en el ADR-0010 (la
 región de UI), el ADR-0019 (las fuentes OFL), el ADR-0021 (el menú de opciones), el
 ADR-0022 (la pasada de UI) y el ADR-0025 (el color de acento de la sangre y de las
-siluetas).
+siluetas). También la fe de erratas del ADR-0031 en este ADR (la cámara en las opciones,
+la mira en el mundo y la ayuda según el estilo).
 
 Qué mirar:
+
+- **La cámara en la UI** (fe de erratas, ADR-0031): las opciones suman el estilo, el FOV
+  de la tercera y de la primera persona, el cierre al apuntar por estilo, la sacudida y
+  la cámara del tajo. **La mira está en el mundo,** no en el centro de la pantalla. **La
+  energía en la espalda es la ubicación por defecto solo con la tercera persona;** con
+  la primera persona y con las fijas y los rieles, junto a la mira.
 
 - ***Immediate mode* propio:** cada pantalla es una función que llama a sus controles
   cada frame; el estado de la UI es el foco, y el valor de cada opción vive en el juego.
@@ -1525,6 +1573,74 @@ Qué mirar:
   hilo de I/O. **Las metas de carga** (≤ 3 s al arrancar, ≤ 1 s al volver a un
   checkpoint) son hipótesis de `presupuestos.md`: cambian con una medición del
   protocolo.
+
+## camara
+
+**ADRs:** 0031 (sistema de cámara). También la fe de erratas que hizo en el ADR-0012 (la
+cámara corre en el render, después de interpolar), el ADR-0015 (la guía de la espada),
+el ADR-0016 (la predicción del tajo especial y el barrido de esfera desde el render),
+el ADR-0017 (las cámaras fijas y los rieles en el cocinador), el ADR-0018 (el apuntado
+desde el pecho y el tajo especial resuelto al soltar), el ADR-0021 (el *replay* guarda
+si la cámara del tajo está apagada), el ADR-0022 (la herida que se abre), el ADR-0023 (la
+ventaja del cono de la caballera), el ADR-0025 (la sacudida y los *frames* de impacto en
+la cámara lenta), el ADR-0026 (las opciones de cámara y la ayuda según el estilo), el
+ADR-0027 (los marcadores de cámara) y la visión (versión 5).
+
+Qué mirar:
+
+- **La cámara es una opción del jugador, y en ningún estilo la mueve él.** Tres estilos:
+  tercera persona por detrás (por defecto), fijas y rieles por sector, y primera persona.
+  Un control para girar o acercar la cámara, una órbita libre o un *lock-on* son una
+  decisión nueva.
+- **La cámara está fuera de la simulación.** Se calcula una vez por frame, en el render,
+  después de interpolar el estado, y nada del paso fijo la lee. **Que la simulación lea
+  la cámara (el apuntado, la IA, el combate) es `bloqueante`:** elegir otro estilo
+  cambiaría la partida y el *replay* dejaría de dar el mismo hash. Su consulta de pared
+  es de solo lectura contra el escenario estático.
+- **Los estilos:**
+  - **tercera persona:** sigue el rumbo con un resorte, con los valores de la visión
+    (2,3 m, 1,9 m, 0,5 m a la izquierda, 51°; al apuntar, 2,0 m y 30°). **Mientras apunta
+    se queda con el rumbo que tenía al empezar a apuntar**;
+  - **fijas y rieles:** el volumen del sector decide la cámara; la fija gira con un
+    resorte, el riel va al punto de la curva más cercano a la caballera; **corte seco
+    entre tomas**; al apuntar no cambian;
+  - **primera persona:** el ojo en la cabeza, con la cabeza y el cuello ocultos; mira hacia
+    el rumbo del cuerpo, **sin el balanceo de la cabeza** (que marea); 70°, **sin zoom al
+    apuntar** por defecto.
+
+  **Cuánto se cierra el FOV al apuntar** es una opción por estilo, hasta 0.
+- **El suavizado:** resortes críticamente amortiguados de forma cerrada, con el dt del
+  frame. **Un `lerp` fijo por frame es `importante`** (P6: ×5 entre 30 y 144 FPS).
+- **La colisión** (solo la tercera persona): barrido de esfera de 0,2 m contra el
+  escenario estático, no contra los personajes; se acerca con un resorte rápido sin
+  pasar el límite de una esfera de 0,1 m, y se aleja lento. **Un rayo en vez de la
+  esfera es `importante`** (P6: el plano cercano corta la pared en las esquinas). La
+  caballera en *screen-door* a menos de ~1 m (ADR-0022, lo audita `graficos`).
+- **La cámara del tajo acompaña la hoja, en los tres estilos:** del lado de la normal del
+  plano, con la mitad de la hoja, y después se queda en el corte. Cámara lenta ×0,02
+  mientras la hoja cruza y ×0,2 durante 0,9 s; vuelve con un corte seco. Se puede
+  apagar, y **apagarla cambia la simulación** (quita la cámara lenta): el encabezado del
+  *replay* lo guarda y un cambio durante la grabación es un evento del paso. Olvidarlo
+  es `bloqueante`.
+- **La herida que se abre:** mientras la hoja cruza, la tapa se ve solo del lado barrido
+  (un semiplano en el shader) y el pedazo de arriba gira alrededor del borde del lado sin
+  barrer. **El giro es solo de presentación:** que toque el cuerpo físico del pedazo o
+  el hash es un hallazgo; al salir la hoja vuelve a 0 con un resorte, no de golpe. No hay
+  huesos semitransparentes ni pasada propia.
+- **La sacudida:** trauma con ruido suave, trauma², **solo rotación y solo en la
+  presentación**. Una sacudida que mueva la posición de la cámara o el rayo de apuntar es
+  un hallazgo. Se puede apagar.
+- **Los *frames* de impacto** dentro de la cámara del tajo duran 2 o 3 frames reales, no
+  de simulación.
+- **Todo valor de la cámara y de la guía de la espada es una CVar** (ADR-0021): se ajusta
+  jugando. Un número de sensación fijo en el código es `importante`. **Salvo las opciones
+  del jugador** de la Decisión 10 (el estilo, el FOV, el cierre al apuntar, la sacudida y
+  la cámara del tajo), que van en `opciones.txt`; su valor por defecto sí es una CVar.
+- **Depuración:** una cámara libre que no toca la partida.
+- El apuntado desde el pecho y la predicción del tajo especial los audita `gameplay`; la
+  ventaja del cono, `ia`; la guía de la espada, `animacion`; las cámaras fijas y los
+  rieles en el cocinador, `assets`; las opciones en el menú, `ui`; los tests del resorte y
+  del barrido, `testing`.
 
 ## herramientas
 

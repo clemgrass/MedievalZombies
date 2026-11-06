@@ -1,6 +1,8 @@
 # Visión del juego
 
-- **Versión:** 4 (2026-11-02): el recorrido es un mundo continuo y explorable, sin
+- **Versión:** 5 (2026-11-03): la cámara es una opción del jugador con tres estilos, y en
+  ninguno la mueve el jugador; el ratón o el stick derecho apuntan la espada, desde el
+  pecho de la caballera (#73, ADR-0031). Versión 4 (2026-11-02): el recorrido es un mundo continuo y explorable, sin
   pantallas de carga entre zonas (#41, ADR-0027). Versión 3 (2026-10-22): la espada
   clavada como secuencia, el agarre, el cansancio que cancela la carga y la regla de vivo
   o muerto (#31). Versión 2
@@ -72,12 +74,16 @@ algo de tragicomedia.
 
 ### Apuntar
 
-- **Al mantener apuntar,** la cámara se acerca y se concentra, y el mouse o el stick
-  derecho **dibujan la línea del tajo** en la pantalla. No hay un set fijo de golpes: el
-  corte sigue el ángulo que eligió el jugador. Cómo se anima lo decide el ADR-0015.
-- **Por dónde pasa el corte lo decide la cámara.** La línea pasa por el centro de la
-  pantalla, así que el jugador apunta la cámara al cuello, a la cintura o a la junta de
-  una armadura, y después elige el ángulo.
+- **Al mantener apuntar,** la caballera levanta la espada y **el mouse o el stick derecho
+  la guían**: mueven el punto apuntado, que una mira marca en el mundo. **Al cargar, la
+  mira queda fija y el mouse o el stick giran la línea del tajo.** No hay un set fijo de
+  golpes: el corte sigue el ángulo que eligió el jugador. La guía es lenta y precisa, la
+  de un cuerpo con una espada pesada en las dos manos, y termina al soltar. Cómo se anima
+  lo deciden los ADR-0015 y ADR-0031.
+- **Por dónde pasa el corte lo decide la espada, no la cámara** (ADR-0031). El rayo sale
+  del pecho de la caballera, así que el jugador lleva la espada al cuello, a la cintura o
+  a la junta de una armadura, y después elige el ángulo. Apuntar es igual con cualquier
+  estilo de cámara.
 - **Apuntar es una habilidad, no un trámite.** La dificultad sale de que los zombies se
   mueven, de que la armadura por partes premia acertar en las juntas, y de que corregir
   cuesta energía.
@@ -249,8 +255,19 @@ técnico apuntan al mismo lado.
 
 ## Cámara
 
-Tercera persona, detrás de la caballera. Al apuntar se acerca un poco y, sobre todo,
-cierra el campo de visión, como si se concentrara (al estilo de *God of War*).
+**El jugador elige el estilo en las opciones, y en ninguno mueve la cámara** (ADR-0031):
+
+- **Tercera persona, por detrás** (por defecto): sigue a la caballera. Al apuntar se
+  acerca un poco y, sobre todo, cierra el campo de visión, como si se concentrara (al
+  estilo de *God of War*, 2018).
+- **Fijas y rieles por zona** (al estilo del *God of War* original, 2005): el sector por
+  el que camina la caballera decide la cámara.
+- **Primera persona:** sin zoom al apuntar, salvo que el jugador lo pida.
+
+En los tres, **la cámara del tajo acompaña la hoja**. Cuánto se cierra el campo de visión
+al apuntar se configura en cada estilo, hasta 0.
+
+Los valores de la tercera persona:
 
 | Parámetro | Normal | Apuntando |
 |---|---|---|
@@ -272,7 +289,8 @@ de depuración), sin recompilar.
   semitransparente** para no tapar la pantalla.
 
 Cómo se detecta la pared y cómo se suaviza el movimiento lo deciden el ADR-0016 (física)
-y el ADR-0022 (render).
+y el ADR-0022 (render) (decidido en el ADR-0031: un barrido de esfera contra el escenario
+estático, que se acerca rápido y se aleja lento, con resortes críticamente amortiguados).
 
 ## Controles
 
@@ -280,9 +298,8 @@ y el ADR-0022 (render).
 |---|---|---|
 | Moverse | WASD | Stick izquierdo |
 | Trotar (mantener) | Shift | Presionar el stick izquierdo (L3) |
-| Mirar | Mouse o trackpad | Stick derecho |
 | **Apuntar** (mantener) | Clic derecho o E | LT / L2 |
-| Dirección del tajo, mientras se apunta | Mouse o trackpad | Stick derecho |
+| Guiar la espada, mientras se apunta: el punto; mientras se carga: la línea | Mouse o trackpad | Stick derecho |
 | **Tajo rápido** (sin apuntar) | Clic izquierdo o Espacio | RT / R2 |
 | **Cargar y soltar** (apuntando) | Mantener clic izquierdo o Espacio, y soltar | Mantener RT / R2, y soltar |
 | **Esquivar** (salto, hacia donde se mueve) | Q | B / Círculo |
@@ -346,7 +363,12 @@ Números propuestos para el engine (los fija el ADR-0020):
 
 ## Abierto
 
-- **Cómo se siente apuntar la espada** en detalle: lo afinan el ADR-0018 y el ADR-0015.
+- **Cómo se siente apuntar la espada** en detalle: lo afinan el ADR-0018 y el ADR-0015
+  (decidido en el ADR-0031: la guía es lenta, precisa y con peso, nunca flácida, y todo
+  lo que da esa sensación es configurable, para ajustarlo jugando).
+- **Ver el interior mientras la hoja cruza** (la cámara del tajo): decidido en el
+  ADR-0031: la herida se abre a medida que pasa la hoja, y la tapa se ve solo donde la
+  hoja ya pasó.
 - **Cuándo se usan los frames de impacto** estilo anime, si se usan (decidido en el
   ADR-0025: siluetas en blanco, negro y rojo, solo en los cortes cargados y en la cámara
   del tajo, y se pueden apagar).
@@ -356,9 +378,10 @@ Números propuestos para el engine (los fija el ADR-0020):
   ADR-0022 (decidido: el ADR-0022, la carne y el hueso; el ADR-0025, las capas, con un
   campo de distancia por corte).
 - **Valores configurables sin recompilar** (cámara, controles, carga): decidido en el
-  ADR-0021. Los valores de ajuste (distancia y altura de la cámara, campo de visión,
-  ventanas de input, carga) son CVars, y en Release quedan como constantes. Las opciones
-  del jugador (sensibilidad, invertir un eje): el menú es del ADR-0026, y se guardan en un
+  ADR-0021. Los valores de ajuste (distancia y altura de la cámara, ventanas de input,
+  carga) son CVars, y en Release quedan como constantes. Las opciones del jugador
+  (sensibilidad, invertir un eje, y el estilo de cámara, el campo de visión y cuánto se
+  cierra al apuntar, decididos en el ADR-0031): el menú es del ADR-0026, y se guardan en un
   texto en la carpeta de configuración (ADR-0028).
 - **Checkpoints:** decidido en el ADR-0027: un checkpoint es un marcador de una zona,
   ligado a una fase; volver es entrar en esa fase desde cero, y reintentarla la repite
@@ -373,4 +396,5 @@ Números propuestos para el engine (los fija el ADR-0020):
   grabados.
 - *Sniper Elite V2* (2012): la cámara de rayos X y la sensación del impacto.
 - *God of War* (2018): la cámara que se acerca al apuntar.
+- *God of War* (2005): las cámaras fijas y los rieles por zona.
 - *Pseudoregalia* (2023), *Signalis* (2022) y *Dusk* (2018): estética PSX.

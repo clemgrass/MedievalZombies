@@ -20,6 +20,11 @@
   A*** (costos, padres y cola abierta) **se reserva al iniciar**, con el tamaño del peor
   caso: la mayor cantidad de polígonos entre las zonas cargadas a la vez, que reporta el
   cocinador. Se corrige en Consecuencias ("La memoria de A*").
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 hace de la cámara una opción del
+  jugador y la saca de la simulación. Si la ventaja de las fichas usara la cámara, elegir
+  otro estilo cambiaría cómo atacan los zombies. **La ventaja pasa a un cono alrededor
+  del rumbo de la caballera,** en el paso anterior, con su ángulo como CVar. Se corrige en
+  la Decisión 4, en Consecuencias y en Abierto.
 
 ## Contexto y problema
 
@@ -335,7 +340,7 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
 | 1 | Modelo de decisión | **BT plano para los zombies.** Los nodos de cada tipo viven en un arreglo compartido, con los hijos contiguos: selector, secuencia, negación, condición y acción. Las hojas se despachan con un `switch` sobre su id. Se evalúa **desde la raíz en cada decisión**, así que reacciona solo. **Las acciones comprometidas** (preparar el ataque, agarrar, recuperarse) avanzan en cada paso fuera del árbol, y el árbol las respeta con una condición de "ocupado". **Los jefes** (el mago; después, el rey y la reina) llevan **una FSM propia** con `switch` |
 | 2 | Dónde vive el comportamiento | **El árbol de cada tipo se arma en C++ al iniciar,** con un constructor, fuera del paso. **Los números de cada tipo** (velocidad, alcance, tiempos del ataque, radios de percepción) van en la **tabla de datos del tipo**, la misma del ADR-0018, y se ajustan sin recompilar |
 | 3 | Percepción | **Vista:** distancia, ángulo de visión y un rayo de la física (ADR-0016). **Oído:** eventos de ruido con posición y radio, que emite el combate (el tajo, el rebote en el metal). **Contagio:** un zombie alertado alerta a los que tiene cerca |
-| 4 | Coordinación del ataque | **Fichas de ataque, 3 para empezar** (configurable), y **espera en anillo** para los que no tienen ficha. **La ficha va al más cercano, con ventaja para los que están en cámara.** El desempate es por entidad. Se toma al empezar a preparar el ataque y se devuelve al terminar de recuperarse, o antes si su dueño deja de poder atacar |
+| 4 | Coordinación del ataque | **Fichas de ataque, 3 para empezar** (configurable), y **espera en anillo** para los que no tienen ficha. **La ficha va al más cercano, con ventaja para los que están en el cono de la caballera** (fe de erratas, ADR-0031: antes, en cámara). El desempate es por entidad. Se toma al empezar a preparar el ataque y se devuelve al terminar de recuperarse, o antes si su dueño deja de poder atacar |
 | 5 | Espacio navegable | **Navmesh:** polígonos convexos con sus portales |
 | 6 | Origen de los datos | **La genera el cocinador desde la colisión del escenario** (ADR-0017), con un algoritmo propio al estilo de Recast. **Un prefijo nuevo en Blender** permite retocarla: quitar o forzar zonas |
 | 7 | Búsqueda de camino | **A* sobre los polígonos y *funnel*.** Si el zombie ve a su objetivo sobre la navmesh, camina directo. **Seguimiento reactivo**, como *Left 4 Dead*: camina hacia un punto más adelante en el camino, y la evasión resuelve los detalles |
@@ -384,12 +389,13 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
   contador del registro por frame cuenta los descartes (ADR-0010: los pools que llena el
   juego degradan con su regla). En el corte vertical, **un zombie alertado no se olvida**
   de la caballera.
-- **La ventaja de la cámara** usa la cámara del paso anterior: un zombie dentro de su
-  ángulo de visión cuenta como más cercano, con un descuento configurable en metros. La
-  cámara ya tiene que avanzar con la simulación, porque de ella sale el punto apuntado
-  del tajo (visión y ADR-0018): una partida grabada solo se repite si la cámara se
-  repite. Así la ventaja tampoco rompe el determinismo. Es lo que hace *DOOM*: el que
-  está en pantalla tiene prioridad para atacar.
+- **La ventaja del cono** usa el rumbo de la caballera del paso anterior: un zombie
+  dentro de un cono alrededor de ese rumbo (su ángulo es una CVar) cuenta como más
+  cercano, con un descuento configurable en metros. Es la idea de *DOOM* (el que está en
+  pantalla tiene prioridad para atacar), pero **sin la cámara** (fe de erratas,
+  ADR-0031): la cámara es una opción del jugador y está fuera de la simulación, así que
+  elegir otro estilo no cambia la partida. El rumbo es estado de la simulación, así que
+  la ventaja no rompe el determinismo.
 - **Las fichas y el ADR-0018:** durante la secuencia de la espada clavada, los demás
   zombies siguen con sus fichas, pero con la escala de tiempo baja. **No usan ficha:** el
   guardaespaldas, los jefes y **el agarre que sale de la espada clavada** (el zombie
@@ -480,8 +486,8 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
   - **la IA y la navegación en el juego llevan tests después,** como el resto del
     gameplay. Son funciones puras con casos calculados a mano: A* y el *funnel* sobre una
     navmesh armada a mano, con las esquinas esperadas; el programa lineal de ORCA, con dos
-    agentes de frente que no chocan; el reparto de fichas (el más cercano, la ventaja de
-    la cámara, el desempate); y la evaluación de un árbol chico;
+    agentes de frente que no chocan; el reparto de fichas (el más cercano, la ventaja del
+    cono, el desempate); y la evaluación de un árbol chico;
   - **los tests de *replay*** cubren la horda entera con un hash del estado.
 - **Rendimiento:** "Gameplay e IA" sigue con 1,3 ms por paso, como hipótesis. El
   prototipo usó ~0,1 ms en IA y navegación con 50 zombies, pero es 2D y no tiene el
@@ -513,7 +519,7 @@ exactamente dónde están. **Recast/Detour es una referencia**, no una dependenc
 - **Abierto:**
   - todos los valores de partida, que se ajustan jugando: las fichas, el radio del
     anillo, la distancia y el ángulo de la vista, el radio del contagio, los radios de
-    ruido, el descuento de la cámara, el intervalo de recálculo, el punto adelantado del
+    ruido, el ángulo y el descuento del cono, el intervalo de recálculo, el punto adelantado del
     seguimiento y los parámetros de ORCA;
   - el resto del algoritmo de Recast (alturas, pisos, escaleras), cuando se armen las
     zonas del castillo;

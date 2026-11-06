@@ -7,6 +7,18 @@
 - **Fe de erratas:** 2026-11-02 (#39): el ADR-0025 decide la imagen del rebote (chispas)
   y suma una tabla `material → efecto` junto a la de materiales por cápsula, que también
   elige las capas de la tapa. Se corrige en Consecuencias.
+  2026-11-03 (#73): el ADR-0031 hace de la cámara una opción del jugador que él no mueve,
+  así que **el apuntado deja de depender de la cámara.** **El rayo sale del pecho de la
+  caballera;** al apuntar, el ratón o el stick derecho guían la espada y mueven su
+  dirección dentro de un cono alrededor del rumbo, y una mira en el mundo marca dónde
+  pega. **Por fases:** al apuntar se mueve el punto; al cargar, la dirección del rayo
+  queda fija respecto del rumbo y se gira la línea; al soltar, el rayo se vuelve a
+  lanzar. La guía termina al soltar. **El tajo especial se resuelve al soltar:** el
+  combate predice el barrido entero contra las poses de ese paso, y si la predicción
+  cumple las reglas de corte especial, los pedidos de corte salen en ese paso y la hoja
+  lo recorre en cámara lenta (la cámara del tajo y la herida que se abre lo necesitan
+  antes de que la hoja entre). Cuándo y cómo se predice queda abierto. Se corrige en la
+  Decisión 5, en Consecuencias y en Abierto.
 
 ## Contexto y problema
 
@@ -453,7 +465,7 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
 | 2 | Resistencia y juntas | **Material por cápsula,** en una tabla por tipo de zombie. **El ángulo** entre el plano y el hueso multiplica el umbral de entrada del metal (dividido por el seno, con un piso). **Juntas por eje:** si el plano cruza el eje de una parte cerca de una articulación, esa parte es junta |
 | 3 | Fuerza insuficiente y tajo rápido | **Bajo el umbral, rebota con retroceso:** un aturdimiento corto y la energía que se recupera más lento por un momento. En la carne no hay umbral: un tajo débil entra y se clava. **El tajo rápido corta solo lo que atraviesa entero;** si no atraviesa la primera parte, empuja. Nunca se clava |
 | 4 | Hoja clavada | **Una secuencia de *quick time*.** Presionar rápido y responder a los eventos termina el corte, y cada pulsación gasta energía. El zombie avanza ensartado por la hoja; la caballera y él van en tiempo real, y los demás, muy lentos o congelados. **Si el zombie la alcanza o la energía llega a 0, pasa al agarre.** Al zafarse, la espada sale y el zombie queda con la herida abierta. La espada no se suelta |
-| 5 | Momento del golpe | **El pedido se emite al salir o detenerse la hoja.** **Una pausa por tajo,** que empieza en ese paso, con su duración configurable (0 la apaga). **Se congelan solo la caballera y el zombie golpeado,** como en *Monster Hunter*. **Corte especial por reglas fijas:** muchos zombies en un tajo y el golpe final al mago. La cámara del tajo se puede apagar en las opciones |
+| 5 | Momento del golpe | **El pedido se emite al salir o detenerse la hoja.** **Una pausa por tajo,** que empieza en ese paso, con su duración configurable (0 la apaga). **Se congelan solo la caballera y el zombie golpeado,** como en *Monster Hunter*. **Corte especial por reglas fijas:** muchos zombies en un tajo y el golpe final al mago. **El tajo especial se resuelve al soltar,** con la predicción del barrido entero (fe de erratas, ADR-0031). La cámara del tajo se puede apagar en las opciones |
 | 6 | Alcance | **Plano por el pecho:** pasa por el pecho de la caballera y por el punto apuntado, con la dirección de la línea dibujada |
 | 7 | Vivo o muerto | **R1 o R2:** sigue vivo el pedazo con la cabeza completa que **sigue unido al torso o conserva al menos un brazo o una pierna.** Cualquier corte en la cabeza mata |
 | 8 | Cuántos cortes | **Todo se puede volver a cortar,** incluidos los pedazos del suelo, salvo que la parte separada quede más delgada que el grosor de la hoja |
@@ -465,8 +477,12 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
 - **El camino de un tajo,** dentro del paso de simulación (ADR-0012):
 
   ```
-  gameplay: la carga (curva, energía) → al soltar: punto apuntado (rayo de la cámara
-            contra las cápsulas) → plano por el pecho, el punto y la línea
+  gameplay: al apuntar: el ratón o el stick mueven la dirección del rayo → al cargar:
+            la dirección queda fija respecto del rumbo y giran la línea; la carga
+            (curva, energía) → al soltar: punto apuntado (el rayo desde el pecho se
+            vuelve a lanzar, contra las cápsulas) → plano por el pecho,
+            el punto y la línea → predicción del barrido: ¿corte especial?
+            (si lo es, los pedidos de corte salen en este paso; ADR-0031)
   combate:  barrido del paso (ADR-0016) → por cada parte que la hoja alcanza:
             umbral de entrada (material, junta, ángulo) → gasto por área en subpasos
             → si la hoja sale o se detiene en un zombie: ¿queda lugar? → slice_request
@@ -529,9 +545,18 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   la dirección del pecho al punto apuntado** sin su componente sobre la línea (antes era
   "hacia donde mira la cámara", que con el plano nuevo ya no está en el plano). Queda
   registrado en el ADR-0015 como fe de erratas.
-- **El punto apuntado** es el primer impacto del rayo central de la cámara contra las
+- **El punto apuntado** es el primer impacto del rayo **que sale del pecho de la
+  caballera** (fe de erratas, ADR-0031: ya no es el rayo central de la cámara) contra las
   cápsulas de los zombies y de los pedazos (la consulta de rayo del ADR-0016). Si el rayo
-  no toca nada, se toma el punto del rayo a la distancia del alcance de la hoja.
+  no toca nada, se toma el punto del rayo a la distancia del alcance de la hoja. **Al
+  apuntar, el ratón o el stick derecho guían la espada** y mueven la dirección del rayo
+  dentro de un cono alrededor del rumbo; **una mira en el mundo** marca el punto. **Al
+  cargar, la dirección del rayo queda fija respecto del rumbo de la caballera y el ratón
+  o el stick giran la línea** (más lento y con costo de energía). Lo fijo es esa
+  dirección, no un punto del mundo, y **el rayo se vuelve a lanzar al soltar:** si el
+  zombie se movió durante la carga, el punto apuntado es donde el rayo pega en ese paso.
+  La guía termina al soltar. Como el rayo sale del pecho, el plano lo
+  contiene: la línea es el giro del plano alrededor del rayo.
 - **El plano del tajo rápido,** que no apunta: horizontal, por el pecho de la caballera,
   en la dirección en que mira. Como corta solo lo que atraviesa entero, **su recta de
   detención se pone un margen angular antes de la primera parte que no atraviesa:** así
@@ -636,7 +661,13 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   aditivas y estiradas, de una tabla `material → efecto`).
 - **La cámara del tajo** sale con un mínimo de zombies cortados en un tajo (configurable)
   y en el golpe final al mago, y se puede apagar. **Al mago lo aturde solo un tajo con
-  carga máxima.**
+  carga máxima.** **El tajo especial se resuelve al soltar** (fe de erratas, ADR-0031):
+  la cámara del tajo tiene que empezar antes de que la hoja entre, y la herida que se
+  abre necesita los pedazos mientras la hoja cruza. Al soltar, el combate predice el
+  barrido entero contra las poses de ese paso (una consulta de solo lectura,
+  determinista); si cumple las reglas, los pedidos de corte salen en ese paso y la hoja
+  lo recorre en cámara lenta. Los tajos normales siguen pidiendo el corte al salir o
+  detenerse la hoja.
 - **Determinismo:** ninguna regla usa azar ni el reloj. La secuencia de *quick time* lee
   el input por paso, así que una partida grabada la repite igual (ADR-0020).
 - **Tests (ADR-0011):** el gameplay lleva tests después, y la sensación, playtest. Las
@@ -662,6 +693,11 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
     mínimo de zombies para la cámara del tajo;
   - el grosor de la hoja, que fija el filtro de los pedazos chicos y probablemente el
     ancho de la cuña del ADR-0007;
+  - **cuándo y cómo se predice el barrido del tajo especial** (ADR-0031): contra qué
+    poses, qué pasa si un zombie se mueve durante la cámara lenta, y cómo se reparte la
+    predicción entre los zombies del tajo. También los valores de la guía de la espada
+    (el cono, su resorte, su velocidad y el ángulo con que empieza la línea), que son
+    CVars;
   - la curva de la duración del barrido según la carga, y la duración del tajo rápido;
   - el diseño exacto de la secuencia de *quick time* (qué teclas, cuántos eventos), con
     playtest;

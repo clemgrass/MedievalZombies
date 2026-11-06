@@ -58,6 +58,14 @@
   están libres. El binario de arranque (la fuente, "Cargando…" y el fondo) vive al
   principio del global. Se corrige en la Decisión 2, en Consecuencias (el mapa de la memoria y lo
   que se toca al iniciar) y en Abierto.
+- **Fe de erratas:** 2026-11-06 (#74): el ADR-0032 suma la región de input: los eventos
+  de un frame (2048, con su *timestamp*), las acciones de cada paso (hasta 8) y la tabla
+  de controles, ~70 KB que viven todo el programa. **Llena, no aborta: se suman los deltas
+  y ningún botón se pierde.** Es la tercera excepción a la regla de abortar, y la única
+  que existe en Release: lo que llena la región lo decide el hardware del jugador (un
+  mouse de 8000 Hz da ~133 eventos por frame, y un tirón de 8 pasos, ~1100), no el autor.
+  Sumar los deltas no cambia el movimiento total, solo en qué paso cae. Se corrige en
+  Consecuencias (el mapa de la memoria y las excepciones a abortar).
 
 ## Contexto y problema
 
@@ -455,6 +463,7 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   | Campos de distancia de las tapas (ADR-0025) | El corte y `engine/gpu` | La de la última tapa que lo usa, más los frames en vuelo | Pool de capas de un arreglo de texturas; lleno, se reusa el más viejo |
   | UI (ADR-0026) | La UI | Todo el programa | Capacidad fija: 8192 vértices por frame, el estado por ID, los subtítulos cortados y las tablas de las fuentes y de los textos de todos los idiomas; llena, aborta |
   | Atlas de las fuentes (ADR-0026) | La UI y `engine/gpu` | Todo el programa | Un bloque de `gpu::Allocator` |
+  | Input (ADR-0032) | La capa de acciones | Todo el programa | Capacidad fija: 2048 eventos por frame, las acciones de hasta 8 pasos y la tabla de controles; llena, suma los deltas |
   | *Ring buffer* | `engine/gpu` | Un frame en vuelo | Anillo |
   | Slots de zona en la GPU (ADR-0027, ADR-0028): vértices, índices y texturas | `engine/gpu` | Una zona, más los frames en vuelo | **Slots fijos:** un bloque de `gpu::Allocator` partido en tantos slots como el tope de zonas, cada uno del tamaño fijado en el texto del mundo para la GPU |
   | Slots de zona en la CPU (ADR-0027, ADR-0028): el binario entero de la zona (instancias, colisión, navmesh, marcadores, fases, triggers y sonidos, más la parte de la GPU como origen de la copia) | La carga | Una zona, más los frames en vuelo | **Slots fijos** del tamaño fijado en el texto del mundo para la CPU, en memoria de Vulkan visible desde la CPU y con caché (`HOST_CACHED`), mapeada siempre. El hilo de I/O escribe ahí sin allocator |
@@ -525,6 +534,10 @@ como ASan no ve dentro de ellos, los hago avisarle a ASan de lo que liberan.
   los builds de desarrollo: el dibujo de depuración descarta lo que no cabe y muestra en
   pantalla cuánto descartó, y Tracy con un servidor conectado pide memoria mientras corre.
   Por eso una medición del protocolo nunca se hace con el servidor conectado.
+- **La región de input** (ADR-0032) es la tercera excepción, y la única en Release: llena,
+  suma los deltas de los eventos que no caben y nunca pierde un botón. Lo que la llena es
+  el hardware del jugador (la frecuencia de su mouse, un tirón), no una decisión del
+  autor. ~70 KB, en "Mundo y ECS".
 - **Lo que vive en `engine/core`:** la arena (con alineación por pedido, marcador y
   reinicio), las *scratch*, el pool con `handle<T>` (ADR-0009), el allocator de offsets y
   los contenedores de capacidad fija (`fixed_vector<T>` y los que hagan falta).

@@ -52,6 +52,17 @@
   después de interpolar el estado** y antes de grabar los comandos; su consulta de pared
   es una llamada directa de solo lectura al escenario estático de la física. Se corrige en
   el orden del frame y en Consecuencias.
+  2026-11-06 (#74): el ADR-0032 decide el input. **Antes de leer el input, el frame
+  espera a que se muestre el frame de hace dos** (`VK_KHR_present_wait2`; si no existe, no
+  espera): la cola nunca tiene más de un frame esperando, y la CPU de un frame sigue en
+  paralelo con la GPU del anterior. **Leer el input** es: vaciar la cola de eventos de
+  `platform::` (cada uno con su *timestamp*) y armar, en la capa de acciones, **las
+  acciones de cada paso**; cada evento va al paso que cubre su *timestamp*, y lo que cae
+  después del último paso del frame espera al siguiente. La capa de acciones es un
+  sistema encima de `engine/core`; `platform::` le da los eventos con tipos propios, sin
+  SDL. **La vibración** corre una vez por frame, después del audio, y lee el arreglo de
+  eventos del audio (ADR-0024), que vive el frame: es de la presentación y no toca el
+  estado. Se corrige en el orden del frame.
 
 ## Contexto y problema
 
@@ -143,7 +154,9 @@ simula en pasos fijos de 16 ms.
 Orden propuesto dentro de un frame:
 
 ```
-1. platform: vaciar la cola de eventos → estado de input        (ADR-0004)
+0. esperar a que se muestre el frame de hace dos                 (ADR-0032)
+1. platform: vaciar la cola de eventos (con su timestamp)        (ADR-0004)
+   input: eventos → acciones de cada paso, por su timestamp      (ADR-0032)
    carga: avisos del hilo de I/O → validar → pedidos nuevos      (ADR-0027, ADR-0028)
 2. mientras el acumulador ≥ paso fijo:
      simulación: gameplay → combate → corte → física → animación
@@ -153,6 +166,7 @@ Orden propuesto dentro de un frame:
            (la cámara: ADR-0031; la GPU: ADR-0005)
            (primero la subida de las zonas, 2 MB por frame)       (ADR-0028)
 4. audio: eventos de los pasos → voces → comandos al callback   (ADR-0024)
+   vibración: los eventos del audio → los dos motores del mando    (ADR-0032)
 5. fin de frame: reiniciar la arena del frame                    (ADR-0010)
 ```
 

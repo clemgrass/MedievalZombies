@@ -97,3 +97,4 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0029](adr/0029-ci-cd.md) | CI/CD (contenedor de Arch con fecha fija, etapas con `ci-ok`, CD con el Steam Linux Runtime si se logra) | Transversal | Aceptado |
 | [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |
 | [ADR-0031](camera/adr/0031-sistema-de-camara.md) | Sistema de cámara (tres estilos a elegir que el jugador no mueve, apuntado desde el pecho, cámara fuera de la simulación, cámara del tajo que acompaña la hoja) | Cámara | Aceptado |
+| [ADR-0032](adr/0032-input-y-controles.md) | Input y controles (acciones con contextos, cada evento al paso de su *timestamp*, mouse crudo y stick por posición, esperar el frame de hace dos) | Transversal | Aceptado |

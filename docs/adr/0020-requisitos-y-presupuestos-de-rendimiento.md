@@ -23,6 +23,14 @@
   para comparar dos versiones de una pasada de GPU, el reloj de la GPU se fija: con el
   reloj libre, la misma configuración varió hasta un 50 %. R2 se sigue midiendo con el
   reloj libre. Se corrige en la Decisión 3, en el protocolo y en Consecuencias.
+- **Fe de erratas:** 2026-11-06 (#74): el ADR-0032 midió la latencia del input a la
+  pantalla. **Leer el input lo más tarde posible no ganó nada** en este compositor
+  (Hyprland compone justo después del vblank); lo que la baja es **no dejar frames
+  esperando en la cola.** El juego espera a que se muestre el frame de hace dos antes de
+  leer el input: 43 ms medidos, contra 82 del *game loop* de libro, **sin poner la CPU y
+  la GPU en serie,** así que cada una sigue teniendo su frame de 16,7 ms. Esperar al
+  frame anterior (en serie) perdió frames con solo 6 ms de CPU. Se corrige en "Cómo lo
+  defiendo".
 
 ## Contexto y problema
 
@@ -414,7 +422,10 @@ nota como un tirón molesto.
 Para tener un margen de seguridad. Medimos que esta máquina baja casi a la mitad su
 frecuencia con el calor, y además están el sistema operativo y los picos que todavía no
 conocemos. Ese margen también se podría usar para bajar el input lag, por ejemplo
-leyendo el input lo más tarde posible.
+leyendo el input lo más tarde posible. (Fe de erratas, ADR-0032: medido, leer tarde no
+ganó nada en este compositor. Lo que baja la latencia es no dejar frames esperando en la
+cola: esperar a que se muestre el frame de hace dos la bajó de 82 a 43 ms, y la CPU y la
+GPU siguen teniendo 16,7 ms cada una.)
 
 **Tienes un solo frame de 16,7 ms. ¿Cómo es que la CPU y la GPU tienen 16,7 ms cada una,
 en vez de repartírselo?**

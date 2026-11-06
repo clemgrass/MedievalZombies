@@ -45,7 +45,7 @@ se recupera solo mientras un paso cueste menos que su duración (6,0 ms contra 1
 
 | Sistema | Meta | Estado |
 |---|---|---|
-| Plataforma e input | 0,3 ms | Hipótesis |
+| Plataforma e input (eventos, la capa de acciones y la vibración, ADR-0032) | 0,3 ms | Hipótesis. La espera del modo D (hasta que se muestra el frame de hace dos) no es trabajo de la CPU: no cuenta aquí |
 | Render en la CPU (culling, comandos y subida de geometría) | 2,5 ms | Hipótesis |
 | Audio en el hilo principal (eventos, emisores, sonido 3D y comandos, ADR-0024) | 0,5 ms | Hipótesis |
 | VFX: integrar, crear marcas, ordenar y escribir los registros de dibujo (ADR-0025) | 0,2 ms | Hipótesis. El prototipo del ADR-0025 midió ~0,005 ms con la demo de un corte (~200 partículas vivas) y 0,24 ms con 20 000; cada marca recortada, 2 µs. La integración y las marcas corren en cada paso, así que un frame con dos pasos las paga dos veces (ver abajo) |
@@ -114,7 +114,9 @@ del ADR-0010 (pedidos de corte, cuerpos y ragdolls, ECS y las partículas de los
 de sangre (384 KB) y los campos de distancia de las tapas (512 KB) del ADR-0025 son
 bloques de la GPU que viven todo el programa y caen en "Recursos de la GPU". La región
 de UI del ADR-0026 (~200 KB, con las tablas de las fuentes y de los textos) cae en "Mundo y ECS", y el atlas de sus fuentes (~165 KB),
-en "Recursos de la GPU"; sus vértices viajan por la subida (160 KB por frame). Con el
+en "Recursos de la GPU"; sus vértices viajan por la subida (160 KB por frame). La región
+de input del ADR-0032 (~70 KB: los eventos de un frame, las acciones de cada paso y la
+tabla de controles) también cae en "Mundo y ECS". Con el
 ADR-0027, la memoria que antes vivía "un nivel" vive **una zona**, y se dimensiona por el
 tope de zonas cargadas a la vez (5, de partida). El ADR-0028 la reparte en **slots
 fijos**, tantos como el tope, cada uno del tamaño fijado (ver abajo), reservados y
@@ -174,3 +176,4 @@ fuera de la caché de páginas), en la máquina de referencia:
 | 2026-11-02 | #41 | Con el ADR-0027, la memoria que vivía "un nivel" vive una zona, dimensionada por el tope de zonas cargadas a la vez (5, de partida): los recursos de la GPU de cada zona caen en "Recursos de la GPU" y sus datos en la CPU, en "Mundo y ECS". Ninguna meta ni total cambia | Ninguna |
 | 2026-11-03 | #42 | Meta nueva para la subida de las zonas del ADR-0028 (hipótesis): 0,6 ms de GPU por frame (2 MB), que salen de la reserva de GPU (de 2,6 a 2,0 ms). Los slots de las zonas y el global caen en "Assets en la CPU" y "Recursos de la GPU"; las entidades de las zonas siguen en "Mundo y ECS". La región de recarga en caliente (32 MiB, hipótesis) se suma a la fila de depuración y sale de "Ejecutable, driver y reserva". Los tamaños se fijan en el texto del mundo, con estas hipótesis: slots de 24 MiB en la CPU y 24 MiB en la GPU (120 MiB en cada fila con el tope de 5) y un global de 64 MiB en la CPU y 128 MiB en la GPU; los sonidos comunes pasan de "Audio" al global, y la música sigue en "Audio". Sección nueva: tiempos de carga (≤ 3 s al arrancar y ≤ 1 s al volver a un checkpoint, hipótesis). Los totales no cambian | Ninguna del protocolo: prototipo de laboratorio con el reloj libre |
 | 2026-11-03 | #73 | Con el ADR-0031, la cámara corre una vez por frame en el render (un barrido de esfera contra el escenario estático y unos resortes): cae en "Render en la CPU". La predicción del tajo especial (el barrido entero, al soltar, solo en los cortes especiales) cae en "Combate y corte". La herida que se abre es un descarte en el shader de la tapa, dentro de la pasada de color. Ninguna meta ni total cambia | Ninguna: el costo de la cámara no se midió |
+| 2026-11-06 | #74 | Con el ADR-0032, la capa de acciones y la vibración caen en "Plataforma e input", con la misma meta. La espera del modo D antes de leer el input no es trabajo de la CPU. La región de input (~70 KB) cae en "Mundo y ECS". Ninguna meta ni total cambia | Ninguna: el costo de la capa de acciones no se midió. El prototipo midió la latencia del input a la pantalla (43 ms con el modo D, 82 con el *game loop* de libro), que no es una meta del ADR-0020 |

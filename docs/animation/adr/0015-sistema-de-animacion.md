@@ -11,6 +11,16 @@
   tajo rápido tiene la suya. La pausa de impacto congela solo a la caballera y al zombie
   golpeado, así que congela el reloj de la animación de esos dos, no el de todo el juego.
   Se corrige en la Decisión 7 y en los valores de partida del tajo.
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 saca el apuntado de la cámara. **Cuando
+  no ataca, la caballera es animación (clips). Al apuntar, el ratón o el stick derecho
+  guían la espada**, y la guía sigue mientras carga: al apuntar mueve el punto, al cargar
+  gira la línea, y termina al soltar. **Esa guía es procedural**, con los dos brazos en
+  la empuñadura (la IK de la Decisión 5), y **siempre restringida a lo que puede hacer un
+  cuerpo humano con una espada pesada en las dos manos: lenta, precisa y con peso, nunca
+  flácida ni "espagueti"** (idea del autor). Cómo se logra el peso lo decide la
+  implementación de este ADR; **todo lo que da esa sensación es configurable sin
+  recompilar** (ADR-0021), para ajustarlo jugando. El 90° del arco no cambia: ya es la
+  dirección del pecho al punto apuntado. Se corrige en la Decisión 5 y en Abierto.
 
 ## Contexto y problema
 
@@ -267,7 +277,7 @@ mezcla de clips se sale del arco: eso define la sensación del juego.
 | 2 | Skinning | **LBS, con hasta 4 huesos por vértice.** El skinning rígido (pesos de 1,0) es un caso particular: el aspecto segmentado de PS1 lo decide cada asset, no el engine |
 | 3 | Dónde | **Híbrido.** La GPU deforma en el vertex shader para dibujar. La CPU deforma **solo el zombie que se corta**, en el paso del corte |
 | 4 | Corte y pedazos | **Mixto.** El pedazo que sigue vivo (con la cabeza, según el ADR-0018) conserva **el esqueleto completo**, con los huesos que perdió enmascarados, y sigue animado con los mismos clips. Los pedazos muertos quedan rígidos o pasan a ragdoll (ADR-0016) |
-| 5 | El tajo | **Mixto.** La punta recorre un arco en el plano del tajo, los dos brazos alcanzan la empuñadura con IK analítica de dos huesos, el torso gira siguiendo la punta, y un clip da el peso del cuerpo (el paso adelante y la carga) |
+| 5 | El tajo | **Mixto.** La punta recorre un arco en el plano del tajo, los dos brazos alcanzan la empuñadura con IK analítica de dos huesos, el torso gira siguiendo la punta, y un clip da el peso del cuerpo (el paso adelante y la carga). **Antes de soltar, el ratón o el stick guían la espada** con la misma IK, limitada por el cuerpo, lenta y con peso (fe de erratas, ADR-0031) |
 | 6 | Zombie mutilado | **Un clip por estado** (cojear, arrastrarse con dos brazos o con uno…), con los huesos perdidos enmascarados |
 | 7 | En el frame | La pose se evalúa **en cada paso de simulación** (ADR-0012), después del corte: el combate y el corte usan la pose con que terminó el paso anterior. El render interpola con *nlerp* (revisando el hemisferio), y la pausa de impacto congela el reloj de la animación de los personajes que congela (ADR-0018) |
 
@@ -359,6 +369,10 @@ cargarlos (ADR-0008).
     (mover el centro del arco, un paso lateral o limitar los ángulos) lo deciden el
     ADR-0018 y el ajuste del combate (decidido en el ADR-0018: el plano pasa por el
     pecho, que es siempre el centro del arco);
+  - **la sensación de la guía de la espada** (ADR-0031): cómo se logra que pese (un
+    resorte con tope de velocidad, límites de articulación en la IK, la cadena que sigue
+    con retraso, el clip de peso debajo). Se decide y se ajusta jugando, con todos sus
+    valores como CVars;
   - el traspaso de la pose al ragdoll y los cuerpos físicos de los pedazos (ADR-0016);
   - qué partes definen cada estado del zombie mutilado (decidido en el ADR-0018);
   - cómo se asignan los pesos de los vértices nuevos: interpolar (simple, con un error

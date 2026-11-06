@@ -15,6 +15,10 @@
   builds de desarrollo **se recargan en caliente** como las demás texturas: con
   inotify, una imagen nueva y la vieja retirada con la cola por número de frame. Se
   corrige en Abierto.
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 decide la cámara. **La sacudida es
+  suya** (trauma con ruido suave, solo rotación, solo en la presentación). **Dentro de la
+  cámara del tajo, los *frames* de impacto duran 2 o 3 frames reales,** no de
+  simulación: en cámara lenta no se estiran. Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -488,7 +492,8 @@ nada a la GPU.
   - la sangre sobre los cuerpos y sobre la hoja (un valor por objeto que el shader mezcla
     con un ruido);
   - las marcas en las paredes (la caja orientada con la normal del impacto);
-  - cómo se ven los *frames* de impacto dentro de la cámara del tajo (ADR-0031);
+  - cómo se ven los *frames* de impacto dentro de la cámara del tajo (decidido en el
+    ADR-0031: duran 2 o 3 frames reales, no de simulación, también en cámara lenta);
   - dónde viven los VFX en las capas del ADR-0012: consultan la física (el rayo), leen
     las poses y los eventos del combate, y la tabla `material → efecto` es del juego.
     Lo decide el ticket 1; por ejemplo, la simulación y el dibujo en `engine/vfx`,

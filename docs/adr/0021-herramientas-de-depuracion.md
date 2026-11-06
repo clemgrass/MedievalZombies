@@ -44,6 +44,15 @@
   guarda un checkpoint, no el estado completo. Se corrige en las Decisiones 5, 7 y 8, en
   Fuera de alcance, en Consecuencias (la región de depuración y "Qué es una CVar y qué
   no") y en Abierto.
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 saca la cámara de la simulación: **un
+  *replay* se puede mirar con cualquier estilo de cámara.** La cámara lenta del tajo sí
+  cambia el tiempo de la simulación, así que **el encabezado del *replay* guarda si la
+  cámara del tajo está apagada,** y un cambio durante la grabación se graba como evento
+  del paso (ADR-0026). **La cámara libre de depuración** no toca la partida. Los valores
+  de la cámara y de la guía de la espada son CVars, **salvo el FOV y cuánto se cierra al
+  apuntar, que pasan a ser opciones del jugador** (en `opciones.txt`); su valor por
+  defecto sí es una CVar, constante en Release. Se corrige en la Decisión 8 y en
+  Consecuencias ("Qué es una CVar y qué no").
 
 ## Contexto y problema
 
@@ -402,7 +411,7 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 | 5 | Logging | **Cinco niveles** (error, aviso, info, debug, traza) y **una categoría por módulo**. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, que una vez por frame se le entrega al hilo de I/O del ADR-0028, que lo escribe a un archivo en la carpeta de estado. Ante un error fatal, el hilo principal espera a que se vacíe antes de abortar. Sin formato diferido y sin spdlog. Lo que no corresponde a cada preset se elimina al compilar |
 | 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame. Del corte muestra: el plano del tajo y su barrido; las cápsulas de cada hueso, y cuáles tocó la hoja; la recta donde se detuvo la hoja y la espada clavada; el contorno del corte; la cuña y el abanico del fondo de la hendidura; las normales de la tapa ya des-deformadas y las de los vértices nuevos; y los pedazos coloreados por grupo de huesos. Los presupuestos de memoria van en el panel (dimensión 9) |
 | 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados (lo escribe el hilo de I/O, ADR-0028) y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante.** Excepción (ADR-0027): los valores del mundo (distancias de carga y de simulación y tope) son datos de los assets, con su propio panel que valida contra el binario del mundo |
-| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el mundo, el checkpoint de partida (zona, fase y fases terminadas) y los valores del mundo en uso (ADR-0027), la semilla y los valores ajustables del inicio, y **un hash de control cada 60 pasos**. El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques por el hilo de I/O (ADR-0028). **Recargar en caliente algo que cambia la simulación (una malla) corta la grabación** en ese paso (ADR-0028). Controles de tiempo: pausa, avance de un paso y cámara lenta |
+| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el mundo, el checkpoint de partida (zona, fase y fases terminadas) y los valores del mundo en uso (ADR-0027), la semilla, los valores ajustables del inicio y si la cámara del tajo está apagada (ADR-0031: quita la cámara lenta), y **un hash de control cada 60 pasos**. La cámara no entra: el *replay* se mira con cualquier estilo (ADR-0031). El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques por el hilo de I/O (ADR-0028). **Recargar en caliente algo que cambia la simulación (una malla) corta la grabación** en ese paso (ADR-0028). Controles de tiempo: pausa, avance de un paso y cámara lenta |
 | 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. En el registro por frame, la escala de R4 del ADR-0020: **`RssAnon` (de `/proc/self/statm`) más el `heapUsage` de `VK_EXT_memory_budget`**, y R4 es el máximo por frame de esa suma. `TracyAllocN` solo para el pool de pedazos |
 | 10 | Presets | **Una macro por herramienta**, con la combinación de cada preset fijada en `CMakePresets.json`. La macro de zona alimenta a Tracy en `relwithdebinfo` y a la traza del verificador del ADR-0030 en `debug` |
 
@@ -519,9 +528,10 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 - **Las CVars en Release son constantes:** un valor ajustado en el archivo de cambios
   pasa al código (su valor por defecto) con un PR antes de valer en Release.
 - **Qué es una CVar y qué no:** los valores de ajuste de la cámara y los controles que
-  fija la visión (distancia, altura, campo de visión, ventanas de input) son CVars, igual
+  fija la visión (distancia, altura, ventanas de input) son CVars, igual
   que los del combate (ADR-0018) y el ancho de la cuña (ADR-0007). Las opciones del
-  jugador (sensibilidad, invertir un eje, apagar la cámara del tajo) no lo son: se
+  jugador (sensibilidad, invertir un eje, apagar la cámara del tajo, y el campo de visión
+  y cuánto se cierra al apuntar, cuyo valor por defecto es una CVar; ADR-0031) no lo son: se
   guardan en `opciones.txt`, en la carpeta de configuración (ADR-0028).
 - **El hash entre máquinas** (resuelve el punto abierto del ADR-0016): con las banderas
   del ADR-0008, Clang y GCC en -O0, -O2 y -O3 dan los mismos bits; lo que no está

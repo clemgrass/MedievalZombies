@@ -31,10 +31,11 @@ docs/
 ├── audio/           audio: README, adr/, research/
 ├── ui/              HUD, subtítulos, menús, texto e idiomas: README, adr/, research/
 ├── levels/          niveles y escenas: README, adr/, research/
+├── camera/          cámara: README, adr/, research/
 └── performance/     rendimiento: README y presupuestos por sistema (documento vivo)
 ```
 
-Las carpetas de área nuevas (`camera/`, etc.) se crean cuando
+Las carpetas de área nuevas se crean cuando
 les toca su primer ADR y tienen la misma forma que `graphics/`. Cuando un área tiene
 código, suma una carpeta `diagramas/` con los diagramas de sus sistemas y procesos
 (ADR-0030).
@@ -95,3 +96,4 @@ las opciones evaluadas, lo que se eligió y por qué.
 | [ADR-0028](adr/0028-recursos-en-runtime-y-guardado.md) | Recursos en runtime y guardado (hilo de I/O propio, slots fijos por zona, paquete dentro del ejecutable en Release, recarga en caliente de lo visual, tarjeta de memoria de 8 KB) | Transversal | Aceptado |
 | [ADR-0029](adr/0029-ci-cd.md) | CI/CD (contenedor de Arch con fecha fija, etapas con `ci-ok`, CD con el Steam Linux Runtime si se logra) | Transversal | Aceptado |
 | [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |
+| [ADR-0031](camera/adr/0031-sistema-de-camara.md) | Sistema de cámara (tres estilos a elegir que el jugador no mueve, apuntado desde el pecho, cámara fuera de la simulación, cámara del tajo que acompaña la hoja) | Cámara | Aceptado |

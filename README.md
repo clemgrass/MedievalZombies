@@ -19,10 +19,10 @@ llegar hasta ella.
 En la mayoría de los juegos de zombies se dispara o se golpea con animaciones fijas.
 Aquí **el ángulo, la fuerza y el punto del corte los decide el jugador:**
 
-- **Apuntar.** La cámara se acerca y el mouse o el stick dibujan la línea del tajo sobre
-  la pantalla. El corte pasa por el centro de la pantalla: al cuello, a la cintura o a
-  la junta de una armadura.
-- **Cargar.** Mantener el ataque carga la fuerza, y al soltar sale el tajo. La precisión
+- **Apuntar.** El mouse o el stick guían la espada, y una mira marca dónde va a pegar:
+  al cuello, a la cintura o a la junta de una armadura.
+- **Cargar.** Mantener el ataque carga la fuerza, y mientras carga se gira la línea del
+  tajo. Al soltar sale el tajo. La precisión
   decide *por dónde* corta, y la fuerza *hasta dónde* llega: un brazo, un zombie entero
   o varios en línea.
 - **Todo pesa.** Cargar, corregir el ángulo, trotar y soltarse de un agarre gastan la

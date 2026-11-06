@@ -46,6 +46,12 @@
   el hilo principal mira sus avisos y decide los pedidos; antes de las pasadas del
   render, graba la subida de las zonas (2 MB por frame). Se corrige en el orden del
   frame, la Decisión 5 y Consecuencias.
+  2026-11-03 (#73): el ADR-0031 saca la cámara de la simulación: el jugador elige un
+  estilo en las opciones y el apuntado sale de la caballera, así que ningún sistema del
+  paso fijo lee la cámara. **La cámara se calcula una vez por frame, en el render,
+  después de interpolar el estado** y antes de grabar los comandos; su consulta de pared
+  es una llamada directa de solo lectura al escenario estático de la física. Se corrige en
+  el orden del frame y en Consecuencias.
 
 ## Contexto y problema
 
@@ -143,7 +149,8 @@ Orden propuesto dentro de un frame:
      simulación: gameplay → combate → corte → física → animación
      VFX: eventos del paso → partículas (fuera del estado)        (ADR-0025)
      reiniciar la arena del paso                                 (ADR-0010)
-3. render: interpolar el estado → grabar comandos → enviar a la GPU  (ADR-0005)
+3. render: interpolar el estado → cámara → grabar comandos → enviar a la GPU
+           (la cámara: ADR-0031; la GPU: ADR-0005)
            (primero la subida de las zonas, 2 MB por frame)       (ADR-0028)
 4. audio: eventos de los pasos → voces → comandos al callback   (ADR-0024)
 5. fin de frame: reiniciar la arena del frame                    (ADR-0010)
@@ -242,7 +249,9 @@ docs/      documentación
 - **Las consultas no van por colas:** un sistema que necesita una respuesta en el momento
   (el combate preguntando qué tocó la espada, la cámara preguntando si hay una pared) la
   pide con una llamada directa a un módulo de abajo. Una consulta no cambia el estado,
-  así que no altera el orden explícito que dan las colas.
+  así que no altera el orden explícito que dan las colas. **La cámara no es un sistema
+  del paso fijo** (ADR-0031): corre en el render, después de interpolar, y nada de la
+  simulación la lee.
 - **El hilo de audio** (ADR-0024) recibe comandos ya resueltos por una cola de un
   productor y un consumidor sin locks, y devuelve su reloj y sus contadores en
   atómicos. No asigna memoria, no toma locks y no hace I/O. El sistema de audio del hilo

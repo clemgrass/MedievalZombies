@@ -84,6 +84,17 @@
   guarda el codec (0 = crudo): hoy nada se comprime. Se corrige en Consecuencias ("El
   cocinador falla el build", "El formato del binario", "Los binarios de la carga", nuevo,
   y Abierto).
+- **Fe de erratas:** 2026-11-03 (#73): el ADR-0031 suma un estilo de cámara con **cámaras
+  fijas y rieles por sector**. Son marcadores de la zona, así que el cocinador **los lee
+  del glTF exportado de la zona**, como los demás: **una cámara fija es un *empty***
+  (su posición y su orientación), y **un riel es una cadena de *empties*** en orden,
+  porque glTF 2.0 no tiene curvas (el exportador de Blender convertiría una curva en
+  malla). **El volumen de su sector es la escala de un *empty*,** como el de los
+  triggers (ADR-0027). Los escribe en el binario de la zona. **Falla el build** si una
+  cámara o un riel queda dentro del escenario, o si **algún polígono del piso de la
+  navmesh de la zona no queda dentro de un volumen de cámara.** Cómo se marcan (un
+  prefijo nuevo o la propiedad `tipo`) y cómo se ordena la cadena se decide al
+  implementarlo. Se corrige en Consecuencias ("Los niveles").
 
 ## Contexto y problema
 
@@ -655,6 +666,11 @@ LFS.
     hay como máximo a menos de cada distancia de salida, de metro en metro— y **la
     entrada máxima** sin una vecina olvidada, para que el juego valide en vivo un cambio
     de esos valores);
+  - lee **las cámaras fijas y los rieles** de cada zona (ADR-0031) del glTF, como
+    *empties*: una cámara es un *empty*, un riel es una cadena de *empties* (glTF no
+    tiene curvas) y el volumen de su sector es la escala de un *empty*; **falla el
+    build** si una cámara o un riel queda dentro del escenario o si algún polígono del
+    piso de la navmesh queda sin volumen de cámara;
   - un cambio solo en un texto se recocina sin abrir Blender.
 
   Cocinar dos veces da los mismos bytes, y lleva el TDD del cocinador.

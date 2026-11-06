@@ -17,6 +17,14 @@
   cámara del último frame, así que **la cámara sigue fuera de la simulación.** Mientras
   apunta, la caballera camina muy despacio, sin girar el rumbo. Se corrige en "Qué no
   decide este ADR" y en Consecuencias.
+- **Fe de erratas:** 2026-11-06 (#76): el ADR-0034 decide la cámara de las cinemáticas.
+  **Sale de Blender, horneada a 30 Hz, y queda fuera de la simulación** como las demás:
+  se calcula una vez por frame, desde el tiempo interpolado. **Entra con un corte seco.**
+  **Desde el marcador `salida` hasta el final, se mezcla con *smoothstep* hacia la cámara
+  del estilo que el jugador eligió,** calculada en vivo; así, al terminar, no queda nada
+  que mezclar. El cocinador barre ese tramo en los tres estilos (con la esfera de 0,2 m
+  de la Decisión 6) y falla si cruza el escenario o pasa a menos de 0,5 m de la
+  caballera. Se corrige en "Qué no decide este ADR".
 
 ## Contexto y problema
 
@@ -74,7 +82,7 @@ Varios ADRs ya aceptados dejaron preguntas para este:
 | Tema | Dónde |
 |---|---|
 | Las curvas, la zona muerta y la sensibilidad del mouse y del stick, y cómo entra el input al paso | ADR-0032 (#74). Aquí la guía de la espada (la dirección del rayo y el giro de la línea) recibe un objetivo: el stick marca una posición y el mouse lo mueve con sus deltas (fe de erratas, ADR-0032) |
-| La cámara de las cinemáticas y sus transiciones (también si mezcla dos poses de cámara) | ADR-0034 (#76) |
+| La cámara de las cinemáticas y sus transiciones (también si mezcla dos poses de cámara) | ADR-0034 (#76). Decidido: entra con un corte seco y su última toma termina mezclándose con la cámara del estilo del jugador (fe de erratas) |
 | Las reglas de qué cuenta como corte especial | ADR-0018 |
 | Cómo se corta la malla (también el corte parcial, hasta donde llega la hoja) | ADR-0007 |
 

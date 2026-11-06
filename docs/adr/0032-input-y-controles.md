@@ -4,6 +4,15 @@
 - **Fecha:** 2026-11-06
 - **Ticket:** #74
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-06 (#76): el ADR-0034 decide las cinemáticas. **Un contexto
+  nuevo, la cinemática,** encima del juego: solo tiene **saltar** (se mantiene 1 s, una
+  CVar, con el disparador de mantener de la capa) y la pausa, que Esc y Start/Options
+  siguen abriendo. **Saltar es una acción reasignable,** como las del juego, con las
+  teclas de "aceptar" por defecto. **El contexto "secuencia" también sirve a las
+  secuencias interactivas** (como el final del dragón): el juego, con solo las acciones
+  que la escena permite. Saltar es una acción, así que el *replay* la graba; **"Saltar"
+  elegido en la pausa entra como esa acción en el primer paso al reanudar.** Se corrige
+  en la Decisión 1.
 
 ## Contexto y problema
 
@@ -407,7 +416,7 @@ desarrollo: **Release no graba nada.**
 
 | # | Dimensión | Elección |
 |---|---|---|
-| 1 | Acciones | **Acciones con contextos apilados**, como el *Enhanced Input* de Unreal pero mínimas: el juego, la secuencia (la hoja clavada y el agarre) y el menú; el de arriba gana, y ImGui, en desarrollo, está por encima de todos (ADR-0026). **Dos tipos:** botón (el estado y **contadores de presiones y de sueltas**) y eje 2D. **Los modificadores** (zona muerta, curva, sensibilidad, invertir) y **los disparadores** (mantener, alternar, presionar rápido) viven en la capa, no en el gameplay. **"Guiar" es una sola acción** que el gameplay interpreta según la fase (ADR-0031). Los gatillos son botones con un umbral con histéresis (de partida, apretar a 0,30 y soltar a 0,20; CVars) |
+| 1 | Acciones | **Acciones con contextos apilados**, como el *Enhanced Input* de Unreal pero mínimas: el juego, la secuencia (la hoja clavada, el agarre y, por la fe de erratas del ADR-0034, las secuencias interactivas), la cinemática (solo saltar y pausar; ADR-0034) y el menú; el de arriba gana, y ImGui, en desarrollo, está por encima de todos (ADR-0026). **Dos tipos:** botón (el estado y **contadores de presiones y de sueltas**) y eje 2D. **Los modificadores** (zona muerta, curva, sensibilidad, invertir) y **los disparadores** (mantener, alternar, presionar rápido) viven en la capa, no en el gameplay. **"Guiar" es una sola acción** que el gameplay interpreta según la fase (ADR-0031). Los gatillos son botones con un umbral con histéresis (de partida, apretar a 0,30 y soltar a 0,20; CVars) |
 | 2 | Reasignación | **Todo se reasigna, por dispositivo:** hasta dos entradas por acción en el teclado y el mouse, una en el gamepad. **Se guarda la posición** (el scancode), con los nombres de una **tabla propia** de `platform::`, no los de SDL, y el menú muestra la letra que esa tecla da en la distribución del jugador. **Un conflicto en el mismo contexto se intercambia**, y el menú lo muestra. **Esc y Start/Options siempre abren la pausa.** Los menús son fijos, con alternativas (ADR-0026). Los controles por defecto son los de la visión; los cambiados van en `opciones.txt` (ADR-0028), una línea por acción y dispositivo (por ejemplo, `control.teclado.apuntar = mouse_derecho, e`) |
 | 3 | Mouse | **Relativo y crudo:** cuentas sin la aceleración del sistema, **una sensibilidad en grados por cuenta**, sin filtro y **nunca multiplicada por el dt**. El mouse y el trackpad comparten la sensibilidad (Wayland los junta en un solo puntero). **En los menús, con el cursor libre, el cursor queda encerrado en la ventana mientras tenga el foco** (`SDL_SetWindowMouseGrab`): con un compositor donde el foco sigue al mouse, si el cursor sale, el teclado se va con él (lo que pasó en la demo) |
 | 4 | Stick | **Zona muerta radial escalada** (de partida, 0,20 interior y 0,05 exterior) y **una curva de exponente 2**, como CVars; la zona muerta interior también es una opción del jugador, para los sticks gastados. **Solo posición, en las dos fases:** al apuntar, el stick a fondo es el borde del cono y soltarlo devuelve el punto al rumbo; al cargar, el ángulo del stick es el ángulo de la línea. La espada sigue a ese objetivo con su propio peso (ADR-0015). **La rapidez del tajo sale de la carga** (ADR-0018), no del stick. El mouse mueve el mismo objetivo, con sus deltas. **Si se usan los dos, manda el último dispositivo usado** (con el mismo umbral de la Decisión 8): si el último fue el stick, el objetivo es su posición; si fue el mouse, el objetivo sigue desde donde estaba y el mouse lo mueve, sin saltos. **Sin ayuda de apuntado.** El giroscopio queda abierto hasta la prueba del autor |

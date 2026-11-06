@@ -63,6 +63,12 @@
   SDL. **La vibración** corre una vez por frame, después del audio, y lee el arreglo de
   eventos del audio (ADR-0024), que vive el frame: es de la presentación y no toca el
   estado. Se corrige en el orden del frame.
+  2026-11-06 (#76): el ADR-0034 decide las cinemáticas. **Durante una cinemática, el paso
+  fijo sigue corriendo, pero solo el secuenciador y sus actores:** la física, la IA y el
+  combate se detienen, y los VFX y el sonido ambiente siguen, porque no entran al hash.
+  El tiempo de la cinemática es el número de paso. A diferencia de la pausa, que deja el
+  frame en 0 pasos, los pasos se cuentan y el *replay* los graba. Se corrige en la
+  Decisión 3.
 
 ## Contexto y problema
 
@@ -232,7 +238,7 @@ docs/      documentación
 |---|---|---|
 | 1 | Modelo de entidades | **ECS propio y simple, con sparse sets.** La entidad es un `handle` con generación (ADR-0009) |
 | 2 | Módulos | **Capas estrictas** (`platform` → `core` → `gpu` → sistemas → `game`), que CMake hace cumplir: cada módulo es un target y solo enlaza con los de abajo |
-| 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo |
+| 3 | Game loop | **Paso fijo a 60 Hz con acumulador**, e **interpolación** en el render. Para evitar la espiral de la muerte: **máximo 8 pasos de simulación por frame** (el valor por defecto de Godot) y **tiempo de frame limitado a 250 ms** (el de *Fix Your Timestep!*). Los dos son constantes ajustables, y se revisan con profiling en la GPU de desarrollo. **Durante una cinemática** (fe de erratas, ADR-0034), los pasos siguen corriendo, pero solo con el secuenciador y sus actores |
 | 4 | Comunicación | **Colas de eventos entre sistemas** para las órdenes que cambian el estado, guardadas en la arena del paso (ADR-0010). Las **consultas de solo lectura** a un módulo de abajo (un rayo, un barrido) son llamadas directas. Dentro de un mismo módulo, llamadas directas |
 | 5 | Hilos | **Un hilo al principio.** Los datos se organizan para poder paralelizar cuando el profiling lo pida. Hay tres excepciones, y ninguna toca el estado del juego: los hilos de Tracy en los builds de desarrollo (ADR-0021), el hilo de audio de SDL3, que solo ejecuta comandos y mezcla (ADR-0024), y el hilo de I/O, que solo lee y escribe archivos en memoria reservada al iniciar (ADR-0028) |
 | 6 | Monorepo | `engine/`, `game/`, `tools/`, `shaders/`, `tests/`, `docs/` |

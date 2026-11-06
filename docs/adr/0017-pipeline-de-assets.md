@@ -95,6 +95,18 @@
   navmesh de la zona no queda dentro de un volumen de cámara.** Cómo se marcan (un
   prefijo nuevo o la propiedad `tipo`) y cómo se ordena la cadena se decide al
   implementarlo. Se corrige en Consecuencias ("Los niveles").
+- **Fe de erratas:** 2026-11-06 (#76): el ADR-0034 decide **las cinemáticas: se arman en
+  Blender**, una por `.blend`, con los actores en la NLA, las cámaras y sus cortes, y
+  marcadores con prefijo (`sub:`, `sonido:`, `evento:`, `salida`). **El script de
+  exportación** usa el modo `SCENE` (hornea la línea de tiempo a 30 Hz), exporta el FOV
+  con `KHR_animation_pointer` (cgltf 1.15 lo entrega como JSON crudo) y **copia los
+  marcadores a los `extras` de la escena**, porque glTF los pierde. **El cocinador falla
+  el build** por un prefijo desconocido, un actor que no existe, un subtítulo sin id en
+  la tabla de textos, un evento que no está en la lista cerrada, un sonido que no existe,
+  una rama que nombra una cinemática que no existe, una cámara dentro del escenario, o
+  un tramo de salida que cruza el escenario o pasa a menos de 0,5 m de la caballera en
+  alguno de los tres estilos de cámara. Se corrige en la Decisión 1 y en Consecuencias
+  ("El cocinador falla el build").
 
 ## Contexto y problema
 
@@ -542,7 +554,7 @@ LFS.
 
 | # | Dimensión | Elección |
 |---|---|---|
-| 1 | Herramientas | **Blender** para los modelos, los rigs y los clips. Las texturas, con **cualquier herramienta que exporte PNG** (Blender, Pixelorama, LibreSprite, Krita…) |
+| 1 | Herramientas | **Blender** para los modelos, los rigs, los clips y las cinemáticas (fe de erratas, ADR-0034). Las texturas, con **cualquier herramienta que exporte PNG** (Blender, Pixelorama, LibreSprite, Krita…) |
 | 2 | Formato de intercambio | **glTF 2.0** (`.glb`) |
 | 3 | Lectura | **cgltf**, solo dentro del cocinador. El juego no lo enlaza |
 | 4 | Formato de runtime | **Binario propio, cocinado en el build.** Una herramienta de `tools/` lee el glTF, lo valida y lo convierte. CMake la corre como a `glslc`, y solo recocina lo que cambió. El binario tiene secciones planas con offsets, sin punteros |
@@ -622,7 +634,13 @@ LFS.
     el mismo id; que los spawns, los puntos de invocación, los checkpoints y el inicio
     caigan en la navmesh; que desde la navmesh de una zona no haya otra zona a menos de
     la distancia de entrada sin estar en su lista de vecinas; y que en ningún punto de
-    la navmesh haya más zonas a menos de la distancia de salida que el tope menos uno.
+    la navmesh haya más zonas a menos de la distancia de salida que el tope menos uno;
+  - en las cinemáticas (ADR-0034): que cada prefijo de marcador sea conocido; que cada
+    actor exista; que cada subtítulo tenga su id en la tabla de textos; que cada evento
+    esté en la lista cerrada; que cada sonido exista; que cada rama nombre una
+    cinemática que existe; que ninguna cámara quede dentro del escenario; y que el tramo
+    de salida no cruce el escenario ni pase a menos de 0,5 m de la caballera en ninguno
+    de los tres estilos de cámara.
 - **La navmesh del escenario** (ADR-0023): el cocinador la genera desde la colisión
   (`UBX_`, `UCP_`, `USP_`) y el piso, inflada por el radio del zombie más ancho, y la
   escribe en el binario cocinado: polígonos convexos con vértices en 3D, sus portales, una

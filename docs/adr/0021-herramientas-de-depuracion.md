@@ -53,6 +53,16 @@
   apuntar, que pasan a ser opciones del jugador** (en `opciones.txt`); su valor por
   defecto sí es una CVar, constante en Release. Se corrige en la Decisión 8 y en
   Consecuencias ("Qué es una CVar y qué no").
+- **Fe de erratas:** 2026-11-06 (#74): el ADR-0032 decide **la regla del input por
+  paso: cada evento va al paso que cubre su *timestamp*;** lo que cae después del último
+  paso del frame espera al siguiente. Es la única regla que, en su prototipo, dio el mismo
+  apunte a cualquier FPS. **Lo que se graba por paso son las acciones ya procesadas** (el
+  movimiento: avance y giro, o una dirección del mundo; la guía: la posición del stick o
+  el delta del mouse; los botones con sus contadores de presiones y de sueltas). La sensibilidad, las curvas, la reasignación y
+  la alternativa de mantener se aplican antes, así que no entran al *replay*. **El
+  *replay* sigue existiendo solo en `debug` y `relwithdebinfo`:** en Release, la capa de
+  acciones arma igual las acciones de cada paso, pero nada las graba. Se corrige en la
+  Decisión 8, en Consecuencias y en Abierto.
 
 ## Contexto y problema
 
@@ -411,7 +421,7 @@ depuración del corte, los valores ajustables y el *replay* determinista.
 | 5 | Logging | **Cinco niveles** (error, aviso, info, debug, traza) y **una categoría por módulo**. Se formatea con `std::format_to_n` a un *ring buffer* de entradas fijas, que una vez por frame se le entrega al hilo de I/O del ADR-0028, que lo escribe a un archivo en la carpeta de estado. Ante un error fatal, el hilo principal espera a que se vacíe antes de abortar. Sin formato diferido y sin spdlog. Lo que no corresponde a cada preset se elimina al compilar |
 | 6 | Dibujo de depuración | ***Immediate mode* propio**, con una duración opcional en pasos, en la **región de depuración**: ni en la arena del paso ni en la del frame. Del corte muestra: el plano del tajo y su barrido; las cápsulas de cada hueso, y cuáles tocó la hoja; la recta donde se detuvo la hoja y la espada clavada; el contorno del corte; la cuña y el abanico del fondo de la hendidura; las normales de la tapa ya des-deformadas y las de los vértices nuevos; y los pedazos coloreados por grupo de huesos. Los presupuestos de memoria van en el panel (dimensión 9) |
 | 7 | Valores ajustables | **Un registro de variables de consola (CVars), un archivo con los valores cambiados (lo escribe el hilo de I/O, ADR-0028) y un panel en ImGui.** Si cambia un valor que afecta la simulación mientras se graba, el cambio se graba como un evento de ese paso. **En Release, cada CVar es una constante.** Excepción (ADR-0027): los valores del mundo (distancias de carga y de simulación y tope) son datos de los assets, con su propio panel que valida contra el binario del mundo |
-| 8 | *Replay* | **Input por paso**, un encabezado con la versión, el commit, el mundo, el checkpoint de partida (zona, fase y fases terminadas) y los valores del mundo en uso (ADR-0027), la semilla, los valores ajustables del inicio y si la cámara del tajo está apagada (ADR-0031: quita la cámara lenta), y **un hash de control cada 60 pasos**. La cámara no entra: el *replay* se mira con cualquier estilo (ADR-0031). El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques por el hilo de I/O (ADR-0028). **Recargar en caliente algo que cambia la simulación (una malla) corta la grabación** en ese paso (ADR-0028). Controles de tiempo: pausa, avance de un paso y cámara lenta |
+| 8 | *Replay* | **Input por paso**: las acciones ya procesadas de cada paso, repartidas por el *timestamp* de cada evento (fe de erratas, ADR-0032). Un encabezado con la versión, el commit, el mundo, el checkpoint de partida (zona, fase y fases terminadas) y los valores del mundo en uso (ADR-0027), la semilla, los valores ajustables del inicio y si la cámara del tajo está apagada (ADR-0031: quita la cámara lenta), y **un hash de control cada 60 pasos**. La cámara no entra: el *replay* se mira con cualquier estilo (ADR-0031). El hash se compara **con la misma glibc**: en la misma máquina, o en la CI del ADR-0029, que usa la glibc de la máquina del autor. En los builds de desarrollo, **cada sesión se graba entera desde que empieza el nivel**, volcada a disco por bloques por el hilo de I/O (ADR-0028). **Recargar en caliente algo que cambia la simulación (una malla) corta la grabación** en ese paso (ADR-0028). Controles de tiempo: pausa, avance de un paso y cámara lenta |
 | 9 | Memoria | **Contadores siempre activos** en cada región (uso, pico y fallos), como ya pide el ADR-0010. Un panel en los builds de desarrollo. En el registro por frame, la escala de R4 del ADR-0020: **`RssAnon` (de `/proc/self/statm`) más el `heapUsage` de `VK_EXT_memory_budget`**, y R4 es el máximo por frame de esa suma. `TracyAllocN` solo para el pool de pedazos |
 | 10 | Presets | **Una macro por herramienta**, con la combinación de cada preset fijada en `CMakePresets.json`. La macro de zona alimenta a Tracy en `relwithdebinfo` y a la traza del verificador del ADR-0030 en `debug` |
 
@@ -544,7 +554,9 @@ depuración del corte, los valores ajustables y el *replay* determinista.
   *replays* grabados divergen desde el primer paso.
 - **El input por paso** necesita una regla en el game loop: qué parte del input del frame
   ve cada paso (por ejemplo, el movimiento del mouse lo consume el primero o se reparte).
-  El *replay* graba el resultado, sea cual sea la regla.
+  El *replay* graba el resultado, sea cual sea la regla. **Decidido en el ADR-0032:**
+  cada evento va al paso que cubre su *timestamp*, y lo que se graba son las acciones ya
+  procesadas.
 - **Un *replay* para cada bug:** como cada sesión se graba entera desde que empieza el
   nivel, el archivo tiene el estado de partida (el escenario, la semilla y las CVars) y
   todo el input desde ahí. Un anillo con solo los últimos minutos no alcanzaría: le
@@ -586,7 +598,8 @@ depuración del corte, los valores ajustables y el *replay* determinista.
     (sus tickets);
   - el formato del archivo de CVars, sin una dependencia nueva (su ticket);
   - dónde viven en el repo los escenarios grabados del protocolo (su ticket);
-  - la regla del input por paso (ticket del game loop);
+  - la regla del input por paso (decidida en el ADR-0032: por el *timestamp* de cada
+    evento);
   - con qué se calculan los percentiles y el *bootstrap* a partir del registro (su
     ticket; el ADR-0029 no mide tiempo en la CI);
   - el hash entre máquinas para la CI (decidido en el ADR-0029: con la misma glibc);

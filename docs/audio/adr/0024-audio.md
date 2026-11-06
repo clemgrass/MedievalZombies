@@ -22,6 +22,13 @@
   con inotify** en los builds de desarrollo, como los demás recursos. Se corrige en la
   Decisión 9, en Consecuencias ("Liberar sonidos", "La tabla de sonidos", "La memoria" y
   los tickets) y en Abierto.
+- **Fe de erratas:** 2026-11-06 (#74): el ADR-0032 suma la vibración del mando, que se
+  arma con los mismos eventos del paso (el impacto con su fuerza, el corte con su
+  material, el agarre, la hoja clavada). **El arreglo de eventos del audio tiene un
+  segundo lector:** la vibración, que corre una vez por frame después del audio. El
+  arreglo se vacía al final del frame, después de que lo leen los dos. La vibración solo
+  lee: no cambia la prioridad ni el reemplazo cuando el arreglo se llena. Se corrige en
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -472,7 +479,8 @@ que tampoco se corta con un tirón.
   con ella; los comunes y los de más de una zona, en lo global, todo el programa.
 - **Los eventos de sonido del paso** van en **un arreglo fijo del sistema de audio,
   con vida de frame** (por ejemplo, 256 eventos: hasta 8 pasos por frame). La simulación
-  lo escribe y el audio lo lee y lo vacía al final del frame. No son las colas del
+  lo escribe y el audio lo lee; **la vibración** (fe de erratas, ADR-0032) también lo lee,
+  después del audio, y el arreglo se vacía al final del frame. No son las colas del
   ADR-0012, que mueren con el paso, ni la arena del frame, que es del render (ADR-0010).
   **Si se llena,** el evento nuevo reemplaza al de menor prioridad si es más importante;
   si no, se descarta y se cuenta. Cada evento lleva: qué sonido, el paso, la entidad, la

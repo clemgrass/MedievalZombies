@@ -1,6 +1,10 @@
 # Visión del juego
 
-- **Versión:** 5 (2026-11-03): la cámara es una opción del jugador con tres estilos, y en
+- **Versión:** 6 (2026-11-06): moverse es de tanque en la tercera y la primera persona, y
+  relativo a la pantalla en las cámaras fijas; mientras apunta, la caballera camina muy
+  despacio y da pasos laterales; esquivar va hacia donde apunta el stick, respecto del
+  rumbo (en las fijas y los rieles, hacia donde se mueve); el stick derecho marca una posición, no una velocidad (#74, ADR-0032).
+  Versión 5 (2026-11-03): la cámara es una opción del jugador con tres estilos, y en
   ninguno la mueve el jugador; el ratón o el stick derecho apuntan la espada, desde el
   pecho de la caballera (#73, ADR-0031). Versión 4 (2026-11-02): el recorrido es un mundo continuo y explorable, sin
   pantallas de carga entre zonas (#41, ADR-0027). Versión 3 (2026-10-22): la espada
@@ -168,8 +172,16 @@ usa. Correr y cargar compiten.
 ### Moverse
 
 - **Trotar**, no correr: la caballera lleva armadura completa.
-- **Esquivar es un salto corto** hacia donde se mueve, no una voltereta. Se siente el
-  peso de la espada y de la armadura.
+- **Esquivar es un salto corto,** no una voltereta. Se siente el peso de la espada y de
+  la armadura. Va hacia donde apunta el stick, respecto del rumbo: adelante, atrás o a un
+  lado, aunque caminar sea de tanque. En las cámaras fijas y los rieles, hacia donde se
+  mueve.
+- **Con controles de tanque** en la tercera y la primera persona: adelante avanza, y a
+  los lados gira. En las cámaras fijas y los rieles, la dirección es la de la pantalla, y
+  se mantiene cuando la toma cambia (ADR-0032).
+- **Mientras apunta, camina muy despacio,** bastante más lento que un zombie, sin girar:
+  adelante y atrás avanza y retrocede, y a los lados da un paso lateral. Solo para
+  corregir un poco la posición.
 
 ### La sensación del corte
 
@@ -299,10 +311,10 @@ estático, que se acerca rápido y se aleja lento, con resortes críticamente am
 | Moverse | WASD | Stick izquierdo |
 | Trotar (mantener) | Shift | Presionar el stick izquierdo (L3) |
 | **Apuntar** (mantener) | Clic derecho o E | LT / L2 |
-| Guiar la espada, mientras se apunta: el punto; mientras se carga: la línea | Mouse o trackpad | Stick derecho |
+| Guiar la espada, mientras se apunta: el punto; mientras se carga: la línea | Mouse o trackpad | Stick derecho, que marca una posición: a fondo es el borde de lo que alcanza la espada; al cargar, la línea apunta hacia donde apunta el stick |
 | **Tajo rápido** (sin apuntar) | Clic izquierdo o Espacio | RT / R2 |
 | **Cargar y soltar** (apuntando) | Mantener clic izquierdo o Espacio, y soltar | Mantener RT / R2, y soltar |
-| **Esquivar** (salto, hacia donde se mueve) | Q | B / Círculo |
+| **Esquivar** (salto: hacia donde apunta el stick o WASD, respecto del rumbo; en las cámaras fijas y los rieles, hacia donde se mueve) | Q | B / Círculo |
 | Interactuar (puertas, palancas) | F | A / Cruz |
 | Pausa | Esc | Start / Options |
 

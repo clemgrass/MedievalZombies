@@ -19,6 +19,20 @@
   lo recorre en cámara lenta (la cámara del tajo y la herida que se abre lo necesitan
   antes de que la hoja entre). Cuándo y cómo se predice queda abierto. Se corrige en la
   Decisión 5, en Consecuencias y en Abierto.
+  2026-11-06 (#74): el ADR-0032 decide el input. **El stick derecho marca una posición,
+  nunca una velocidad:** al apuntar, el stick a fondo es el borde del cono y soltarlo
+  devuelve el punto al rumbo; al cargar, el ángulo del stick es el ángulo de la línea. El
+  mouse mueve el mismo objetivo con sus deltas. **La rapidez del tajo sale solo de la
+  carga** (como ya decía este ADR). **Mientras apunta, la caballera puede caminar muy
+  despacio,** bastante más lento que un zombie, sin girar el rumbo: adelante y atrás
+  avanzan y retroceden, e izquierda y derecha dan un paso lateral; solo para correcciones
+  chicas. **Esquivar lee el stick respecto del rumbo:** salta adelante, atrás o a un
+  lado, aunque caminar sea de tanque (en la fija y los rieles, hacia la dirección del
+  mundo en que se mueve). **Los márgenes y las ventanas del combate** (soltar el tajo si la
+  agarran, el *buffer* de esquivar, del tajo rápido y de interactuar, de partida 6 pasos)
+  **se cuentan en pasos,** como CVars. **La alternativa de mantener** es un disparador
+  de la capa de acciones: el gameplay recibe el mismo progreso y no sabe de dónde vino.
+  Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -556,7 +570,16 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   dirección, no un punto del mundo, y **el rayo se vuelve a lanzar al soltar:** si el
   zombie se movió durante la carga, el punto apuntado es donde el rayo pega en ese paso.
   La guía termina al soltar. Como el rayo sale del pecho, el plano lo
-  contiene: la línea es el giro del plano alrededor del rayo.
+  contiene: la línea es el giro del plano alrededor del rayo. **El stick marca una
+  posición** (fe de erratas, ADR-0032): al apuntar, el stick a fondo es el borde del
+  cono y soltarlo devuelve el punto al rumbo; al cargar, el ángulo del stick es el
+  ángulo de la línea. La espada sigue ese objetivo con su peso (ADR-0015), y la rapidez
+  del tajo sale solo de la carga. **Mientras apunta, la caballera puede caminar muy
+  despacio,** bastante más lento que un zombie, sin girar el rumbo: adelante y atrás
+  avanzan y retroceden, e **izquierda y derecha dan un paso lateral**; solo para
+  correcciones chicas. **Esquivar lee el stick respecto del rumbo** (fe de erratas,
+  ADR-0032): salta adelante, atrás o a un lado, aunque caminar sea de tanque; en la fija y
+  los rieles, hacia la dirección del mundo en que se mueve.
 - **El plano del tajo rápido,** que no apunta: horizontal, por el pecho de la caballera,
   en la dirección en que mira. Como corta solo lo que atraviesa entero, **su recta de
   detención se pone un margen angular antes de la primera parte que no atraviesa:** así
@@ -610,12 +633,17 @@ nada de torso. Los pedazos del suelo también se cortan, porque puede ser entret
   energía baja más rápido con cada zombie que agarra, y zafarse pide más progreso con
   cada uno. **Al zafarse,** la caballera da un paso atrás y empuja a todos; si tenía la
   espada clavada, la hoja sale y la herida queda abierta. **Si la agarran cargando,** hay
-  un margen corto (configurable) para soltar el tajo, que corta a quien esté en su plano;
-  si no lo suelta, la carga se cancela.
+  un margen corto (configurable, en pasos: ADR-0032) para soltar el tajo, que corta a
+  quien esté en su plano; si no lo suelta, la carga se cancela.
 - **Accesibilidad:** presionar rápido y los eventos de *quick time* son lo que la guía
   XAG 107 pide compensar. La secuencia de la espada clavada y la del agarre tienen en las
   opciones una alternativa de **mantener** con la misma duración, sin cambiar la
-  mecánica.
+  mecánica. **Es un disparador de la capa de acciones** (fe de erratas, ADR-0032): el
+  gameplay recibe el mismo progreso, venga de presionar rápido o de mantener.
+- **El *buffer* de las acciones** (fe de erratas, ADR-0032): esquivar, el tajo rápido e
+  interactuar salen si se apretaron hasta N pasos antes de poder hacerse (de partida, 6
+  pasos; CVars). **Soltar la carga no tiene *buffer*:** el momento de soltar es la
+  decisión. No hay cola de acciones.
 - **Vivo o muerto** se decide en el gameplay del paso siguiente al corte, con la máscara
   de huesos que el corte escribe en cada pedazo (ADR-0007). **Los pedazos nacen sin
   clasificar:** en el paso del corte, la física no les crea cuerpo y la animación no los

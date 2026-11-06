@@ -21,6 +21,13 @@
   implementación de este ADR; **todo lo que da esa sensación es configurable sin
   recompilar** (ADR-0021), para ajustarlo jugando. El 90° del arco no cambia: ya es la
   dirección del pecho al punto apuntado. Se corrige en la Decisión 5 y en Abierto.
+- **Fe de erratas:** 2026-11-06 (#74): el ADR-0032 decide el input. **La guía recibe un
+  objetivo, no una velocidad:** el stick derecho marca una posición (al apuntar, el punto
+  en el cono, y soltarlo lo devuelve al rumbo; al cargar, el ángulo de la línea), y el
+  mouse mueve el mismo objetivo con sus deltas, crudos y sin filtro. **El peso lo pone
+  la espada, no el input:** la guía de este ADR sigue a ese objetivo con su propia
+  velocidad y su aceleración. La rapidez del tajo sale de la carga (ADR-0018). Se corrige
+  en la Decisión 5.
 
 ## Contexto y problema
 
@@ -277,7 +284,7 @@ mezcla de clips se sale del arco: eso define la sensación del juego.
 | 2 | Skinning | **LBS, con hasta 4 huesos por vértice.** El skinning rígido (pesos de 1,0) es un caso particular: el aspecto segmentado de PS1 lo decide cada asset, no el engine |
 | 3 | Dónde | **Híbrido.** La GPU deforma en el vertex shader para dibujar. La CPU deforma **solo el zombie que se corta**, en el paso del corte |
 | 4 | Corte y pedazos | **Mixto.** El pedazo que sigue vivo (con la cabeza, según el ADR-0018) conserva **el esqueleto completo**, con los huesos que perdió enmascarados, y sigue animado con los mismos clips. Los pedazos muertos quedan rígidos o pasan a ragdoll (ADR-0016) |
-| 5 | El tajo | **Mixto.** La punta recorre un arco en el plano del tajo, los dos brazos alcanzan la empuñadura con IK analítica de dos huesos, el torso gira siguiendo la punta, y un clip da el peso del cuerpo (el paso adelante y la carga). **Antes de soltar, el ratón o el stick guían la espada** con la misma IK, limitada por el cuerpo, lenta y con peso (fe de erratas, ADR-0031) |
+| 5 | El tajo | **Mixto.** La punta recorre un arco en el plano del tajo, los dos brazos alcanzan la empuñadura con IK analítica de dos huesos, el torso gira siguiendo la punta, y un clip da el peso del cuerpo (el paso adelante y la carga). **Antes de soltar, el ratón o el stick guían la espada** con la misma IK, limitada por el cuerpo, lenta y con peso (fe de erratas, ADR-0031). **La guía sigue un objetivo** (el stick marca una posición; el mouse la mueve con sus deltas), y el peso lo pone la espada al seguirlo, no el input (fe de erratas, ADR-0032) |
 | 6 | Zombie mutilado | **Un clip por estado** (cojear, arrastrarse con dos brazos o con uno…), con los huesos perdidos enmascarados |
 | 7 | En el frame | La pose se evalúa **en cada paso de simulación** (ADR-0012), después del corte: el combate y el corte usan la pose con que terminó el paso anterior. El render interpola con *nlerp* (revisando el hemisferio), y la pausa de impacto congela el reloj de la animación de los personajes que congela (ADR-0018) |
 

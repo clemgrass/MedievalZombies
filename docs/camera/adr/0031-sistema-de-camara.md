@@ -4,6 +4,19 @@
 - **Fecha:** 2026-11-03
 - **Ticket:** #73
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-06 (#74): el ADR-0032 decide el input. **El stick derecho
+  marca una posición, no una velocidad:** al apuntar, el stick a fondo es el borde del
+  cono y soltarlo devuelve el punto al rumbo; al cargar, el ángulo del stick es el ángulo
+  de la línea. El mouse mueve el mismo objetivo con sus deltas, en grados por cuenta. Así
+  que la guía de la espada recibe **un objetivo** (el punto en el cono, el ángulo de la
+  línea), no "girar tantos grados", y la espada lo sigue con su peso (ADR-0015).
+  **Respecto de qué se mueve la caballera:** tanque en la tercera y la primera persona
+  (arriba avanza; izquierda y derecha giran el rumbo); en la fija y los rieles, relativo
+  a la pantalla, manteniendo la dirección mientras el stick no cambie, aunque la toma
+  corte. La capa de input lo convierte en una dirección del mundo antes del paso, con la
+  cámara del último frame, así que **la cámara sigue fuera de la simulación.** Mientras
+  apunta, la caballera camina muy despacio, sin girar el rumbo. Se corrige en "Qué no
+  decide este ADR" y en Consecuencias.
 
 ## Contexto y problema
 
@@ -60,7 +73,7 @@ Varios ADRs ya aceptados dejaron preguntas para este:
 
 | Tema | Dónde |
 |---|---|
-| Las curvas, la zona muerta y la sensibilidad del mouse y del stick, y cómo entra el input al paso | ADR-0032 (#74). Aquí la guía de la espada (la dirección del rayo y el giro de la línea) recibe "girar tantos grados" |
+| Las curvas, la zona muerta y la sensibilidad del mouse y del stick, y cómo entra el input al paso | ADR-0032 (#74). Aquí la guía de la espada (la dirección del rayo y el giro de la línea) recibe un objetivo: el stick marca una posición y el mouse lo mueve con sus deltas (fe de erratas, ADR-0032) |
 | La cámara de las cinemáticas y sus transiciones (también si mezcla dos poses de cámara) | ADR-0034 (#76) |
 | Las reglas de qué cuenta como corte especial | ADR-0018 |
 | Cómo se corta la malla (también el corte parcial, hasta donde llega la hoja) | ADR-0007 |
@@ -379,10 +392,11 @@ la hoja**, y mientras la hoja cruza la herida se abre para que se vea el interio
     apuntado). **Suma la guía de la espada mientras apunta y carga:** es procedural, con
     los dos brazos en la empuñadura, limitada por lo que puede hacer el cuerpo, lenta y
     con peso. Cómo se logra el peso es del ADR-0015, con todos sus valores como CVars.
-- **Para el ADR-0032 (input), sin decidir aquí:** respecto de qué se mueve la caballera
-  sin una cámara del jugador. Lo habitual: en la fija y los rieles, respecto de la
-  pantalla, manteniendo la dirección al cambiar de toma; en la primera persona, respecto
-  del cuerpo.
+- **Respecto de qué se mueve la caballera** sin una cámara del jugador (decidido en el
+  ADR-0032): **tanque en la tercera y la primera persona;** en la fija y los rieles,
+  **relativo a la pantalla, manteniendo la dirección** al cambiar de toma mientras el
+  stick no cambie. La capa de input lo convierte en una dirección del mundo antes del
+  paso, con la cámara del último frame: la simulación nunca lee la cámara.
 - **Tickets, en orden:**
   1. el resorte críticamente amortiguado y el barrido de esfera de la cámara, en TDD;
   2. la cámara en tercera persona, con la colisión y el *screen-door*;

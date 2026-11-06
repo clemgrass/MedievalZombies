@@ -20,7 +20,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
 | [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el reparto y el paquete), 0031 (las cámaras fijas y los rieles) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028 y 0031 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador, la tarjeta de memoria y el resorte y el barrido de la cámara; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI, las fases y el sistema de cámara; el *replay* con tiempos de carga al azar; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028, 0031 y 0032 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador, la tarjeta de memoria, el resorte y el barrido de la cámara y las piezas puras del input; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI, las fases, el sistema de cámara y la capa de acciones; el *replay* con tiempos de carga al azar y con otro horario de frames; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
@@ -30,6 +30,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [niveles](#niveles) | 0027 | `engine/world*/**`, `game/**`, los `.blend` y los textos de zona y de mundo en `assets/**`, `docs/levels/**`, o código que cargue, active o descargue zonas, cree las entidades de una zona, ejecute fases o triggers, elija las antorchas del frame o recorte por la niebla o las vecinas |
 | [recursos](#recursos) | 0028 | `engine/io*/**`, `engine/resource*/**`, `engine/save*/**`, `engine/platform/**`, `game/**`, `CMakePresets.json`, o código que lea o escriba archivos, pida o libere zonas, use el hilo de I/O o los slots, suba datos de una zona a la GPU, cree o guarde el `VkPipelineCache`, recargue en caliente, o lea o escriba la tarjeta de memoria o las opciones |
 | [camara](#camara) | 0031 | `engine/camera*/**`, `game/**`, `docs/camera/**`, los marcadores de cámara en `assets/**`, o código que calcule la cámara, su colisión, la cámara del tajo, la herida que se abre o la sacudida, que apunte la espada o que lea la cámara desde la simulación |
+| [input](#input) | 0032 | `engine/input*/**`, el input de `engine/platform/**`, `game/**`, `docs/vision/**`, o código que lea eventos de teclado, mouse o gamepad, arme acciones, aplique zonas muertas o curvas, reparta el input entre los pasos, guarde o reasigne controles, cambie de dispositivo, haga vibrar el mando o espere la presentación antes de leer el input |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
 | [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
 
@@ -62,6 +63,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Niveles, escenas, el mundo, zonas, vecinas, *streaming*, precarga, spawns, oleadas, fases, triggers, checkpoints, marcadores, *empties*, *collection instances*, *prefabs* o piezas, la pantalla de carga, el culling por la niebla | `niveles` |
 | La carga de recursos, el hilo de I/O, io_uring, `pread`, `mmap`, los slots, el paquete o el ejecutable con los assets, la subida a la GPU, el *staging*, la recarga en caliente (*hot reload*), inotify, el `VkPipelineCache`, la partida, la tarjeta de memoria, el guardado, las opciones del jugador, las carpetas XDG, `SDL_GetPrefPath`, `fsync` | `recursos` |
 | Cámara, estilos de cámara, tercera o primera persona, cámaras fijas, rieles, FOV, colisión de la cámara, la cámara del tajo, cámara lenta, rayos X, la herida que se abre, sacudida, trauma, la mira, apuntar la espada, el punto apuntado | `camara` |
+| Input, controles, acciones, reasignar, teclas, scancode o keycode, mouse relativo, sensibilidad, stick, zona muerta, curva de respuesta, gatillos, *buffer* de input, toques perdidos, latencia del input, `present_wait`, gamepad, mando, deriva, cambio de dispositivo, vibración, giroscopio, moverse (tanque o relativo a la pantalla) | `input` |
 | CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
@@ -137,8 +139,8 @@ Qué mirar:
   `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, decidir cómo entra el input al paso antes del
-  ADR-0032, o cómo se firman y publican las releases antes del ADR-0035.
+  pendiente es un hallazgo. Por ejemplo, decidir cómo se arma una cinemática antes del
+  ADR-0034, o cómo se firman y publican las releases antes del ADR-0035.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo
@@ -190,8 +192,9 @@ Qué mirar:
   ese orden.
 - **SDL3 solo detrás de la interfaz `platform::`.** Nada fuera de `engine/platform`
   incluye headers de SDL. `SDL_GPU` y `SDL_Renderer` están prohibidos.
-- **El input se expone como estado** (teclas y botones en el frame), no como eventos
-  crudos de SDL.
+- **`platform::` entrega eventos con tipos propios y su *timestamp*,** nunca eventos de
+  SDL. La capa de acciones (un sistema encima de `engine/core`, ADR-0032) arma las
+  acciones de cada paso; el gameplay nunca ve una tecla ni un dispositivo.
 - **ECS:** de *sparse sets* propio. La entidad es un handle con generación.
 - **Bucle:** paso fijo de 60 Hz con acumulador e interpolación, como mucho 8 pasos por
   frame y el frame recortado a 250 ms.
@@ -266,7 +269,10 @@ Qué mirar:
   depuración descarta lo que no cabe y lo muestra en pantalla, y Tracy con un servidor
   conectado pide memoria mientras corre (por eso nunca se mide así). **La región de UI**
   (ADR-0026) no degrada: llena, aborta con su nombre, como una arena, porque lo que dibuja
-  la UI lo decide el autor. Descartar vértices en silencio es un hallazgo.
+  la UI lo decide el autor. Descartar vértices en silencio es un hallazgo. **La región de
+  input** (ADR-0032) es la tercera excepción, y la única en Release: llena, suma los
+  deltas de los eventos que no caben y nunca pierde un botón, porque lo que la llena es
+  el hardware del jugador. Abortar, o perder un botón, es un hallazgo.
 - **RelWithDebInfo** cuesta lo mismo que Release, salvo las herramientas del ADR-0021 y
   su región de depuración (fe de erratas del ADR-0010).
 - **Revisiones de desarrollo, solo en Debug:** las arenas y los pools envenenan para
@@ -431,7 +437,8 @@ Qué mirar:
 ## animacion
 
 **ADRs:** 0015 (sistema de animación), con la fe de erratas del ADR-0031 (la guía de la
-espada).
+espada) y la del ADR-0032 (la guía sigue un objetivo, que el stick marca como posición y
+el mouse mueve con sus deltas; el peso lo pone la espada, no el input).
 
 Qué mirar:
 
@@ -772,11 +779,21 @@ Qué mirar:
 
 ## testing
 
-**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028
-y 0031 (reparto del TDD en el corte, la memoria, la animación, la física, el cocinador de
-assets, el cargador, la tarjeta de memoria y el resorte y el barrido de la cámara; los
-tests del combate, de la IA, del audio, de los VFX, de la UI, de los niveles, del guardado
-y del sistema de cámara).
+**ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028,
+0031 y 0032 (reparto del TDD en el corte, la memoria, la animación, la física, el
+cocinador de assets, el cargador, la tarjeta de memoria, el resorte y el barrido de la
+cámara y las piezas puras del input; los tests del combate, de la IA, del audio, de los
+VFX, de la UI, de los niveles, del guardado, del sistema de cámara y de la capa de
+acciones).
+
+- **El input** (ADR-0032): la zona muerta radial escalada, la curva, la histéresis de los
+  gatillos, los contadores de presiones, la regla del paso por *timestamp* (con los
+  *timestamps* del futuro y del pasado), el *buffer* en pasos, la lectura de los
+  controles de `opciones.txt` y los conflictos son piezas puras, en TDD estricto (sin
+  test es `bloqueante`). **La misma traza cruda** (eventos con su *timestamp*) con varios
+  horarios de frames tiene que dar **las mismas acciones por paso** desde el ticket de las
+  piezas puras, y **el mismo hash** desde el ticket de la guía de la espada, cuando ya
+  existe la simulación que apunta. No exigir el hash antes.
 
 - **La cámara** (ADR-0031): el resorte críticamente amortiguado y el barrido de esfera son
   matemática del núcleo, en TDD estricto (sin test es `bloqueante`); el sistema de cámara
@@ -1131,7 +1148,8 @@ Qué mirar:
 ## audio
 
 **ADRs:** 0024 (audio). También la fe de erratas que hizo en el ADR-0004 (SDL3 solo
-saca el sonido) y en el ADR-0012 (el hilo de audio, segunda excepción al hilo único).
+saca el sonido) y en el ADR-0012 (el hilo de audio, segunda excepción al hilo único), y
+la fe de erratas del ADR-0032 en este ADR (la vibración lee el arreglo de eventos).
 
 Qué mirar:
 
@@ -1160,7 +1178,10 @@ Qué mirar:
 - **Los eventos de sonido** van en un arreglo fijo del sistema de audio, con vida de
   frame (por ejemplo, 256), no en una cola del paso (se borra al terminar el paso) ni en
   la arena del frame (es del render). Lleno: el nuevo reemplaza al de menor prioridad si
-  es más importante; si no, se descarta y se cuenta.
+  es más importante; si no, se descarta y se cuenta. **La vibración (ADR-0032) es un
+  segundo lector,** que solo lee, después del audio: el arreglo se vacía al final del
+  frame. **Vaciarlo antes (por ejemplo, al leerlo el audio) es `importante`:** la
+  vibración se queda sin eventos.
 - **El tiempo:** cada evento suena en el tiempo de su paso más un desfase con el reloj
   del audio (latencia de partida: 2 pasos, 33 ms). **El desfase solo se reajusta**
   cuando un evento caería en el pasado o demasiado lejos. Recalcularlo en cada frame
@@ -1282,7 +1303,8 @@ Qué mirar:
 región de UI), el ADR-0019 (las fuentes OFL), el ADR-0021 (el menú de opciones), el
 ADR-0022 (la pasada de UI) y el ADR-0025 (el color de acento de la sangre y de las
 siluetas). También la fe de erratas del ADR-0031 en este ADR (la cámara en las opciones,
-la mira en el mundo y la ayuda según el estilo).
+la mira en el mundo y la ayuda según el estilo) y la del ADR-0032 (los controles fuera
+de la simulación, los íconos con umbral, los menús fijos y el cursor encerrado).
 
 Qué mirar:
 
@@ -1335,9 +1357,16 @@ Qué mirar:
 - **La pausa:** una pila de pantallas; solo la de arriba recibe input. La pausa deja el
   paso fijo en 0 pasos, congela el bus del mundo y deja sonar el de la UI (ADR-0024).
   Avanzar pasos durante la pausa es `bloqueante` (cambia el *replay*). **Una opción que
-  cambia la simulación** (mantener en vez de presionar rápido, la sensibilidad) se graba
-  como evento del paso si cambia durante una grabación; no grabarla es `bloqueante`.
-  Grabar las que no la cambian (ayudas, subtítulos, idioma, color) es un hallazgo menor.
+  cambia la simulación** (apagar la cámara del tajo) se graba como evento del paso si
+  cambia durante una grabación; no grabarla es `bloqueante`. Grabar las que no la cambian
+  (ayudas, subtítulos, idioma, color y **los controles**: la sensibilidad, las curvas, la
+  reasignación y la alternativa de mantener, que el ADR-0032 aplica antes del paso) es un
+  hallazgo menor.
+- **Los íconos y los menús** (fe de erratas, ADR-0032): un dispositivo cuenta como usado
+  con un botón o con un eje que pasa la zona muerta, no con cualquier evento; las
+  acciones de los menús son fijas, con alternativas (flechas y WASD, Enter y Espacio,
+  Esc; la cruceta, el stick, A/Cruz y B/Círculo); el cursor queda encerrado en la ventana
+  mientras tiene el foco.
 - **La navegación:** listas con un índice de foco, *hover* del mouse, el stick con
   repetición (0,35 s y después cada 0,12 s) e íconos del último dispositivo, dibujados
   con primitivas. Una pantalla que no se puede manejar sin mouse es `bloqueante`.
@@ -1358,7 +1387,7 @@ Qué mirar:
   dispositivo, y las cajas de cada control en el dibujo de depuración.
 - Las fuentes y los textos en el cocinador los audita `assets`; sus licencias,
   `build-y-licencias`; los tests, `testing`; las acciones y la reasignación de controles,
-  el ADR-0032 cuando se acepte.
+  `input`.
 
 ## niveles
 
@@ -1641,6 +1670,99 @@ Qué mirar:
   ventaja del cono, `ia`; la guía de la espada, `animacion`; las cámaras fijas y los
   rieles en el cocinador, `assets`; las opciones en el menú, `ui`; los tests del resorte y
   del barrido, `testing`.
+
+## input
+
+**ADRs:** 0032 (input y controles). También la fe de erratas que hizo en la visión
+(versión 6: el movimiento, caminar y el paso lateral al apuntar, esquivar respecto del
+rumbo), el ADR-0010 (la región de input), el ADR-0012 (el orden del frame), el ADR-0015
+(la guía sigue un objetivo), el ADR-0018 (el stick por posición, el paso lateral,
+esquivar respecto del rumbo, el *buffer* y los márgenes en pasos, la alternativa de
+mantener como disparador), el ADR-0020 (la latencia), el ADR-0021 (la regla del input por
+paso), el ADR-0024 (la vibración lee su arreglo de eventos), el ADR-0026 (las opciones fuera de la simulación, los íconos, los menús fijos y el cursor
+encerrado), el ADR-0031 (el movimiento y la guía) y `presupuestos.md`.
+
+Qué mirar:
+
+- **El gameplay habla con acciones, nunca con teclas ni dispositivos.** Que `game/**` o un
+  sistema de la simulación pregunte por una tecla, un botón o el tipo de mando es
+  `importante`: rompe la reasignación. Contextos apilados (el juego, la secuencia de la
+  hoja clavada y del agarre, el menú), el de arriba gana; ImGui encima de todos, en
+  desarrollo. **"Guiar" es una sola acción** que el gameplay interpreta según la fase.
+- **Los botones llevan el estado y contadores de presiones y de sueltas,** que se acumulan
+  hasta que un paso los consume. **Solo el estado, o un flanco por frame, es
+  `importante`** (P2: se pierde el 54 % de los toques a 144 FPS, o el 29 % a 20 FPS). Los
+  gatillos son botones con un umbral con histéresis.
+- **Cada evento va al paso que cubre su *timestamp*,** y lo que cae después del último
+  paso del frame espera al siguiente. **Darle todo al primer paso, repartirlo o meterlo
+  todo en el frame actual es `importante`:** el apunte cambia con los FPS (P2: hasta 39°).
+  Un *timestamp* del futuro se toma como el momento de la lectura; uno de un paso que ya
+  corrió va al primer paso del frame. No acotarlos es `importante` (los teclados
+  virtuales de Wayland mandan *timestamps* inválidos).
+- **La simulación recibe las acciones ya procesadas:** **mover** (avance y giro con
+  tanque; una dirección del mundo en la fija y los rieles), **la guía** (la posición del
+  stick normalizada y absoluta, o el delta del mouse en grados, según el último
+  dispositivo usado; el recorte al cono es de la simulación) y **los botones** con sus
+  contadores. Sumar el stick y el mouse, en vez de usar el último, es una decisión nueva.
+  Convertir el tanque a una dirección del mundo antes del paso es `importante`: el rumbo
+  cambia de un paso a otro. **Que la simulación lea
+  la sensibilidad, una curva, la reasignación o la opción de mantener es `importante`:**
+  esas opciones están fuera del *replay*. **Que lea la cámara para convertir el movimiento
+  es `bloqueante`** (también lo ve `camara`): la conversión a una dirección del mundo la
+  hace la capa de input, con la cámara del último frame.
+- **El mouse es relativo y crudo:** cuentas sin la aceleración del sistema
+  (`SDL_HINT_MOUSE_RELATIVE_SYSTEM_SCALE` apagado), una sensibilidad en grados por
+  cuenta y sin filtro. **Multiplicar el delta del mouse por el dt es `importante`** (P4:
+  el mismo gesto da de 11° a 40° según los FPS). **Un filtro o suavizado es
+  `importante`:** el peso lo pone la espada (ADR-0015), no el input.
+- **El stick:** zona muerta radial escalada y una curva (exponente 2 de partida). **Una
+  zona muerta axial es `importante`** (P3: se desvía hasta 42°). **El stick marca una
+  posición, nunca una velocidad,** en las dos fases: al apuntar, a fondo es el borde del
+  cono y soltarlo vuelve al rumbo; al cargar, su ángulo es el de la línea. Un stick que
+  marque una velocidad, o una ayuda de apuntado, son una decisión nueva.
+- **Moverse:** tanque en la tercera y la primera persona; en la fija y los rieles,
+  relativo a la pantalla, **manteniendo la dirección** mientras el stick no cambie,
+  aunque la toma corte. **Mientras apunta, camina muy despacio** (bastante más lento que
+  un zombie) y no gira el rumbo: izquierda y derecha dan un paso lateral. **Esquivar lee
+  el stick respecto del rumbo** (adelante, atrás o a un lado), aunque caminar sea de
+  tanque.
+- **La reasignación:** todo, por dispositivo; hasta dos entradas por acción en el teclado
+  y el mouse. **Se guarda la posición** (el scancode) con una tabla de nombres propia, y
+  se muestra la letra de la distribución del jugador. **Guardar la letra, o los nombres
+  de `SDL_GetScancodeName` (no son estables), es `importante`.** Un conflicto en el mismo
+  contexto se intercambia; Esc y Start/Options siempre pausan; los menús son fijos, con
+  alternativas.
+- **El *buffer* se cuenta en pasos** (6 de partida para esquivar, el tajo rápido e
+  interactuar), como CVar. **En milisegundos, o con el reloj del frame, es
+  `importante`:** el *buffer* vive en la simulación y entra al hash. **Soltar la carga no
+  tiene *buffer*;** una cola de acciones es una decisión nueva.
+- **La latencia: el modo D.** Antes de leer el input, el frame espera a que se muestre el
+  frame de hace dos (`VK_KHR_present_wait2` con `VK_KHR_present_id2`, la misma generación
+  que usa el ADR-0021; mezclarla con la primera es un hallazgo); sin la extensión, el modo
+  A. El modo es una
+  CVar. **Esperar al frame anterior (B o C) es `importante`:** pone la CPU y la GPU en
+  serie y pierde frames (P5). **Leer el input sin esa espera, con más frames en la cola,
+  es `importante`** (82 contra 43 ms).
+- **Los dispositivos:** todos funcionan a la vez; los íconos cambian con un botón o con un
+  eje que pasa la zona muerta, **no con cualquier evento** (P6: un mando quieto con
+  deriva los cambia 292 veces por minuto); pausa si se desconecta el mando en uso; solo la
+  base de mandos de SDL3 (un archivo de mapeos nuevo lo ve `build-y-licencias`). **En los
+  menús, el cursor queda encerrado en la ventana mientras tiene el foco.**
+- **La vibración sale de los eventos del paso,** una vez por frame, después del audio, y
+  **los lee del arreglo de eventos del audio** (ADR-0024), que vive el frame. Leerlos de
+  las colas del paso (que mueren con el paso) es `importante`. Es de la presentación. **Que la vibración escriba estado de la simulación, o entre al
+  hash, es `importante`.** Nunca es la única señal, se apaga y se regula (XAG 110).
+- **La región de input** (2048 eventos por frame): **llena, suma los deltas y nunca
+  pierde un botón.** Abortar, o descartar un botón, es `importante`. El tamaño de la
+  región lo audita `memoria`.
+- **Valores:** los de sensación son CVars (la zona muerta, la curva, el *buffer*, la
+  histéresis, la velocidad al apuntar, el modo de latencia). **Las opciones del jugador**
+  (los controles, la sensibilidad de 0,25× a 4×, invertir un eje, la zona muerta interior,
+  mantener o alternar, la alternativa de mantener, la vibración) van en `opciones.txt`.
+- La grabación del *replay* (solo en `debug` y `relwithdebinfo`) la audita
+  `herramientas`; la guía de la espada, `animacion`; los íconos y el menú de controles,
+  `ui`; los tests de las piezas puras, `testing`; que los tipos de SDL no salgan de
+  `platform::`, `arquitectura`.
 
 ## herramientas
 

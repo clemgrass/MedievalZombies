@@ -135,6 +135,10 @@ Qué mirar:
   `Aceptado` tiene la Decisión y "Cómo lo defiendo" completas.
 - **Índice:** cada ADR nuevo o con estado cambiado tiene su fila en `docs/README.md`, con
   el mismo estado que su encabezado.
+- **Diagrama teórico (fe de erratas del ADR-0030, #69):** un ADR que pasa a `Aceptado`
+  tiene su caja en `docs/diagramas/teorico/proyecto.d2`, con lo que eligió y su número,
+  y las flechas "empujó a" que su texto nombra. Una fe de erratas que cambia lo que
+  eligió un ADR corrige su caja. Falta la caja: `importante`.
 - **Inmutabilidad (ADR-0014, regla 11):** mientras no exista código del juego, un ADR
   aceptado se puede corregir como fe de erratas, registrada en el campo **Fe de
   erratas** de su encabezado (fecha, ticket y qué cambió). Cuando existe código (`engine/` o
@@ -1004,6 +1008,10 @@ Qué mirar:
 - **`docs/vision/mapa/` no es técnico:** el mapa del castillo dibuja zonas del juego y
   usa su propia leyenda (`docs/vision/mapa/leyenda.d2`). Solo se revisa que cada SVG
   esté al día con su `.d2`; las reglas de abajo no le tocan (#77, `docs/diagramas/README.md`).
+- **`docs/diagramas/teorico/` no es técnico** (fe de erratas del ADR-0030, #69): el
+  diagrama teórico del proyecto muestra lo que eligió cada ADR y usa su propia leyenda
+  (`docs/diagramas/teorico/leyenda.d2`). Como al mapa, solo se revisa que el SVG esté al
+  día con su `.d2` (verificador (b)); las reglas de abajo no le tocan.
 - **Cada diagrama importa la leyenda** de `docs/diagramas/leyenda.d2` y usa sus clases.
   Estilos sueltos que repiten o contradicen la leyenda son un hallazgo. Cada diagrama
   tiene título, y todo elemento tiene su propio relleno. Un sistema del ECS es un

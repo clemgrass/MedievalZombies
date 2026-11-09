@@ -1001,6 +1001,9 @@ Qué mirar:
   `.ejemplo.d2` no lo llevan, porque solo se importan), con el mismo nombre, generado con
   `--dark-theme`. Un `.d2` cambiado con su SVG sin regenerar es un hallazgo. Se revisa
   el `.d2`, no el diff del SVG.
+- **`docs/vision/mapa/` no es técnico:** el mapa del castillo dibuja zonas del juego y
+  usa su propia leyenda (`docs/vision/mapa/leyenda.d2`). Solo se revisa que cada SVG
+  esté al día con su `.d2`; las reglas de abajo no le tocan (#77, `docs/diagramas/README.md`).
 - **Cada diagrama importa la leyenda** de `docs/diagramas/leyenda.d2` y usa sus clases.
   Estilos sueltos que repiten o contradicen la leyenda son un hallazgo. Cada diagrama
   tiene título, y todo elemento tiene su propio relleno. Un sistema del ECS es un
@@ -1130,8 +1133,10 @@ Qué mirar:
   **El punto del agarre lo marca el temporizador de la tabla del tipo**, y el clip se
   reproduce escalado a esa duración; que la consulta del agarre dependa del clip (un
   evento de animación, otro reloj) es un hallazgo.
-  **Los jefes** (el mago, el rey, la reina) son una FSM propia con `switch`; un jefe
-  metido en el árbol común es un hallazgo.
+  **Los jefes** (el alquimista, que el ADR llama "el mago") son una FSM propia con
+  `switch`; un jefe metido en el árbol común es un hallazgo. El rey y la reina ya no son
+  jefes. Si los mini jefes (el cazador y su caballo, el prisionero gigante) llevan FSM o
+  el BT común sigue pendiente (fe de erratas del ADR-0023, #77).
 - **Los árboles se arman en C++ al iniciar,** fuera del paso. **Los números de cada
   tipo** (velocidad, alcance, tiempos del ataque, radios de percepción) van en la tabla
   de datos del tipo y se ajustan sin recompilar. Un número fijo en el código es un

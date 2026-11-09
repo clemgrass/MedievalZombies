@@ -1,6 +1,13 @@
 # Visión del juego
 
-- **Versión:** 7 (2026-11-09): hay build de Windows, además de la de Linux, desde el
+- **Versión:** 8 (2026-11-09): la historia completa vive en [`historia.md`](historia.md),
+  con spoilers, y el mapa en [`mapa/`](mapa/README.md). Los detalles de la trama viven
+  allí, no en este documento. El juego abre en la torre, sin intro: el origen de los zombies es un
+  misterio, y el tono es serio. El mago pasa a ser **el alquimista**, que da
+  instrucciones solo a los zombies que tiene cerca. Mini jefes: el caballero a caballo,
+  el prisionero gigante y un guardia humano opcional; el rey y la reina dejan de serlo.
+  El dragón se confirma como una secuencia interactiva al final (#77).
+  Versión 7 (2026-11-09): hay build de Windows, además de la de Linux, desde el
   primer corte vertical (#82, ADR-0035).
   Versión 6 (2026-11-06): moverse es de tanque en la tercera y la primera persona, y
   relativo a la pantalla en las cámaras fijas; mientras apunta, la caballera camina muy
@@ -52,29 +59,29 @@ Un pilar sirve para decir que no: si una idea no respeta los pilares, espera.
 
 ## Premisa e historia
 
-- **El accidente.** En una introducción corta, un mago convierte en zombies a casi todo
-  el reino **por error**, con una poción. Él mismo termina convertido. Solo se salvan
-  algunas personas.
-- **El inicio.** Un soldado con armadura medieval completa mira hacia la torre más alta
-  del castillo, donde está atrapada la princesa. Mientras la observa, aparecen los
-  zombies, y tiene que ir a salvarla.
+La historia completa, momento a momento, está en [`historia.md`](historia.md). **Tiene
+spoilers,** así que esta sección cuenta solo la premisa.
+
+- **El inicio.** No hay introducción: el juego abre en la torre más alta del castillo,
+  donde está atrapada la princesa. Un soldado con armadura medieval completa la mira
+  desde la ventana de un pasillo. Se oyen gritos, entran los zombies, y tiene que ir a
+  salvarla.
+- **El misterio.** Era un día de celebración en el castillo, y casi todos se
+  convirtieron en zombies. Nadie le explica al jugador qué pasó: lo descubre jugando.
 - **El recorrido.** Atraviesa el castillo y varias zonas a su alrededor, en orden y de
   forma lineal, hasta llegar a la torre. **Es un mundo caminable y explorable:** se
   siente que sale de A y camina hasta Z, recorriendo un castillo completo, sin pantallas
   de carga entre zonas (ADR-0027).
-- **El jefe final** es **el mago zombie**. Un **dragón zombie** es una posibilidad, no un
-  compromiso.
-- **El final.** Se revela que el soldado es una mujer, y que ella y la princesa son
-  pareja. La rescata y escapan juntas a otro reino, al que la poción no llegó.
+- **El jefe final** es **el alquimista**, un zombie distinto a los demás.
 
 **El secreto de la protagonista se cuida en todo el juego:**
 
-- el yelmo nunca se quita;
+- el yelmo no se quita hasta el final;
 - la silueta bajo la armadura no la delata;
-- no tiene voz, o su voz no la delata, hasta el final.
+- no habla: a lo sumo hace sonidos (esfuerzo, golpes, respiración), nunca palabras.
 
-El tono es serio y oscuro, como *Berserk*, aunque el origen del desastre (un error) tiene
-algo de tragicomedia.
+El tono es serio, oscuro y de misterio, como *Berserk*: el jugador llega cuando el
+desastre ya ocurrió.
 
 ## Combate
 
@@ -164,7 +171,7 @@ usa. Correr y cargar compiten.
 - **El agarre cancela la carga,** pero si la caballera estaba cargando tiene un margen
   corto para soltar el tajo.
 - **Los enemigos especiales usan sus propios ataques** (el soldado con espada, los
-  perros, el mago…), definidos para cada uno.
+  perros, el alquimista…), definidos para cada uno.
 - **El equilibrio:** si carga y se posiciona bien, la caballera mata casi cualquier cosa
   de un solo golpe. El peligro está en no tener tiempo ni espacio para hacerlo.
 - **Al morir, se vuelve al último checkpoint.**
@@ -192,7 +199,7 @@ Es la prioridad absoluta del juego.
 | Recurso | Qué hace | Cuándo |
 |---|---|---|
 | **Pausa de impacto** (*hit-stop*) | La caballera y el zombie golpeado se congelan de 50 a 80 ms, como en *Monster Hunter*; el resto sigue. Casi no se nota, pero da peso al golpe. La duración se configura, y en 0 se apaga si queda mejor sin ella | Una vez por tajo, más larga cuanto más fuerte |
-| **Cámara del tajo** | Cámara lenta, y la cámara acompaña a la hoja mientras atraviesa el cuerpo. Se ve el interior: carne y hueso. Es el equivalente a la vista de rayos X de *Sniper Elite* | **Solo en los cortes especiales**, para que no aburra: muchos zombies en un tajo y el golpe final al mago. Se puede apagar en las opciones |
+| **Cámara del tajo** | Cámara lenta, y la cámara acompaña a la hoja mientras atraviesa el cuerpo. Se ve el interior: carne y hueso. Es el equivalente a la vista de rayos X de *Sniper Elite* | **Solo en los cortes especiales**, para que no aburra: muchos zombies en un tajo y el golpe final al alquimista. Se puede apagar en las opciones |
 | **Salpicadura roja** | Sangre roja saturada al cortar | En cada corte |
 | **Sacudida de cámara** | Proporcional a la fuerza | En los golpes cargados |
 | **Pedazos con física** | Las mitades caen, y la de arriba se arrastra. Los pedazos del suelo se pueden volver a cortar, y los personajes los empujan sin trabarse | En cada corte |
@@ -212,11 +219,13 @@ usarían.
 | **Soldado con armadura completa, sin espada** | Umbral alto. Obliga a cargar, o sea a exponerse |
 | **Soldado con armadura y espada** | Umbral alto, y sabe usar la espada a su favor: bloquea o contraataca |
 | **Zombie con escudo**, sin arma | Bloquea los tajos de frente. Hay que rodearlo o buscarle el ángulo |
-| **Perros de caza zombies** | Bajos y rápidos. Obligan a cortar en diagonal o hacia abajo |
-| **Caballero y caballo** | **Dos enemigos que funcionan por separado.** Si muere el caballo, el jinete sigue a pie. Si muere el jinete, el caballo sigue solo |
-| **El rey y la reina** | Mini jefes |
-| **El mago** | Jefe final |
-| **El dragón** | Posibilidad |
+| **Perros de caza zombies** | Bajos y rápidos. Obligan a cortar en diagonal o hacia abajo. Aparecen solo con el caballero a caballo |
+| **Caballero y caballo** | **Mini jefe.** **Dos enemigos que funcionan por separado.** Si muere el caballo, el jinete sigue a pie. Si muere el jinete, el caballo sigue solo |
+| **Prisioneros de tamaños distintos** | El grande tiene más cuerpo que cruzar, así que pide más fuerza; el chico es rápido |
+| **El prisionero gigante** | **Mini jefe.** Solo lo vence un tajo de carga máxima |
+| **Un guardia humano** | **Mini jefe opcional.** El único enemigo que no es zombie |
+| **El alquimista** | **Jefe final.** Un zombie que conserva la mente y les da instrucciones a los zombies que tiene cerca |
+| **El dragón** | No es una pelea: es una secuencia interactiva al final ([historia](historia.md), con spoilers) |
 
 Reglas que valen para todos. Son la **intención de diseño**: el ADR-0018 evalúa las
 alternativas y fija las reglas exactas.
@@ -343,17 +352,18 @@ está al servicio de eso.
      soldados con armadura completa;
   2. una horda que crece hasta ser demasiado, y **termina al matar una cantidad
      determinada** de zombies;
-  3. la pelea final contra el mago.
+  3. la pelea final contra el alquimista.
 - **Checkpoints** entre las fases: al morir, se vuelve al inicio de la fase.
-- **La pelea contra el mago:**
-  - **invoca zombies** durante toda la pelea;
+- **La pelea contra el alquimista:**
+  - **llama zombies** durante toda la pelea (sus "invocaciones": les da instrucciones a
+    los que tiene cerca);
   - **solo un tajo de máxima fuerza lo aturde.** Un golpe más débil no lo detiene;
-  - **se defiende invocando un zombie con armadura máxima** que se interpone y bloquea.
+  - **se defiende llamando a un zombie con armadura máxima** que se interpone y bloquea.
     Hay que deshacerse del guardaespaldas, o adelantarse a él, para conectar el golpe;
   - el golpe final, el que activa la cámara del tajo, se le da mientras está aturdido.
 - **Fuera del corte vertical:** los soldados con espada y con escudo, los perros, el
-  caballero y su caballo, el rey y la reina, el dragón, la historia completa y el resto
-  de las zonas.
+  caballero y su caballo, los prisioneros, el guardia humano, el dragón, la historia
+  completa y el resto de las zonas.
 
 Números propuestos para el engine (los fija el ADR-0020):
 
@@ -387,7 +397,12 @@ Números propuestos para el engine (los fija el ADR-0020):
 - **Cuándo se usan los frames de impacto** estilo anime, si se usan (decidido en el
   ADR-0025: siluetas en blanco, negro y rojo, solo en los cortes cargados y en la cámara
   del tajo, y se pueden apagar).
-- **El dragón** como enemigo.
+- **Lo que la historia pide y ningún ADR cubre todavía:** los avisos del tutorial, que
+  se ven por defecto; la horda vista de lejos con una IA simplificada; la IA de los mini
+  jefes y del guardia humano; cómo muere un humano al cortarlo; un personaje que sigue a
+  la caballera; el *parry* del dragón, con la carga sin energía y el tajo vertical
+  obligado; la bola de fuego como algo de la simulación, y montar a caballo. El detalle está en la [historia](historia.md), con
+  spoilers.
 - **La cara del corte por dentro:** su geometría (triangulación y coordenadas) la genera
   el ADR-0007, y cómo se dibuja (carne, hueso, capas de metal y carne) lo decide el
   ADR-0022 (decidido: el ADR-0022, la carne y el hueso; el ADR-0025, las capas, con un

@@ -33,6 +33,10 @@
   evento de trigger "cinemática" y el comando de fase "cinemática", cada uno con el
   nombre de la cinemática. Su último evento suele activar el checkpoint, para que no se
   repita al morir. Se corrige en las Decisiones 5 y 6.
+- **Fe de erratas:** 2026-11-09 (#77): la historia del juego cambia al mago por **el
+  alquimista**. Donde este ADR dice "el mago", se lee "el alquimista"; la fase del jefe
+  y sus puntos de invocación no cambian. El recorrido completo, con sus zonas, está en
+  `docs/vision/historia.md` y en el mapa de `docs/vision/mapa/`.
 
 ## Contexto y problema
 

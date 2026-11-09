@@ -1,0 +1,42 @@
+# Leyenda del mapa del castillo (docs/vision/mapa/).
+# No es la leyenda de los diagramas técnicos (docs/diagramas/leyenda.d2, ADR-0030):
+# esta dibuja zonas del juego, no funciones ni datos. Cada mapa la importa con `...@leyenda`.
+classes: {
+  # Zonas
+  zona: {
+    style: {fill: "#e7e5e4"; stroke: "#57534e"; font-color: "#1c1917"; border-radius: 4}
+  }
+  opcional: {
+    style: {fill: "#f5f5f4"; stroke: "#78716c"; font-color: "#1c1917"; stroke-dash: 4; border-radius: 4}
+  }
+  jefe: {
+    style: {fill: "#fee2e2"; stroke: "#b91c1c"; font-color: "#450a0a"; stroke-width: 3; border-radius: 4}
+  }
+  cinematica: {
+    style: {fill: "#e0e7ff"; stroke: "#4338ca"; font-color: "#1e1b4b"; border-radius: 4}
+  }
+  cerrada: {
+    shape: hexagon
+    style: {fill: "#d6d3d1"; stroke: "#292524"; font-color: "#1c1917"}
+  }
+  piso: {
+    style: {fill: "#fafaf9"; stroke: "#a8a29e"; font-color: "#292524"; bold: true}
+  }
+  vacio: {
+    style: {opacity: 0}
+  }
+
+  # Conexiones
+  paso: {
+    style: {stroke: "#44403c"}
+  }
+  vista: {
+    style: {stroke: "#0369a1"; stroke-dash: 2}
+  }
+  atajo: {
+    style: {stroke: "#b91c1c"; stroke-width: 3}
+  }
+  huida: {
+    style: {stroke: "#7c3aed"; stroke-width: 2; stroke-dash: 6}
+  }
+}

@@ -1,0 +1,147 @@
+# Plano esquemático del castillo, piso por piso, con los enemigos (con spoilers).
+# No es a escala, pero las posiciones valen: cada piso es la misma cuadrícula de 3×3,
+# con las columnas de oeste a este y las filas de norte a sur, así que una celda está
+# encima de la misma celda del piso de abajo. La torre es la esquina sureste en todos
+# los pisos. Las escaleras se nombran en el texto de cada zona; la topología completa
+# está en recorrido.d2. El número es el momento de historia.md.
+...@leyenda
+
+title: "Plano esquemático del castillo, con los enemigos" {
+  near: top-center
+  shape: text
+  style: {font-size: 28; bold: true}
+}
+
+castillo: "" {
+  grid-columns: 1
+  grid-gap: 30
+  style: {opacity: 0}
+
+  cima: "Torre, la cima" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    v1: "" {class: vacio}
+    v2: "" {class: vacio}
+    v3: "" {class: vacio}
+    v4: "" {class: vacio}
+    v5: "" {class: vacio}
+    v6: "" {class: vacio}
+    v7: "" {class: vacio}
+    v8: "" {class: vacio}
+    habitacion_princesa: "15 · Habitación de la princesa\nla princesa" {class: cinematica}
+  }
+
+  tercer_piso: "Tercer piso" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    v1: "" {class: vacio}
+    v2: "" {class: vacio}
+    v3: "" {class: vacio}
+    v4: "" {class: vacio}
+    v5: "" {class: vacio}
+    v6: "" {class: vacio}
+    v7: "" {class: vacio}
+    v8: "" {class: vacio}
+    antecamara: "14 · Antecámara de la torre\nel alquimista, los zombies que llama\n(salen de sus cuartos)\ny su guardaespaldas con armadura máxima" {class: jefe}
+  }
+
+  segundo_piso: "Segundo piso" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    v1: "" {class: vacio}
+    v2: "" {class: vacio}
+    v3: "" {class: vacio}
+    v4: "" {class: vacio}
+    v5: "" {class: vacio}
+    subida: "13 · La subida\nel laboratorio del alquimista\n↑ desde las mazmorras" {class: zona}
+    v6: "" {class: vacio}
+    v7: "" {class: vacio}
+    escalera_alta: "13 · Escalera de caracol\nentra el pasaje alto\n↑ antecámara · ↓ base de la torre" {class: zona}
+  }
+
+  primer_piso: "Primer piso" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    v1: "" {class: vacio}
+    aposentos_reales: "10 · Aposentos reales (opcional)\nlos reyes ahorcados, sus hijos zombies\nel guardia humano con lanza" {class: opcional}
+    galeria: "Galería, sobre el salón\n↑ sube desde el salón" {class: zona}
+    v2: "" {class: vacio}
+    v3: "" {class: vacio}
+    pasillo_sobre_patio: "11 · Pasillo sobre el patio\nventanas a la horda\n↓ baja a las mazmorras" {class: zona}
+    v4: "" {class: vacio}
+    v5: "" {class: vacio}
+    torre_1: "Torre: escalera de caracol\n(sin puerta en este piso)" {class: zona}
+  }
+
+  muralla: "Muralla (el adarve, a la altura del primer piso)" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    tramo_oeste: "8 · Tramo oeste\n↑ sube desde el patio exterior" {class: zona}
+    tramo_norte: "8 · Tramo norte\ncota de malla, armadura completa" {class: zona}
+    tramo_este: "8 · Tramo este\nescudo, el capitán con armadura y espada\n↓ baja al salón del banquete" {class: zona}
+    v1: "" {class: vacio}
+    v2: "" {class: vacio}
+    v3: "" {class: vacio}
+    v4: "" {class: vacio}
+    v5: "" {class: vacio}
+    v6: "" {class: vacio}
+  }
+
+  planta_baja: "Planta baja" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    patio_exterior: "7 · Patio exterior (fuera del torreón)\nlos perros y el cazador a caballo" {class: jefe}
+    cocina: "6 · Cocina\nlos cocineros" {class: zona}
+    salon_banquete: "9 · Salón del banquete\nsobre todo campesinos, algunos soldados\nlas copas: una pista" {class: zona}
+    pasillo_inicial: "1–4 · Pasillo inicial\n3 sirvientes; 1 sirviente (el susto)\nventanas a la torre y al patio" {class: zona}
+    patio_interior: "5 · Patio interior (opcional)\nla horda: 300 invitados, siempre 50\nlas caballerizas\n17–18 · el dragón" {class: opcional}
+    v1: "" {class: vacio}
+    puerta_trancada: "Puerta de madera\n(no se abre)" {class: cerrada}
+    puerta_principal: "19 · Puerta principal\nsale del patio: la salida a caballo" {class: cinematica}
+    base_torre: "Base de la torre\nla escalera de caracol\npuerta al patio interior" {class: zona}
+  }
+
+  subsuelo: "Subsuelo" {
+    class: piso
+    grid-rows: 3
+    grid-columns: 3
+    grid-gap: 20
+    v1: "" {class: vacio}
+    v2: "" {class: vacio}
+    mazmorras: "12 · Mazmorras, bajo el salón\nprisioneros grandes y chicos\nel prisionero gigante\n↑ sube mucho hacia la torre" {class: jefe}
+    v3: "" {class: vacio}
+    v4: "" {class: vacio}
+    v5: "" {class: vacio}
+    v6: "" {class: vacio}
+    v7: "" {class: vacio}
+    v8: "" {class: vacio}
+  }
+}
+
+leyenda: "Leyenda" {
+  near: bottom-center
+  class: piso
+  grid-columns: 5
+  z: "Zona" {class: zona}
+  o: "Zona opcional" {class: opcional}
+  j: "Jefe o mini jefe" {class: jefe}
+  c: "Cinemática" {class: cinematica}
+  x: "Cerrada" {class: cerrada}
+}
+
+# Todas las celdas del mismo tamaño, también las vacías, para que una celda quede encima
+# de la misma celda del piso de abajo. Con grid-rows antes que grid-columns, D2 llena la
+# cuadrícula fila por fila.
+castillo.*.*: {width: 320; height: 130}

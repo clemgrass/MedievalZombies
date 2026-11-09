@@ -9,10 +9,9 @@ del zombie de verdad, por donde lo apuntaste.**
 
 ## El juego
 
-Por error, un mago convierte en zombies a casi todo el reino con una poción, y él mismo
-termina convertido. Solo se salvan algunos. La princesa quedó atrapada en la torre más
-alta del castillo, y un caballero tiene que atravesar el castillo y sus alrededores para
-llegar hasta ella.
+En un día de celebración, casi todo el castillo se convirtió en zombies, y nadie sabe por
+qué. La princesa quedó atrapada en la torre más alta, y un caballero tiene que atravesar
+el castillo y sus alrededores para llegar hasta ella.
 
 ### El tajo
 
@@ -33,8 +32,8 @@ Aquí **el ángulo, la fuerza y el punto del corte los decide el jugador:**
 
 Campesinos lentos, soldados con cota de malla y soldados con armadura completa, cada uno
 con su resistencia al corte. Contra la armadura no basta con pegar fuerte: hay que
-buscar las juntas y el ángulo. Al final espera el mago zombie, que invoca a la horda y
-se esconde detrás de un guardaespaldas acorazado.
+buscar las juntas y el ángulo. Al final espera un zombie distinto a los demás, que llama
+a la horda y se esconde detrás de un guardaespaldas acorazado.
 
 Un zombie partido no siempre muere. Un corte en la cabeza lo mata, pero mientras
 conserve la cabeza y algo más, sigue: si se corta por la cintura, la mitad de arriba se

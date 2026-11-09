@@ -15,7 +15,8 @@ el [ADR-0014](adr/0014-metodologia-de-desarrollo.md).
 ```
 docs/
 ├── README.md        este archivo: mapa e índice de todos los ADRs
-├── vision/          diseño del juego: premisa, pilares, alcance, enemigos
+├── vision/          diseño del juego: premisa, pilares, alcance, enemigos; la historia
+│                    (con spoilers) y el mapa del castillo
 ├── process/         cómo trabajamos: tickets, convenciones git
 ├── specs/           specs aprobadas
 ├── plans/           planes de implementación derivados de las specs

@@ -1,0 +1,70 @@
+# Recorrido del castillo: qué zona conecta con cuál (con spoilers).
+# La fuente de verdad de la topología. El número de cada zona es el momento de
+# docs/vision/historia.md.
+...@leyenda
+
+direction: down
+
+title: "Recorrido del castillo: zonas y conexiones" {
+  near: top-center
+  shape: text
+  style: {font-size: 28; bold: true}
+}
+
+puerta_trancada: "Puerta de madera\n(no se abre)" {class: cerrada}
+pasillo_inicial: "1–4 · Pasillo inicial\ncinemática, tutorial, el susto" {class: zona}
+patio_interior: "5 · Patio interior\nla horda imposible, los caballos\n17–18 · el dragón, frente a la puerta principal" {class: opcional}
+cocina: "6 · Cocina" {class: zona}
+patio_exterior: "7 · Patio exterior\nla partida de caza" {class: jefe}
+muralla: "8 · Muralla" {class: zona}
+salon_banquete: "9 · Salón del banquete" {class: zona}
+galeria: "Galería del primer piso" {class: zona}
+aposentos_reales: "10 · Aposentos reales" {class: opcional}
+pasillo_sobre_patio: "11 · Pasillo sobre el patio" {class: zona}
+mazmorras: "12 · Mazmorras\nel prisionero gigante" {class: jefe}
+subida: "13 · La subida\nel laboratorio, el pasaje alto" {class: zona}
+escalera_torre: "13 · Escalera de caracol de la torre" {class: zona}
+antecamara: "14 · Antecámara\nel alquimista" {class: jefe}
+habitacion_princesa: "15 · Habitación de la princesa" {class: cinematica}
+salida: "19–20 · Puerta principal\nsale del patio: la salida a caballo, los créditos" {class: cinematica}
+
+# El camino normal
+pasillo_inicial -> puerta_trancada: "si retrocede" {class: paso}
+pasillo_inicial -> cocina: "sigue el pasillo" {class: paso}
+cocina -> patio_exterior: "puerta de servicio" {class: paso}
+patio_exterior -> muralla: "sube" {class: paso}
+muralla -> salon_banquete: "baja y vuelve a entrar" {class: paso}
+salon_banquete -> galeria: "sube" {class: paso}
+galeria -> aposentos_reales: "puerta abierta" {class: paso}
+galeria -> pasillo_sobre_patio {class: paso}
+pasillo_sobre_patio -> mazmorras: "baja" {class: paso}
+mazmorras -> subida: "sube mucho" {class: paso}
+subida -> escalera_torre: "por otra conexión" {class: paso}
+escalera_torre -> antecamara: "arriba" {class: paso}
+antecamara -> habitacion_princesa: "un tajo rompe la puerta" {class: paso}
+
+# El patio interior y el atajo
+pasillo_inicial -> patio_interior: "puerta: activa la horda" {class: paso}
+patio_interior -> escalera_torre: "atajo, si vence a la horda" {class: atajo}
+
+# Lo que se ve sin poder pasar
+pasillo_inicial -> escalera_torre: "ventana: la torre" {class: vista}
+pasillo_inicial -> patio_interior: "ventanas: la horda y los caballos" {class: vista}
+pasillo_sobre_patio -> patio_interior: "ventanas: la horda" {class: vista}
+
+# La huida
+habitacion_princesa -> escalera_torre: "bajan; el camino a las mazmorras se cierra" {class: huida}
+escalera_torre -> patio_interior: "puerta de la base" {class: huida}
+patio_interior -> salida: "a caballo, tras el dragón" {class: huida}
+
+leyenda: "Leyenda" {
+  near: bottom-right
+  class: piso
+  grid-columns: 2
+  z: "Zona" {class: zona}
+  o: "Zona opcional" {class: opcional}
+  j: "Jefe o mini jefe" {class: jefe}
+  c: "Cinemática" {class: cinematica}
+  x: "Cerrada" {class: cerrada}
+  n: "Conexiones: paso (gris), vista (azul punteada),\natajo (roja gruesa), huida (violeta)" {shape: text}
+}

@@ -25,6 +25,17 @@
   otro estilo cambiaría cómo atacan los zombies. **La ventaja pasa a un cono alrededor
   del rumbo de la caballera,** en el paso anterior, con su ángulo como CVar. Se corrige en
   la Decisión 4, en Consecuencias y en Abierto.
+- **Fe de erratas:** 2026-11-09 (#77): la historia del juego cambia al mago por **el
+  alquimista**, que les da instrucciones solo a los zombies que tiene cerca. Donde este
+  ADR dice "el mago", se lee "el alquimista": sus invocaciones son los zombies que llama,
+  y lo decidido (su FSM, los puntos de invocación y el árbol del guardaespaldas) no
+  cambia. **El rey y la reina dejan de ser jefes;** los mini jefes pasan a ser el
+  cazador y su caballo, el prisionero gigante y un guardia humano opcional. La historia
+  pide comportamientos que este ADR no cubre: **la horda vista de lejos con una IA
+  simplificada** (aquí se decidió no usar nivel de detalle con 50 zombies), **si los
+  mini jefes llevan una FSM propia o el BT común**, **la IA del guardia humano**, que no
+  es un zombie, y **un personaje que sigue a la caballera.** Quedan pendientes en
+  `docs/vision/historia.md`.
 
 ## Contexto y problema
 

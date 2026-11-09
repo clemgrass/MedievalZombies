@@ -9,6 +9,12 @@ sistema nace con su diagrama en el primer PR que le da comportamiento. El piloto
 investigación quedó como historial en
 [`research/diagramas-piloto/`](../research/diagramas-piloto/README.md).
 
+**Una excepción:** el mapa del castillo, en
+[`docs/vision/mapa/`](../vision/mapa/README.md), usa D2 pero no es un diagrama técnico:
+dibuja zonas del juego, no funciones ni datos. Por eso importa su propia leyenda. De los
+verificadores del ADR-0030, le toca (b), que cada SVG coincida con su `.d2` regenerado,
+pero no (c), que importe esta leyenda, ni los que leen el código.
+
 ## Dónde vive cada diagrama
 
 | Nivel | Qué muestra | Dónde |

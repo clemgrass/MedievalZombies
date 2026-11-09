@@ -33,6 +33,14 @@
   **se cuentan en pasos,** como CVars. **La alternativa de mantener** es un disparador
   de la capa de acciones: el gameplay recibe el mismo progreso y no sabe de dónde vino.
   Se corrige en Consecuencias.
+  2026-11-09 (#77): la historia del juego cambia al mago por **el alquimista**. Donde
+  este ADR dice "el mago", se lee "el alquimista", y sus reglas no cambian: solo lo
+  aturde un tajo de carga máxima, y su golpe final es un corte especial. La historia
+  pide además reglas que este ADR no tiene, y las deja pendientes en
+  `docs/vision/historia.md`: **cómo muere un humano al cortarlo** (un guardia, mini jefe
+  opcional), y, para el dragón, **la ventana del *parry*, la carga sin energía y el tajo
+  vertical obligado**. La carga sin energía será una excepción a la Decisión 1 (con la
+  energía en 0, la carga se cancela), solo en esa secuencia.
 
 ## Contexto y problema
 

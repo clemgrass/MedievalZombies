@@ -4,6 +4,13 @@
 - **Fecha:** 2026-11-06
 - **Ticket:** #76
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-09 (#77): la historia del juego ya no tiene la intro corta
+  del mago y la poción: el juego abre en la torre, y el mago pasa a ser el alquimista.
+  **El dragón se confirma** como secuencia interactiva: donde este ADR dice "si el
+  dragón existe", ya existe. **La protagonista no habla nunca, tampoco al final:** a lo
+  sumo hace sonidos, y responde con gestos. Eso cierra el pendiente de su voz. Ninguna
+  decisión cambia. Las cinemáticas que pide la historia están en
+  `docs/vision/historia.md`.
 
 ## Contexto y problema
 

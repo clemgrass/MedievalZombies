@@ -1,0 +1,46 @@
+# Leyenda del diagrama teórico del proyecto (docs/diagramas/teorico/).
+# No es la leyenda de los diagramas técnicos (docs/diagramas/leyenda.d2, ADR-0030):
+# este diagrama muestra lo decidido en los ADRs, no funciones ni datos del código.
+# El diagrama la importa con `...@leyenda`.
+classes: {
+  # Piezas, con el color de su capa (ADR-0012)
+  juego: {
+    style: {fill: "#fee2e2"; stroke: "#b91c1c"; font-color: "#450a0a"; border-radius: 6}
+  }
+  sistema: {
+    style: {fill: "#ccfbf1"; stroke: "#0f766e"; font-color: "#042f2e"; border-radius: 6}
+  }
+  gpu: {
+    style: {fill: "#dcfce7"; stroke: "#15803d"; font-color: "#052e16"; border-radius: 6}
+  }
+  nucleo: {
+    style: {fill: "#dbeafe"; stroke: "#1d4ed8"; font-color: "#0b1b3a"; border-radius: 6}
+  }
+  plataforma: {
+    style: {fill: "#e2e8f0"; stroke: "#334155"; font-color: "#0f172a"; border-radius: 6}
+  }
+  herramienta: {
+    style: {fill: "#ede9fe"; stroke: "#6d28d9"; font-color: "#2e1065"; border-radius: 6}
+  }
+  externo: {
+    shape: oval
+    style: {fill: "#f1f5f9"; stroke: "#475569"; font-color: "#0f172a"}
+  }
+
+  # Franja de proceso
+  franja: {
+    style: {fill: "#fefce8"; stroke: "#a16207"; font-color: "#422006"; bold: true; border-radius: 6}
+  }
+  proceso: {
+    style: {fill: "#fef9c3"; stroke: "#a16207"; font-color: "#422006"; border-radius: 6}
+  }
+
+  # Flechas. "entrega" no fija color: lo pone el tema (claro u oscuro). "empuja" usa
+  # un rosado que se lee sobre los dos fondos.
+  entrega: {
+    style: {stroke-width: 2}
+  }
+  empuja: {
+    style: {stroke: "#db2777"; stroke-width: 2; stroke-dash: 5; font-color: "#db2777"}
+  }
+}

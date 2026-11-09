@@ -22,7 +22,8 @@ docs/
 ├── plans/           planes de implementación derivados de las specs
 ├── adr/             ADRs transversales y plantilla (template.md)
 ├── research/        notas de investigación de los ADRs transversales
-├── diagramas/       diagramas técnicos transversales (el frame) y la leyenda común
+├── diagramas/       diagramas técnicos transversales (el frame), la leyenda común y el
+│                    diagrama teórico del proyecto (lo que eligió cada ADR)
 ├── graphics/        renderer: README, adr/, research/
 ├── slicing/         corte de mallas: README, adr/, research/
 ├── animation/       animación: README, adr/, research/
@@ -61,9 +62,13 @@ las opciones evaluadas, lo que se eligió y por qué.
   con la fecha, el ticket y qué cambió. Cuando empieza el código, la inmutabilidad es
   estricta.
 - **Un ADR por ticket** `tipo:investigación`, enlazados en ambas direcciones.
-- **Cada ADR nuevo se agrega al índice** de abajo.
+- **Cada ADR nuevo se agrega al índice** de abajo y, al aceptarse, tiene su caja en el
+  [diagrama teórico](diagramas/teorico/README.md).
 
 ## Índice de ADRs
+
+Para ver todas las decisiones de una vez, y cómo se conectan, está el
+[diagrama teórico del proyecto](diagramas/teorico/README.md).
 
 | ADR | Título | Área | Estado |
 |---|---|---|---|

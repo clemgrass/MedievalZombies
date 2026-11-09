@@ -9,7 +9,12 @@
   fuentes de píxeles con licencia **SIL Open Font License 1.1** (OFL), la licencia
   estándar de las fuentes libres, con el mismo espíritu que CC0 y CC BY. **Las fuentes
   de terceros pueden ser OFL**, además de CC0 y CC BY. Se corrige la Decisión 4 y
-  Consecuencias.
+  Consecuencias. 2026-11-09 (#82): el ADR-0035 publica el juego en paquetes. **Cada
+  paquete lleva `LICENSE`, `LICENSES/` y `CREDITS.md`** junto al ejecutable, porque el
+  ejecutable lleva adentro los assets, las fuentes y las bibliotecas de terceros
+  (ADR-0028): el crédito y **los textos de licencia** que piden la OFL y el MIT tienen
+  que viajar con ellos. El ticket de empaquetado revisa qué runtimes enlazados estáticos
+  piden un aviso. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -156,6 +161,12 @@ Titular del copyright: **Clemente Grass**.
 - **Las dependencias** (SDL3 con licencia zlib, Vulkan-Headers con Apache-2.0 o MIT)
   quedan listadas en `CREDITS.md`. Una dependencia nueva se agrega ahí, además de su
   ADR.
+- **Los paquetes de cada release** (ADR-0035) llevan `LICENSE`, `LICENSES/` y
+  `CREDITS.md` al lado del ejecutable: los assets CC BY, las fuentes OFL y las
+  bibliotecas MIT (como stb_vorbis) van dentro de él, y su crédito y sus textos de
+  licencia viajan con ellos. Los runtimes enlazados estáticos (libc++, `libstdc++`, el
+  CRT de mingw-w64) se revisan en el ticket de empaquetado y se suman a `CREDITS.md` si
+  piden un aviso.
 
 ## Cómo lo defiendo
 

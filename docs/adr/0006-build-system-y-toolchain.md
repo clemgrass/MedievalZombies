@@ -25,6 +25,17 @@
   de ensamblador que CMake regenera cuando cambia el paquete. Medido: enlazar 227 MB
   tarda 3,7 s. Los presets de desarrollo (`debug` y `relwithdebinfo`) no lo enlazan:
   leen los archivos sueltos de la carpeta de lo cocinado. Se corrige en Consecuencias.
+- **Fe de erratas:** 2026-11-09 (#82): el ADR-0035 decide la CD y **suma Windows**.
+  **Windows se compila cruzando desde Linux con llvm-mingw** (Clang, `lld`, libc++ y
+  UCRT), con un *toolchain file* de CMake y `-static`. **La Release de Linux se compila
+  en el SDK de *sniper*, con GCC 14 y el `ld` de binutils** (el SDK no trae `lld`), y
+  `libstdc++` y `libgcc` estáticas. **Los builds
+  de la CD usan SDL3 estática** (la copia fijada de `MZ_VENDOR_SDL3`), y llevan
+  `-ffile-prefix-map` en las banderas del preset (para que alcance a las dependencias) y
+  `SOURCE_DATE_EPOCH`. **Vulkan:** los headers en una versión fijada, y **el loader se
+  carga en runtime** a través de SDL3 (`SDL_Vulkan_GetVkGetInstanceProcAddr`), sin
+  enlazar `libvulkan` ni `vulkan-1.dll`. Se corrige en las Decisiones 3 y 5 y en
+  Consecuencias.
 
 ## Contexto y problema
 
@@ -155,9 +166,9 @@ generado.
 |---|---|---|
 | 1 | Build system | **CMake**, solo CMake moderno basado en *targets* |
 | 2 | Generador | **Ninja** |
-| 3 | Compilador y linker | **Clang** como principal, **GCC** como secundario, linker **`lld`** |
+| 3 | Compilador y linker | **Clang** como principal, **GCC** como secundario, linker **`lld`**. Excepción (fe de erratas, ADR-0035): la Release de Linux de la CD enlaza con el `ld` de binutils del SDK de *sniper*, que no trae `lld` |
 | 4 | Módulos o headers | **Headers con `#pragma once`.** Los módulos se reevalúan cuando `import std` deje de ser experimental |
-| 5 | Dependencias | **SDL3:** opción de CMake para elegir entre el paquete del sistema (por defecto) y una copia con versión fijada vía `FetchContent`. **Vulkan:** siempre del sistema (`find_package(Vulkan)`). **Dear ImGui y Tracy** (ADR-0021): `FetchContent` con versión fijada, solo en Debug y RelWithDebInfo. **stb_vorbis** (ADR-0024): copiado en el repo, en el juego. **Solo en el cocinador:** cgltf, stb_image (ADR-0017), dr_flac (ADR-0024) y stb_truetype (ADR-0026), copiados en `tools/third_party/`; libvorbis y libogg (ADR-0024), paquetes del sistema |
+| 5 | Dependencias | **SDL3:** opción de CMake para elegir entre el paquete del sistema (por defecto) y una copia con versión fijada vía `FetchContent`; **los builds de la CD usan la copia, estática** (ADR-0035). **Vulkan:** **headers en una versión fijada; el loader se carga en runtime a través de SDL3, sin enlazarlo** (fe de erratas, ADR-0035; decía "siempre del sistema, `find_package(Vulkan)`"). **Dear ImGui y Tracy** (ADR-0021): `FetchContent` con versión fijada, solo en Debug y RelWithDebInfo. **stb_vorbis** (ADR-0024): copiado en el repo, en el juego. **Solo en el cocinador:** cgltf, stb_image (ADR-0017), dr_flac (ADR-0024) y stb_truetype (ADR-0026), copiados en `tools/third_party/`; libvorbis y libogg (ADR-0024), paquetes del sistema |
 | 6 | Compilador de shaders | **`glslc`**, con validación con `spirv-val` en Debug |
 | 7 | Configuraciones | **Debug** (ASan + UBSan + validation layers), **RelWithDebInfo** (con `-fno-omit-frame-pointer`, ADR-0021) y **Release**, definidas en `CMakePresets.json`. Cada preset fija qué herramientas de depuración compila (ADR-0021) |
 
@@ -177,6 +188,11 @@ generado.
   leen los archivos sueltos.
 - **Dos compiladores:** el código tiene que compilar sin warnings con Clang y con GCC.
   La CI, cuando exista, compila con los dos.
+- **Las releases (ADR-0035):** la de Linux sale del SDK de *sniper* con GCC 14; la de
+  Windows, de llvm-mingw cruzando desde Linux. Las dos con el runtime estático, SDL3
+  estática, `-ffile-prefix-map` en las banderas del preset y `SOURCE_DATE_EPOCH`.
+  `vulkan-headers` del sistema sirve en la máquina del autor; los builds de la CD usan
+  los headers fijados.
 - **`compile_commands.json`** se genera siempre, para que `clangd` y `clang-tidy`
   entiendan el proyecto.
 - Las optimizaciones del ciclo de build (`mold`, `ccache`) quedan para cuando los

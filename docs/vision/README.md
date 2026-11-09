@@ -1,6 +1,8 @@
 # Visión del juego
 
-- **Versión:** 8 (2026-11-09): la historia completa vive en [`historia.md`](historia.md),
+- **Versión:** 9 (2026-11-09): la CD publica Linux y Windows desde el esqueleto
+  andante, no desde el primer corte vertical (#75, ADR-0033).
+  Versión 8 (2026-11-09): la historia completa vive en [`historia.md`](historia.md),
   con spoilers, y el mapa en [`mapa/`](mapa/README.md). Los detalles de la trama viven
   allí, no en este documento. El juego abre en la torre, sin intro: el origen de los zombies es un
   misterio, y el tono es serio. El mago pasa a ser **el alquimista**, que da
@@ -342,7 +344,7 @@ objetivo**: se llega a él con varios cortes verticales más chicos, cada uno co
 (ADR-0014). **Es para el autor:**
 algo que jugar antes de dedicarle mucho tiempo a construir el mundo. Que otros la jueguen
 es un bonus, así que no hace falta un tutorial. Igual sale para Linux y Windows, porque
-la CD publica las dos desde el primer corte vertical (ADR-0035). **Lo único que
+la CD publica las dos desde el esqueleto andante (ADR-0035 y ADR-0033). **Lo único que
 realmente importa en ella es que cortar se sienta increíble y no aburra.** Todo lo demás
 está al servicio de eso.
 

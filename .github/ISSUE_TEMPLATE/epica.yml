@@ -1,5 +1,5 @@
 name: Épica
-description: Un área completa del proyecto (por ejemplo "Renderer" o "Corte de mallas"). Se parte en features y tareas como sub-issues.
+description: "Agrupa trabajo que no es código, como las decisiones de un milestone de investigación. En el código no hay épicas (ADR-0033): el milestone es el corte vertical."
 labels: ["tipo:épica"]
 body:
   - type: textarea

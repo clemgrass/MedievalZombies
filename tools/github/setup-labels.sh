@@ -12,10 +12,10 @@ done
 
 create() { gh label create "$1" --repo "$REPO" --color "$2" --description "$3" --force; }
 
-for t in épica feature tarea bug investigación; do
+for t in épica tarea bug investigación; do
   create "tipo:$t" 5319e7 "Tipo de ticket"
 done
-for a in graphics slicing physics animation ai gameplay audio ui tooling docs; do
+for a in graphics slicing physics animation ai gameplay audio ui tooling docs contenido; do
   create "área:$a" 0e8a16 "Área del proyecto"
 done
 create "modo:dirigido" fbca04 "El autor explica el flujo y Claude lo escribe (ADR-0014)"
@@ -23,7 +23,7 @@ create "modo:propuesto" fbca04 "Claude propone el diseño y el código, el autor
 create "deuda-técnica" d93f0b "Atajo deliberado que hay que pagar (ADR-0014)"
 
 # Labels que ya no se usan.
-for label in "owner:autor" "owner:claude"; do
+for label in "owner:autor" "owner:claude" "tipo:feature"; do
   gh label delete "$label" --repo "$REPO" --yes 2>/dev/null || true
 done
 

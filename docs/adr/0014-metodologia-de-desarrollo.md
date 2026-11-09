@@ -10,6 +10,11 @@
 - **Fe de erratas:** 2026-11-09 (#82): el ADR-0035 decide la CD. **Publica en GitHub
   Releases y en itch.io**, para Linux y Windows, desde un borrador que el autor prueba y
   publica a mano; GitHub Packages no se usa. Se corrige en la Decisión 7.
+- **Fe de erratas:** 2026-11-09 (#75): el ADR-0033 organiza el código en un milestone
+  por corte, y **la CD entra en el esqueleto andante**, que se despliega como cualquier
+  corte. **El esqueleto también lleva su tag** (`v0.1.0`). Además, el nivel "feature"
+  se quita: cada trabajo de código es una tarea átomo. Se corrige en las Decisiones 1.2,
+  1.3 y 6.
 
 ## Contexto y problema
 
@@ -298,13 +303,13 @@ mismo Clang, CMake y SDL3 que la máquina del autor (ADR-0006).
 | # | Qué | Elección |
 |---|---|---|
 | 1.1 | Modos de trabajo | **Dirigido** para los sistemas grandes (renderer, corte, física, animación, IA) y **propuesto** para lo periférico. En el modo dirigido, Claude prepara el código alrededor y marca con `TODO(human)` los puntos de decisión clave. El autor explica con sus palabras cómo resolverlos, Claude lo escribe y lo mejora, y el autor lo revisa |
-| 1.2 | Marca del modo | Labels **`modo:dirigido`** y **`modo:propuesto`** en las features y las tareas. Las investigaciones no llevan label de modo, porque el proceso de los ADRs ya define los roles |
-| 1.3 | Transparencia | El modelo explicado en este ADR, enlazado desde `docs/README.md`, **`Co-Authored-By: Claude`** en los commits con código de Claude, y **"Qué debo poder explicar" obligatoria** en cada feature y tarea |
+| 1.2 | Marca del modo | Labels **`modo:dirigido`** y **`modo:propuesto`** en las tareas (fe de erratas, ADR-0033: el nivel "feature" ya no existe). Las investigaciones no llevan label de modo, porque el proceso de los ADRs ya define los roles |
+| 1.3 | Transparencia | El modelo explicado en este ADR, enlazado desde `docs/README.md`, **`Co-Authored-By: Claude`** en los commits con código de Claude, y **"Qué debo poder explicar" obligatoria** en cada tarea (fe de erratas, ADR-0033: el nivel "feature" ya no existe) |
 | 2 | Orden de construcción | **Esqueleto andante, después cortes verticales.** Las dudas técnicas se resuelven con **spikes** de tiempo acotado, en ramas `spike/<N>-…` que no se mergean. El resultado queda escrito en el issue |
 | 3 | Flujo | **Kanban, con el tablero tal como está:** `Backlog → Listo → En progreso → En revisión → Hecho`, sin límites por columna ni ceremonias extra |
 | 4 | Revisión | **Todo cambio entra por rama y PR, nunca directo a `main`.** Plantilla de PR con la lista de revisión de Google. **`main` está protegida** con un *ruleset* de GitHub, sin excepciones: PR obligatorio, conversaciones resueltas antes del merge, sin *force push* y sin borrado. Cuando exista la CI, se suma como chequeo obligatorio. No se exige aprobación (GitHub no deja aprobar el propio PR) ni historial lineal (para no restringir los métodos de merge). Antes de cada PR corre la **skill de auditoría** contra los ADRs. Sus hallazgos los revisan juntos el autor y Claude, y cada uno se decide: se corrige, se ignora o queda como deuda técnica |
 | 5 | Refactorización y deuda | **Regla del boy scout y regla de tres.** Los refactors van en PRs `refactor:` separados de las features. **Cada deuda deliberada tiene su issue** (label `deuda-técnica`) y un `TODO(#N)` en el código |
-| 6 | Versionado | **SemVer `0.y.z`**, con un tag de git por cada corte vertical y un **`CHANGELOG.md`** generado con git-cliff desde los Conventional Commits |
+| 6 | Versionado | **SemVer `0.y.z`**, con un tag de git por cada corte vertical y un **`CHANGELOG.md`** generado con git-cliff desde los Conventional Commits. **El esqueleto andante también lleva tag** (fe de erratas, ADR-0033): `v0.1.0`, y cada corte suma uno a la versión menor |
 | 7 | CI/CD | Lo decide un **ADR propio, el ADR-0029**. Este ADR solo fija que la CI existe desde el esqueleto andante y que la CD, si se logra, publica en GitHub (Releases o Packages). Si no se logra, no hay CD (fe de erratas: lo reemplaza el ADR-0035). **La CD la decide el ADR-0035:** GitHub Releases e itch.io, para Linux y Windows; GitHub Packages no se usa |
 | 8 | Documentación del código | **Código autoexplicativo y comentarios lo más concisos posible, sin referencias a ADRs.** Cada bloque se tiene que entender por sí solo, fuera de contexto, tanto para una persona como para una IA |
 | 9 | Rendimiento | **Medir antes de optimizar**, y cada PR de rendimiento incluye la medición antes y después |

@@ -19,7 +19,7 @@ docs/
 │                    (con spoilers) y el mapa del castillo
 ├── process/         cómo trabajamos: tickets, convenciones git
 ├── specs/           specs aprobadas
-├── plans/           planes de implementación derivados de las specs
+├── plans/           planes de implementación y el roadmap del código (documento vivo)
 ├── adr/             ADRs transversales y plantilla (template.md)
 ├── research/        notas de investigación de los ADRs transversales
 ├── diagramas/       diagramas técnicos transversales (el frame), la leyenda común y el
@@ -104,5 +104,6 @@ Para ver todas las decisiones de una vez, y cómo se conectan, está el
 | [ADR-0030](adr/0030-diagramas-tecnicos.md) | Diagramas técnicos (D2, de lo macro a lo micro, verificados contra el código) | Transversal | Aceptado |
 | [ADR-0031](camera/adr/0031-sistema-de-camara.md) | Sistema de cámara (tres estilos a elegir que el jugador no mueve, apuntado desde el pecho, cámara fuera de la simulación, cámara del tajo que acompaña la hoja) | Cámara | Aceptado |
 | [ADR-0032](adr/0032-input-y-controles.md) | Input y controles (acciones con contextos, cada evento al paso de su *timestamp*, mouse crudo y stick por posición, esperar el frame de hace dos) | Transversal | Aceptado |
+| [ADR-0033](adr/0033-organizacion-del-desarrollo-y-roadmap.md) | Organización del desarrollo y roadmap (un milestone por corte vertical, CD desde el esqueleto andante, tareas átomo sin épicas, roadmap vivo en `docs/plans/`) | Proceso | Aceptado |
 | [ADR-0034](adr/0034-cinematicas.md) | Cinemáticas (en el engine, armadas en Blender, el mundo se detiene, corte seco de ida y la última toma termina interpolando hacia la cámara del jugador) | Gameplay | Aceptado |
 | [ADR-0035](adr/0035-cd-y-distribucion.md) | CD y distribución (Linux en el SDK de *sniper* y Windows con llvm-mingw desde el primer tag, sin firma por ahora, builds reproducibles, borrador de GitHub como *staging* y luego itch.io) | Transversal | Aceptado |

@@ -1,5 +1,5 @@
 name: Tarea
-description: Trabajo que se termina en 1 a 3 sesiones, con criterios de aceptación claros. Si no cabe, se parte.
+description: "Un átomo (ADR-0033): un PR que entrega algo comprobable y cabe en una revisión tranquila (del orden de 200 a 400 líneas de producción). Si se puede partir en dos piezas que entregan algo cada una, se parte."
 labels: ["tipo:tarea"]
 body:
   - type: textarea
@@ -29,10 +29,11 @@ body:
     validations:
       required: true
   - type: input
-    id: adr
+    id: adrs
     attributes:
-      label: ADR relacionado
-      placeholder: ADR-0005
+      label: ADRs
+      description: Uno o varios. El primero es el dueño, y su área da el label área:. Las dependencias se marcan en Relationships → Mark as blocked by.
+      placeholder: ADR-0007, ADR-0022
   - type: textarea
     id: explicar
     attributes:

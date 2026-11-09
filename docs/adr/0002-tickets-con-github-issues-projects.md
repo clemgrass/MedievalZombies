@@ -4,6 +4,11 @@
 - **Fecha:** 2026-10-18
 - **Ticket:** #7
 - **Reemplaza / Reemplazado por:** —
+- **Fe de erratas:** 2026-11-09 (#75): el ADR-0033 organiza el código. **La jerarquía
+  pasa a épica → tarea:** el nivel "feature" se quita, y cada tarea es un átomo (un PR
+  que entrega algo comprobable y cabe en una revisión tranquila). **Las épicas no se usan
+  en el código:** el milestone es el corte vertical y el label `área:` es el sistema. Se
+  corrige en el criterio "Capacidad de partir trabajo" y en las Consecuencias.
 
 ## Contexto y problema
 
@@ -19,7 +24,8 @@ Jira con estas condiciones:
 ## Criterios
 
 - **Costo:** gratis, sin límites que el proyecto vaya a alcanzar.
-- **Capacidad de partir trabajo:** jerarquía épica → feature → tarea.
+- **Capacidad de partir trabajo:** jerarquía épica → feature → tarea (fe de erratas,
+  ADR-0033: épica → tarea, y en el código, milestone → tarea).
 - **Integración con el código:** enlazar tickets con commits y PRs.
 - **Visibilidad pública:** que un reclutador o evaluador vea el proceso.
 - **Conexión con Claude:** CLI o MCP.
@@ -86,6 +92,9 @@ molestar. Además, hay que aprender la interfaz propia de GitHub.
 - Sin *issue types*, la clasificación depende de que los labels se usen con
   disciplina. Los formularios de issue ponen el label de `tipo:` solos.
 - Claude trabaja con los tickets vía `gh` (ver `docs/process/tickets.md`).
+- **Cómo se organiza el código** (fe de erratas, ADR-0033): un milestone por corte
+  vertical, tareas átomo sin épicas, con sus dependencias nativas (`--blocked-by`) y su
+  sección "ADRs", y un roadmap en `docs/plans/roadmap.md`.
 
 ## Cómo lo defiendo
 

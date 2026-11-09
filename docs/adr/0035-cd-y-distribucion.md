@@ -5,6 +5,11 @@
 - **Ticket:** #82
 - **Reemplaza / Reemplazado por:** — (reemplaza la Decisión 10 del ADR-0029, con fe de
   erratas allá)
+- **Fe de erratas:** 2026-11-09 (#75): el ADR-0033 adelanta la CD al **esqueleto
+  andante (M3, tag `v0.1.0`)**: el esqueleto también se despliega, y el riesgo de
+  Windows se ve en el primer milestone. **La tabla propia de funciones de Vulkan sale del
+  ticket 3** y va a la base de Vulkan del esqueleto, porque sin ella no se dibuja el
+  primer píxel. Se corrige en la Decisión 1 y en "Tickets, en orden".
 
 ## Contexto y problema
 
@@ -280,7 +285,7 @@ juego jugable. macOS queda para el futuro.
 
 | # | Dimensión | Elección |
 |---|---|---|
-| 1 | Plataformas | **Linux x86-64 y Windows x86-64 desde el primer tag de corte vertical.** Mínimos declarados: **glibc 2.31 o más nueva** (la de *sniper*), **Windows 10 o 11 de 64 bits**, y un driver de **Vulkan 1.3** con las features del ADR-0022. **macOS queda fuera, con la intención de sumarlo en el futuro** (dimensión 5) |
+| 1 | Plataformas | **Linux x86-64 y Windows x86-64 desde el primer tag de corte vertical** (fe de erratas, ADR-0033: desde el tag del esqueleto andante, `v0.1.0`). Mínimos declarados: **glibc 2.31 o más nueva** (la de *sniper*), **Windows 10 o 11 de 64 bits**, y un driver de **Vulkan 1.3** con las features del ADR-0022. **macOS queda fuera, con la intención de sumarlo en el futuro** (dimensión 5) |
 | 2 | Toolchain | **Linux:** el **SDK de *sniper*, fijado por *digest***, con **GCC 14** (`g++-14`) y **el `ld` de binutils del SDK** (no trae `lld`); `libstdc++` y `libgcc` estáticas. **Windows:** **llvm-mingw, fijado por *digest*,** cruzando desde Linux con un *toolchain file* de CMake (Clang, `lld`, libc++ y UCRT), con `-static`; **Wine y lavapipe se instalan en el job** desde los paquetes de la misma imagen, sin imagen propia (D1 del ADR-0029). **SDL3 estática en los builds de la CD,** con la opción de copia fijada que ya da el ADR-0006; en desarrollo sigue la del sistema. **Vulkan:** headers de una versión fijada, y **el loader se carga en runtime** a través de SDL3 (`SDL_Vulkan_GetVkGetInstanceProcAddr`), sin enlazar `libvulkan` ni `vulkan-1.dll`: el loader lo pone el driver del jugador. **`engine/gpu` carga cada función de Vulkan en una tabla propia** (`VK_NO_PROTOTYPES`, con `vkGetInstanceProcAddr` y `vkGetDeviceProcAddr`), a partir del puntero inicial que le entrega `platform::`; sin volk, para no sumar una dependencia |
 | 3 | Paquete | **Linux:** `MedievalZombies-<versión>-linux-x86_64.tar.gz`. **Windows:** `MedievalZombies-<versión>-windows-x86_64.zip`. Cada uno, una carpeta con **el ejecutable sin símbolos** (`strip`), `LICENSE`, **`LICENSES/`** (los textos de MIT, CC BY 4.0 y OFL 1.1, porque el ejecutable lleva adentro assets, fuentes y bibliotecas con esas licencias), `CREDITS.md` y un `LEEME.txt` en español e inglés. El `.exe` lleva **ícono, `VERSIONINFO` y manifiesto**. **Sin AppImage, Flatpak ni instalador.** Los símbolos de depuración se guardan aparte, como artefacto del workflow, sin publicarse. **`platform::` encuentra la sección del paquete en ELF y en PE** (en PE, por `VirtualSize`; el nombre cabe en 8 bytes). **Carpetas en Windows:** la tarjeta de memoria y las opciones en `%APPDATA%\<juego>\` (lo que da `SDL_GetPrefPath`); la caché de pipelines y los archivos de depuración (el log, el registro por frame y los *replays*), en `%LOCALAPPDATA%\<juego>\`. El nombre `<juego>` lo cierra el ADR-0028 cuando se elija |
 | 4 | Confianza en Windows | **Sin firma por ahora.** La firma (postular a SignPath Foundation, que exige una release ya publicada) **se retoma cuando haya un juego jugable**, en "Lo que queda abierto". **Higiene del build contra las heurísticas:** sin empaquetadores, sin datos pegados al final (los assets van en una sección real), sin símbolos, con `VERSIONINFO` y manifiesto. **Las notas de cada release** explican el aviso de SmartScreen ("Más información" → "Ejecutar de todas formas") y cómo verificar el SHA-256 y la atestación. **No se sube a VirusTotal antes de publicar:** el archivo se compartiría con unos 70 proveedores; la prueba previa es el borrador, que prueba el autor. **Un falso positivo** se reporta a Microsoft en el portal de Security Intelligence, como "Software developer" |
@@ -347,7 +352,9 @@ juego jugable. macOS queda para el futuro.
 
 ### Tickets, en orden
 
-Llegan con el primer tag de corte vertical, cada uno en su ticket:
+Llegan con el primer tag de corte vertical, cada uno en su ticket (fe de erratas,
+ADR-0033: llegan con el esqueleto andante, en M3, y el orden de construcción lo fija el
+roadmap):
 
 1. **Un *spike*** que compila el engine real en *sniper* y en llvm-mingw, y corre sus
    tests bajo Wine con el Wine de los paquetes de la imagen (el prototipo usó el de
@@ -356,9 +363,10 @@ Llegan con el primer tag de corte vertical, cada uno en su ticket:
    las carpetas de `%APPDATA%` y `%LOCALAPPDATA%`, y **la sección del paquete en PE**,
    con tests de ELF y de PE.
 3. **Los presets de la CD:** el *toolchain file* de llvm-mingw, SDL3 estática, el
-   runtime estático, `-ffile-prefix-map` y `SOURCE_DATE_EPOCH`, y el `strip`. **Los
-   headers de Vulkan fijados y la tabla propia de funciones de Vulkan** en `engine/gpu`,
-   cargada desde el puntero que entrega `platform::`.
+   runtime estático, `-ffile-prefix-map` y `SOURCE_DATE_EPOCH`, y el `strip`. Los
+   headers de Vulkan fijados y la tabla propia de funciones de Vulkan en `engine/gpu`,
+   cargada desde el puntero que entrega `platform::`, **ya no van aquí** (fe de erratas,
+   ADR-0033): van en la base de Vulkan del esqueleto andante, antes que este ticket.
 4. **Los recursos del `.exe`:** ícono, `VERSIONINFO` y manifiesto.
 5. **El modo de prueba de humo** del ejecutable: arranca, verifica el paquete y las
    carpetas, informa si hay Vulkan y termina con un código de salida.

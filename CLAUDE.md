@@ -3,9 +3,9 @@
 Videojuego 3D sobre un apocalipsis zombie en la época medieval, con engine propio,
 escrito en C++20 (ADR-0003).
 
-> **Estado actual:** milestone M2 (decisiones de sistemas, épica #35). M0 y M1 están
-> cerrados. No existe código del juego: el autor eligió decidir los ADRs de M2 (épica
-> #35) antes de escribir código.
+> **Estado actual:** milestone M3 (esqueleto andante). M0, M1 y M2 están cerrados:
+> todas las decisiones de sistemas están en ADRs. Todavía no existe código del juego.
+> El orden en que se construye está en `docs/plans/roadmap.md` (ADR-0033).
 
 ## El juego
 
@@ -107,6 +107,10 @@ sistema de tickets (GitHub Issues + Projects) y el orden de los primeros ADRs:
   correspondiente en `.github/ISSUE_TEMPLATE/`.
 - **Claude solo crea issues con aprobación del autor.** Antes de trabajar, lee el
   ticket y respeta su label `modo:`.
+- **Tareas de código (ADR-0033):** cada una es un átomo, sin épicas. Al abrir un
+  milestone, Claude parte sus filas del roadmap en átomos y propone el lote; con la
+  aprobación, los crea con `--milestone`, `--blocked-by` y la sección "ADRs", y anota
+  cada número de issue en `docs/plans/roadmap.md`.
 - **Nunca se trabaja directo en `main`:** siempre rama y PR. El *ruleset* "Proteger
   main" lo exige.
 - `gh issue list --label` usa el índice de búsqueda: un issue recién creado puede

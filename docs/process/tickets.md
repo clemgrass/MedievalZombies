@@ -5,7 +5,7 @@ en el ADR-0002.
 
 - **Repo:** <https://github.com/clemgrass/MedievalZombies>
 - **Tablero:** el Project #1 `MedievalZombies` del perfil `clemgrass` (épicas,
-  features, tareas e investigaciones)
+  tareas e investigaciones)
 - **Bugs:** el Project #2 `MedievalZombies – Bug hunting`, separado del tablero para no
   mezclar arreglos con features (ADR-0011). Ver [Bugs](#bugs)
 
@@ -27,27 +27,43 @@ el milestone son del issue. Estado, Prioridad y Tamaño son campos del Project.
 
 | Nivel | Qué es | Ejemplo |
 |---|---|---|
-| Épica | Un área completa | "Renderer", "Corte de mallas" |
-| Feature | Una capacidad concreta, sub-issue de una épica | "Shadow maps" |
-| Tarea | Se termina en 1 a 3 sesiones de trabajo, con criterios de aceptación claros | "Depth pass para shadow map" |
+| Épica | Agrupa trabajo que **no es código**, como las decisiones de un milestone de investigación | "M2 – Decisiones de sistemas" (#35) |
+| Tarea | Un **átomo**: un PR que entrega algo comprobable y cabe en una revisión tranquila | "Tapa del corte: cortar orejas sin agujeros" |
 
-**Si una tarea no cabe en 1 a 3 sesiones, se parte en tareas más chicas.**
+**En el código no hay épicas** (ADR-0033): el milestone es el corte vertical y el label
+`área:` es el sistema. El nivel "feature" ya no existe.
+
+### El átomo
+
+Un ticket que termina en un PR es un átomo. Antes de crearlo, se le hacen cuatro
+preguntas (ADR-0033):
+
+1. **¿Entrega algo que se puede comprobar solo?** Un test que pasa, algo que se ve en
+   pantalla o una regla del build que falla.
+2. **¿Cabe en una revisión tranquila?** Del orden de 200 a 400 líneas de código de
+   producción, sin contar los tests.
+3. **¿Es indivisible?** Si se parte en dos y cada mitad todavía entregaría algo
+   comprobable, se parte.
+4. **¿No es demasiado chico?** Si una mitad no entrega nada, no se parte: el átomo es la
+   pieza más chica que todavía vale un PR.
+
+Un auto es demasiado grande; un motor, todavía grande; un cilindro, aunque tenga piezas
+más chicas, ya es del tamaño justo.
 
 ## Labels
 
 | Grupo | Labels | Para qué |
 |---|---|---|
-| Tipo | `tipo:épica`, `tipo:feature`, `tipo:tarea`, `tipo:bug`, `tipo:investigación` | Qué clase de ticket es. Una `tipo:investigación` produce un ADR |
-| Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:audio`, `área:ui`, `área:tooling`, `área:docs` | Qué parte del proyecto toca |
-| Modo | `modo:dirigido`, `modo:propuesto` | Cómo se trabaja la feature o la tarea (ADR-0014): el autor dirige el diseño, o Claude lo propone |
+| Tipo | `tipo:épica`, `tipo:tarea`, `tipo:bug`, `tipo:investigación` | Qué clase de ticket es. Una `tipo:investigación` produce un ADR |
+| Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:audio`, `área:ui`, `área:tooling`, `área:docs`, `área:contenido` | Qué parte del proyecto toca. En el código, es el sistema. `área:contenido` es para los assets: mallas, rigs, clips, texturas, sonidos y niveles |
+| Modo | `modo:dirigido`, `modo:propuesto` | Cómo se trabaja la tarea (ADR-0014): el autor dirige el diseño, o Claude lo propone |
 | Deuda | `deuda-técnica` | Un atajo deliberado que hay que pagar. Su `TODO(#N)` en el código apunta al issue |
 
 Cada formulario de issue pone su label de `tipo:` automáticamente, **pero solo si el
 issue se crea desde la web**. El label de `área:` siempre se agrega a mano.
 
 **El `modo` se elige en el formulario, pero el label `modo:` se pone al refinar.**
-Sin ese label, una feature o una tarea no puede pasar a `Listo`. Las investigaciones no
-llevan modo.
+Sin ese label, una tarea no puede pasar a `Listo`. Las investigaciones no llevan modo.
 
 ## Campos del tablero
 
@@ -55,17 +71,35 @@ llevan modo.
 |---|---|
 | Estado (en GitHub se llama `Status`) | `Backlog` → `Listo` → `En progreso` → `En revisión` → `Hecho` |
 | Prioridad | `Alta`, `Media`, `Baja` |
-| Tamaño | `S`, `M`, `L` |
+| Tamaño | `S`, `M`, `L`, según las líneas de producción que va a revisar el autor: S hasta ~100, M hasta ~250 y L hasta ~400. Lo que pasa de L se parte (ADR-0033) |
 
 ## Definición de Listo y de Hecho
 
-- **Listo:** tiene criterios de aceptación, label `modo:` (si es feature o tarea),
-  Tamaño, y su ADR
-  relacionado (si aplica) está `Aceptado`.
+- **Listo:** tiene criterios de aceptación, label `modo:` (si es tarea), Tamaño, su
+  sección "ADRs" y sus dependencias marcadas (si es tarea de código), y sus ADRs están
+  `Aceptado`.
 - **Hecho:** cumple los criterios de aceptación, está mergeado con `Closes #N`, y (si
-  es feature o tarea) el autor respondió "Qué debo poder explicar", recorriendo el
+  es tarea) el autor respondió "Qué debo poder explicar", recorriendo el
   diagrama del flujo cuando lo hay. Si el ticket cambia un flujo dibujado, o le da
   comportamiento a un sistema nuevo, su diagrama está al día (ADR-0030).
+
+## Cómo se organiza el código
+
+Lo decide el ADR-0033. El plan completo vive en el [roadmap](../plans/roadmap.md).
+
+- **Un milestone por corte vertical:** M3 es el esqueleto andante y M4 a M7 son los
+  cortes, cada uno con un criterio de salida que se juega y su tag (`v0.1.0` a
+  `v0.5.0`).
+- **Al abrir un milestone,** Claude parte sus filas del roadmap en átomos y propone el
+  lote completo. El autor lo aprueba antes de que se cree ningún issue. Los milestones
+  siguientes quedan como filas del roadmap, sin issues.
+- **Cada tarea dice a qué ADRs pertenece,** en su sección "ADRs": uno o varios, y el
+  primero es el dueño. Su área da el label `área:`, salvo en las tareas de contenido,
+  que llevan `área:contenido`.
+- **Las dependencias son las nativas de GitHub:** una tarea que necesita otra se crea con
+  `--blocked-by`, y el tablero la marca como bloqueada.
+- **Al cerrar un milestone,** el autor juega el tag y un PR actualiza el roadmap y los
+  riesgos, antes de abrir el siguiente.
 
 ## Cómo hago…
 
@@ -73,8 +107,8 @@ Cada acción tiene su ruta en la web y su comando `gh` equivalente.
 
 ### …crear un issue
 
-- **Web:** *Issues* → *New issue* → elegir el formulario (Épica, Feature, Tarea,
-  Investigación o Bug).
+- **Web:** *Issues* → *New issue* → elegir el formulario (Épica, Tarea, Investigación
+  o Bug).
 - **gh:** `gh issue create --web` abre el selector de formularios en el navegador.
   Si creas el issue solo con `gh`, sin pasar por el formulario, tienes que poner los
   labels tú: `gh issue create --title "…" --label "tipo:tarea" --body "…"`.
@@ -85,6 +119,12 @@ Cada acción tiene su ruta en la web y su comando `gh` equivalente.
   (uno que ya existe).
 - **gh:** `gh issue create --parent 12` (nuevo) o `gh issue edit 34 --parent 12`
   (existente).
+
+### …marcar una dependencia
+
+- **Web:** en la barra lateral del issue, *Relationships* → *Mark as blocked by*.
+- **gh:** `gh issue create --blocked-by 40,41` (nuevo) o
+  `gh issue edit 42 --add-blocked-by 40` (existente).
 
 ### …poner un label o un milestone
 

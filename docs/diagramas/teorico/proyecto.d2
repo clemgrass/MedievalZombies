@@ -132,24 +132,32 @@ mapa: "" {
 proceso: "Proceso: cómo se trabaja y se construye" {
   class: franja
   grid-columns: 2
+  # Deja lugar a la etiqueta de la única flecha horizontal (ADR-0033 → ADR-0035).
+  horizontal-gap: 170
 
   # El orden importa: la grilla llena por columnas, y la altura de cada caja decide
   # por dónde pasan las dos flechas que cruzan hacia el mapa sin pisar otras etiquetas.
+  # El ADR-0033 va en la segunda columna, al lado del 0035 y entre el 0002 y el 0014,
+  # para que sus tres flechas vayan a cajas vecinas.
   adrs: "ADR-0001\ndecisiones en ADRs" {class: proceso}
-  cd: "ADR-0035\nCD: Linux y Windows,\nbuilds reproducibles" {class: proceso}
   ci: "ADR-0029\nCI: contenedor de Arch\ncon fecha fija" {class: proceso}
+  cd: "ADR-0035\nCD: Linux y Windows,\nbuilds reproducibles" {class: proceso}
   rendimiento: "ADR-0020\nUHD 620, 60 fps, 640×360" {class: proceso}
   licencias: "ADR-0019\ncódigo MIT,\ndocs y assets CC BY 4.0" {class: proceso}
-  tickets: "ADR-0002\ntickets en GitHub Issues + Projects" {class: proceso}
-  colaboracion: "ADR-0014\ncolaboración: modo dirigido,\ncortes verticales" {class: proceso}
-  diagramas: "ADR-0030\ndiagramas técnicos en D2" {class: proceso}
   lenguaje: "ADR-0003\nC++20" {class: proceso}
   subconjunto: "ADR-0009\nsubconjunto de C++:\nsin excepciones ni RTTI" {class: proceso}
+  diagramas: "ADR-0030\ndiagramas técnicos en D2" {class: proceso}
+  tickets: "ADR-0002\ntickets en GitHub Issues + Projects" {class: proceso}
+  roadmap: "ADR-0033\nun milestone por corte,\ntareas átomo, roadmap vivo" {class: proceso}
+  colaboracion: "ADR-0014\ncolaboración: modo dirigido,\ncortes verticales" {class: proceso}
   convenciones: "ADR-0013\nconvenciones y análisis estático" {class: proceso}
   build: "ADR-0006\nCMake + Ninja, Clang/GCC" {class: proceso}
   testing: "ADR-0011\nGoogleTest, TDD en el núcleo,\nxfail por bug" {class: proceso}
 
   cd -> ci: "reemplaza la CD\ndel ADR-0029" {class: empuja}
+  roadmap -> cd: "la CD entra en\nel esqueleto andante" {class: empuja}
+  roadmap -> tickets: "épica → tarea,\nsin épicas en el código" {class: empuja}
+  roadmap -> colaboracion: "el esqueleto\ntambién lleva tag" {class: empuja}
 }
 
 # Decisiones que cruzan de la franja al mapa

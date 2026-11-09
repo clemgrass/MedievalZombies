@@ -8,7 +8,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 
 | Tema | ADRs | Se activa cuando el PR toca… |
 |---|---|---|
-| [proceso](#proceso) | 0001, 0002, 0014, 0020 | **Siempre** |
+| [proceso](#proceso) | 0001, 0002, 0014, 0020, 0033 | **Siempre** |
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
@@ -81,8 +81,9 @@ aceptado del índice de `docs/README.md` no aparece en ningún tema.
 ## proceso
 
 **ADRs:** 0001 (ADRs), 0002 (tickets), 0014 (colaboración y metodología), 0020
-(requisitos y protocolo de medición del rendimiento). También `docs/process/git.md`,
-`docs/process/tickets.md` y `docs/performance/presupuestos.md`.
+(requisitos y protocolo de medición del rendimiento), 0033 (organización del desarrollo
+y roadmap). También `docs/process/git.md`, `docs/process/tickets.md`,
+`docs/performance/presupuestos.md` y `docs/plans/roadmap.md`.
 
 Qué mirar:
 
@@ -97,8 +98,20 @@ Qué mirar:
   **responder la "Pregunta a decidir"** del ticket, completa.
 - No queda ningún `TODO(human)` sin resolver: esos marcadores son del modo dirigido y
   no llegan a `main`.
-- Si el ticket es feature o tarea: tiene label `modo:`, y "Qué debo poder explicar" está
+- Si el ticket es una tarea: tiene label `modo:`, y "Qué debo poder explicar" está
   respondida o pendiente para el autor antes del merge.
+- **El átomo (ADR-0033):** una tarea de código es un PR que entrega algo comprobable y
+  cabe en una revisión tranquila. Si el diff de producción (sin los tests) pasa de ~400
+  líneas, o junta dos entregas que se podrían revisar por separado, es un hallazgo
+  `sugerencia`: se parte, o el PR explica por qué no se puede.
+- **La trazabilidad (ADR-0033):** la tarea tiene su sección "ADRs" (el primero es el
+  dueño, y su área coincide con el label `área:`, salvo las tareas de contenido, que
+  llevan `área:contenido` por la Decisión 8), su milestone (el corte en curso) y sus
+  dependencias como *blocked by* nativas. En el código no hay épicas ni `tipo:feature`.
+- **El roadmap (ADR-0033):** el PR que abre o cierra un milestone actualiza
+  `docs/plans/roadmap.md` (las filas, el número de issue de cada átomo, los riesgos).
+  Una tarea de código que no aparece en el roadmap, o un milestone que se cierra sin
+  actualizarlo, es un hallazgo `importante`.
 - Una deuda deliberada nueva lleva `TODO(#N)` y su issue `deuda-técnica`. Un `TODO`
   suelto, sin issue, es un hallazgo.
 - Los cambios de rendimiento incluyen la medición antes y después (ADR-0014, regla 9),
@@ -141,13 +154,13 @@ Qué mirar:
   eligió un ADR corrige su caja. Falta la caja: `importante`.
 - **Inmutabilidad (ADR-0014, regla 11):** mientras no exista código del juego, un ADR
   aceptado se puede corregir como fe de erratas, registrada en el campo **Fe de
-  erratas** de su encabezado (fecha, ticket y qué cambió). Cuando existe código (`engine/` o
-  `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
+  erratas** de su encabezado (fecha, ticket y qué cambió). **El código empieza cuando se
+  mergea el primer PR con código** (ADR-0033, Decisión 9), aunque solo traiga el CMake
+  del esqueleto. Desde ahí, editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, decidir cómo se organizan los milestones de
-  código antes del ADR-0033, o con qué se firma el `.exe` antes de retomar la firma que
-  el ADR-0035 dejó abierta.
+  pendiente es un hallazgo. Por ejemplo, decidir con qué se firma el `.exe` antes de
+  retomar la firma que el ADR-0035 dejó abierta.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo

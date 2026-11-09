@@ -13,14 +13,14 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
 | [memoria](#memoria) | 0010 | `engine/core/**`, `engine/gpu/**`, o código que reserve, libere o guarde memoria (arenas, pools, allocators, contenedores) |
-| [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
-| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers), 0010 (tamaño del *ring buffer*), 0022 (pipeline de render) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
+| [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags), 0035 (los builds de la CD: SDL3 estática, el loader de Vulkan en runtime, `-ffile-prefix-map`) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
+| [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers), 0010 (tamaño del *ring buffer*), 0022 (pipeline de render), 0035 (la carga de funciones de Vulkan) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
 | [matematica](#matematica) | 0008 | `engine/core/math/**`, o código que defina o use vectores, matrices, cuaterniones o comparaciones de `float` |
 | [animacion](#animacion) | 0015 | `engine/animation/**`, shaders de skinning, o código que use esqueletos, poses, clips, IK o pesos de vértices |
 | [fisica](#fisica) | 0016 | `engine/physics/**`, o código que use cuerpos, formas de colisión, contactos, uniones, consultas o el controlador de personaje |
 | [assets](#assets) | 0017, 0007 (lo que el cocinador hace para el corte), 0022 (mipmaps), 0023 (la navmesh), 0024 (los sonidos), 0026 (las fuentes y los textos), 0027 (el mundo: zonas, marcadores y fases), 0028 (los binarios por zona y el global, el reparto y el paquete), 0031 (las cámaras fijas y los rieles), 0034 (las cinemáticas) | `assets/**`, las herramientas de assets en `tools/**`, las reglas de CMake que exportan o cocinan assets, o código que lea el binario cocinado |
 | [corte](#corte) | 0007 | `engine/slicing/**`, o código que parta mallas, arme tapas, cree pedazos o lea un `slice_request` |
-| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028, 0031, 0032 y 0034 (TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo, las cinemáticas y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador, la tarjeta de memoria, el resorte y el barrido de la cámara, las piezas puras del input y el secuenciador de las cinemáticas; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI, las fases, el sistema de cámara y la capa de acciones; el *replay* con tiempos de carga al azar y con otro horario de frames; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
+| [testing](#testing) | 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028, 0031, 0032, 0034 y 0035 (la suite de Windows sin *sanitizers*; TDD en el corte, incluido el campo de distancia de la tapa, la memoria, la animación, la física, el cocinador de assets, incluidos la navmesh, los sonidos, las fuentes, los textos, el mundo, las cinemáticas y los binarios de la carga, la cola del audio, la lógica pura de la UI, el cargador, la tarjeta de memoria, el resorte y el barrido de la cámara, las piezas puras del input y el secuenciador de las cinemáticas; tests después en el combate, la IA, el resto del audio, los VFX, las pantallas de la UI, las fases, el sistema de cámara y la capa de acciones; el *replay* con tiempos de carga al azar y con otro horario de frames; el guardado con el proceso muerto a mitad) | `tests/**`, o cualquier cambio en `engine/**`, `game/**` o en las herramientas de `tools/**` (para ver si trae sus tests) |
 | [diagramas](#diagramas) | 0030 | `**/diagramas/**`, `*.d2`, o cualquier cambio en `engine/**` o `game/**` (para ver si cambió un flujo dibujado, o si un sistema nuevo trae su diagrama) |
 | [gameplay](#gameplay) | 0018 | `game/**`, `docs/vision/**`, o código que cargue el tajo, gaste la fuerza, emita un `slice_request`, maneje la energía, la pausa de impacto, la espada clavada, los agarres o decida qué pedazo sigue vivo |
 | [ia](#ia) | 0023 | `engine/ai/**`, `engine/nav*/**`, `game/**`, o código que decida qué hace un zombie, perciba, reparta fichas de ataque, busque caminos, esquive (ORCA) o genere o lea la navmesh |
@@ -28,12 +28,12 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [vfx](#vfx) | 0025 | `engine/vfx/**`, los shaders de partículas, marcas, estela o postproceso, `game/**`, o código que emita, integre o dibuje partículas, marcas de sangre, la estela, los *frames* de impacto o las capas de la tapa |
 | [ui](#ui) | 0026 | `engine/ui/**`, los shaders de la UI, `game/**`, los archivos de textos y las fuentes en `assets/**`, `docs/ui/**`, o código que dibuje el HUD, los subtítulos o los menús, mida o corte texto, mueva el foco o pause el juego |
 | [niveles](#niveles) | 0027 | `engine/world*/**`, `game/**`, los `.blend` y los textos de zona y de mundo en `assets/**`, `docs/levels/**`, o código que cargue, active o descargue zonas, cree las entidades de una zona, ejecute fases o triggers, elija las antorchas del frame o recorte por la niebla o las vecinas |
-| [recursos](#recursos) | 0028 | `engine/io*/**`, `engine/resource*/**`, `engine/save*/**`, `engine/platform/**`, `game/**`, `CMakePresets.json`, o código que lea o escriba archivos, pida o libere zonas, use el hilo de I/O o los slots, suba datos de una zona a la GPU, cree o guarde el `VkPipelineCache`, recargue en caliente, o lea o escriba la tarjeta de memoria o las opciones |
+| [recursos](#recursos) | 0028, 0035 (la sección en PE y las carpetas de Windows) | `engine/io*/**`, `engine/resource*/**`, `engine/save*/**`, `engine/platform/**`, `game/**`, `CMakePresets.json`, o código que lea o escriba archivos, pida o libere zonas, use el hilo de I/O o los slots, suba datos de una zona a la GPU, cree o guarde el `VkPipelineCache`, recargue en caliente, o lea o escriba la tarjeta de memoria o las opciones |
 | [camara](#camara) | 0031 | `engine/camera*/**`, `game/**`, `docs/camera/**`, los marcadores de cámara en `assets/**`, o código que calcule la cámara, su colisión, la cámara del tajo, la herida que se abre o la sacudida, que apunte la espada o que lea la cámara desde la simulación |
 | [input](#input) | 0032 | `engine/input*/**`, el input de `engine/platform/**`, `game/**`, `docs/vision/**`, o código que lea eventos de teclado, mouse o gamepad, arme acciones, aplique zonas muertas o curvas, reparta el input entre los pasos, guarde o reasigne controles, cambie de dispositivo, haga vibrar el mando o espere la presentación antes de leer el input |
 | [cinematicas](#cinematicas) | 0034 | `game/**`, los `.blend` de cinemáticas y sus scripts de exportación en `assets/**` y `tools/**`, o código que reproduzca, salte o cocine una cinemática, detenga el mundo durante ella, mezcle su cámara con la del jugador o dibuje sus bandas |
 | [herramientas](#herramientas) | 0021 | `CMakePresets.json`, o código que use Dear ImGui, Tracy o RenderDoc, que loguee, que dibuje primitivas de depuración, que declare o lea CVars, que grabe o reproduzca un *replay*, o que mida tiempos o memoria |
-| [ci](#ci) | 0029 | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, o cualquier cambio en la versión de Blender, de D2 o en la fecha del snapshot del toolchain |
+| [ci](#ci) | 0029 (CI), 0035 (CD y distribución) | `.github/workflows/**`, `.github/dependabot.yml`, `tools/ci/**`, el *toolchain file* de Windows, los recursos del `.exe` (ícono, `VERSIONINFO`, manifiesto), el `LEEME.txt` o la plantilla de las notas de release, o cualquier cambio en la versión de Blender, de D2, en la fecha del snapshot del toolchain o en el *digest* de las imágenes de la CD |
 
 ### Activación por contenido
 
@@ -66,7 +66,7 @@ importa sobre todo en los cambios de documentación (un ADR nuevo, una guía):
 | Cámara, estilos de cámara, tercera o primera persona, cámaras fijas, rieles, FOV, colisión de la cámara, la cámara del tajo, cámara lenta, rayos X, la herida que se abre, sacudida, trauma, la mira, apuntar la espada, el punto apuntado | `camara` |
 | Input, controles, acciones, reasignar, teclas, scancode o keycode, mouse relativo, sensibilidad, stick, zona muerta, curva de respuesta, gatillos, *buffer* de input, toques perdidos, latencia del input, `present_wait`, gamepad, mando, deriva, cambio de dispositivo, vibración, giroscopio, moverse (tanque o relativo a la pantalla) | `input` |
 | Cinemáticas, escenas de película, secuenciador, línea de tiempo, tomas, cortes de cámara, la salida a la cámara del jugador, bandas o *letterbox*, saltar una cinemática, *quick time*, secuencia interactiva, el dragón, el *parry* | `cinematicas` |
-| CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime | `ci` |
+| CI, CD, GitHub Actions, workflows, runners, chequeos obligatorios, el ruleset, Dependabot, releases, el Arch Linux Archive, el Steam Linux Runtime, *sniper*, Windows, llvm-mingw, Wine, itch.io, `butler`, firma de código, SmartScreen, antivirus, `SHA256SUMS`, atestaciones, releases inmutables, builds reproducibles, `SOURCE_DATE_EPOCH`, *staging*, macOS | `ci` |
 
 **Un solo dueño por regla.** Las flags del compilador las audita solo
 `build-y-licencias`, aunque vengan del ADR-0008, 0009 o 0013. Así no aparece el mismo
@@ -141,8 +141,9 @@ Qué mirar:
   `game/` con fuentes), editar la Decisión de un ADR aceptado es `bloqueante`: hace
   falta un ADR nuevo que lo reemplace.
 - **No adelantar decisiones:** un texto que da por decidido algo que le toca a un ADR
-  pendiente es un hallazgo. Por ejemplo, decidir cómo se firman y publican las releases
-  antes del ADR-0035, o cómo se organizan los milestones de código antes del ADR-0033.
+  pendiente es un hallazgo. Por ejemplo, decidir cómo se organizan los milestones de
+  código antes del ADR-0033, o con qué se firma el `.exe` antes de retomar la firma que
+  el ADR-0035 dejó abierta.
 - **Coherencia:** un documento nuevo no contradice un ADR aceptado. Si lo contradice,
   reporta las dos citas.
 - **Modelo de colaboración (ADR-0014):** los documentos lo describen como trabajo
@@ -193,7 +194,9 @@ Qué mirar:
   capa nunca incluye ni enlaza una capa superior, y las dependencias en CMake respetan
   ese orden.
 - **SDL3 solo detrás de la interfaz `platform::`.** Nada fuera de `engine/platform`
-  incluye headers de SDL. `SDL_GPU` y `SDL_Renderer` están prohibidos.
+  incluye headers de SDL. `SDL_GPU` y `SDL_Renderer` están prohibidos. **Lo mismo con
+  Windows** (fe de erratas del ADR-0004, por el ADR-0035): `windows.h` y los tipos de
+  Win32 solo dentro de `engine/platform`.
 - **`platform::` entrega eventos con tipos propios y su *timestamp*,** nunca eventos de
   SDL. La capa de acciones (un sistema encima de `engine/core`, ADR-0032) arma las
   acciones de cada paso; el gameplay nunca ve una tecla ni un dispositivo.
@@ -311,7 +314,23 @@ Qué mirar:
   hallazgo, porque llega a las dependencias de `FetchContent`.
   `-fno-exceptions` y `-fno-rtti` (ADR-0009). **Sin `-ffast-math` y sin `-march`**
   (ADR-0008).
-- **SDL3:** del sistema, con la opción `MZ_VENDOR_SDL3` para usar FetchContent.
+- **SDL3:** del sistema, con la opción `MZ_VENDOR_SDL3` para usar FetchContent. **Los
+  builds de la CD usan la copia, estática** (fe de erratas del ADR-0006, por el
+  ADR-0035): un binario publicado que enlaza `libSDL3.so` no arranca en Ubuntu 24.04
+  (medido).
+- **Vulkan (fe de erratas del ADR-0006, por el ADR-0035):** headers en una versión
+  fijada, y **el loader se carga en runtime a través de SDL3**. Enlazar `libvulkan` o
+  `vulkan-1.dll` (`Vulkan::Vulkan`) es un hallazgo. Las funciones de Vulkan van en una
+  tabla propia de `engine/gpu` (`VK_NO_PROTOTYPES`); eso lo audita `graficos`, y volk
+  sería una dependencia nueva.
+- **El linker:** `lld`, salvo la Release de Linux de la CD, que enlaza con el `ld` de
+  *sniper* (fe de erratas del ADR-0006, por el ADR-0035).
+- **Los builds de la CD (ADR-0035):** Linux con GCC 14 en *sniper*, `libstdc++` y
+  `libgcc` estáticas; Windows con llvm-mingw y `-static`, desde un *toolchain file*.
+  **`-ffile-prefix-map` va en las banderas del preset** (`CMAKE_C_FLAGS` y
+  `CMAKE_CXX_FLAGS`), para que alcance a las dependencias; con `add_compile_options`
+  después de `add_subdirectory`, no las alcanza. Estas banderas no son las de warnings:
+  esas siguen por target.
 - **Shaders:** `glslc` y `spirv-val`.
 - **Dependencias:** una dependencia nueva necesita su ADR y su fila en `CREDITS.md`.
   Una dependencia **copiada en el repo** (como `tools/third_party/`) lleva además su
@@ -330,13 +349,18 @@ Qué mirar:
 
 **ADRs:** 0005 (API gráfica), 0007 (frames en vuelo y subida de los pedazos), 0008
 (proyección y buffers), 0010 (el *ring buffer* dimensionado para el peor caso), 0022
-(pipeline de render).
+(pipeline de render) y la carga de funciones de Vulkan del ADR-0035.
 
 Qué mirar:
 
 - **Vulkan 1.3**, con *dynamic rendering* y `synchronization2`. Sin *render passes*
   clásicos.
 - **Inicialización propia**, sin vk-bootstrap.
+- **Las funciones de Vulkan, en una tabla propia** (fe de erratas del ADR-0006, por el
+  ADR-0035): `VK_NO_PROTOTYPES`, cargadas con `vkGetInstanceProcAddr` y
+  `vkGetDeviceProcAddr` desde el puntero inicial que entrega `platform::` (que lo saca de
+  SDL3). Llamar a un `vk*` enlazado, pedirle el puntero a SDL fuera de `platform::`, o
+  usar volk sin su ADR, es un hallazgo.
 - **`gpu::Allocator` propio** (VMA es solo el plan B, y necesita su ADR).
 - **Ring buffer** persistente y mapeado, uno por frame en vuelo, de tamaño máximo por
   frame × frames en vuelo. **2 frames en vuelo** (ADR-0007). El máximo por frame cuenta
@@ -792,7 +816,8 @@ Qué mirar:
 ## testing
 
 **ADRs:** 0011, 0007, 0010, 0015, 0016, 0017, 0018, 0023, 0024, 0025, 0026, 0027, 0028,
-0031, 0032 y 0034 (reparto del TDD en el corte, la memoria, la animación, la física, el
+0031, 0032, 0034 y 0035 (la suite de Windows de la CD, bajo Wine y sin *sanitizers*;
+reparto del TDD en el corte, la memoria, la animación, la física, el
 cocinador de assets, el cargador, la tarjeta de memoria, el resorte y el barrido de la
 cámara, las piezas puras del input y el secuenciador de las cinemáticas; los tests del
 combate, de la IA, del audio, de los VFX, de la UI, de los niveles, del guardado, del
@@ -957,7 +982,11 @@ Qué mirar:
 - **Regresión de bugs:** `tests/regression/bug_<N>.cpp` con el test `Bug<N>_…` y la URL
   del issue. Lleva `WILL_FAIL` mientras el bug está abierto, y se le quita en el PR que
   lo arregla.
-- **Los tests corren en el preset Debug**, con ASan y UBSan.
+- **Los tests corren en el preset Debug**, con ASan y UBSan. **Excepción (fe de erratas
+  del ADR-0011, por el ADR-0035):** la suite de Windows de la CD corre bajo Wine sin
+  *sanitizers*; por eso **cada test que depende de un *sanitizer*** (los *death tests* de
+  ASan) **lleva la etiqueta de CTest que lo excluye ahí**. Un *death test* de ASan sin la
+  etiqueta es `importante`: rompe la CD.
 
 ## diagramas
 
@@ -1575,7 +1604,10 @@ Qué mirar:
   de I/O lo lee del propio ejecutable con `pread`**. Usar el símbolo de esa sección como
   memoria (es `mmap`) es `bloqueante`. Un paquete pegado al final del ejecutable, o
   archivos sueltos en Release, es una decisión nueva. **El juego nunca escribe junto al
-  ejecutable.**
+  ejecutable.** **En PE** (fe de erratas, ADR-0035), la sección se encuentra por la tabla
+  de secciones y su tamaño es `VirtualSize`; usar `SizeOfRawData` (redondeado al
+  `FileAlignment`) es `importante`: lee basura al final. El nombre de la sección cabe en
+  8 bytes.
 - **El arranque:** primero la etapa cero (`opciones.txt`, el binario de arranque y su
   pipeline, antes del primer frame); después, detrás de la pantalla de carga, el mundo,
   el global (su parte de la GPU, por los slots de zona), la música, los pipelines y la
@@ -1623,7 +1655,9 @@ Qué mirar:
 - **Las carpetas:** datos con `SDL_GetPrefPath`; configuración, caché y estado (el log,
   el registro y los *replays*) con XDG, armadas por `platform::`. Escribir en otra carpeta (la del ejecutable, `$HOME` suelto) es
   `importante`. Los nombres de la organización y del juego, una vez elegidos, no
-  cambian.
+  cambian. **En Windows** (fe de erratas, ADR-0035): la tarjeta de memoria y las opciones
+  en `%APPDATA%\<juego>\` (`SDL_GetPrefPath`); la caché de pipelines y los archivos de
+  depuración en `%LOCALAPPDATA%\<juego>\`.
 - **Depuración:** el panel de ImGui de la carga (pedidos en vuelo y lo que tardó cada
   uno, los slots y su zona, la subida por frame y las recargas) y zonas de Tracy en el
   hilo de I/O. **Las metas de carga** (≤ 3 s al arrancar, ≤ 1 s al volver a un
@@ -1959,8 +1993,9 @@ Qué mirar:
 
 ## ci
 
-**ADRs:** 0029 (CI/CD). También el uso de `docs/performance/presupuestos.md` como límite
-del *replay*.
+**ADRs:** 0029 (la CI) y 0035 (la CD y la distribución, que reemplazó la Decisión 10
+del ADR-0029). También el uso de `docs/performance/presupuestos.md` como límite del
+*replay*.
 
 Qué mirar:
 
@@ -2009,21 +2044,61 @@ Qué mirar:
 - **Seguridad:** `permissions: contents: read` en cada workflow y más solo en el job que
   lo necesite; **cada `uses:` fijado por su SHA completo**, con la versión en un
   comentario (una etiqueta como `@v7` es un hallazgo); `.github/dependabot.yml` con el
-  ecosistema `github-actions`; nunca `pull_request_target`; ningún secreto; ningún
-  runner propio (`runs-on: self-hosted`). Un valor del evento (título, rama, cuerpo de un
+  ecosistema `github-actions`; nunca `pull_request_target`; **ningún secreto en la CI**
+  (el único de la CD, abajo); ningún runner propio (`runs-on: self-hosted`). Un valor del evento (título, rama, cuerpo de un
   PR) usado directo dentro de un `run:` es `bloqueante` por inyección: va por `env:`.
 - **Velocidad:** caché de `/var/cache/pacman/pkg` con la fecha como clave, y de Blender
   y D2 con sus versiones; `cancel-in-progress` solo en los PRs. Si una corrida real pasa
   de 10 minutos, se anota y se abre un ticket.
-- **CD:** el workflow de release corre solo con un tag y trabaja en el SDK del Steam
-  Linux Runtime 3.0 (*sniper*): compila `debug` y corre sus tests **sin** las
-  comparaciones contra un hash guardado (el *replay* y el render offline del audio,
-  ADR-0024; solo valen con la glibc del snapshot; la del *replay* de dos ejecuciones en
-  el mismo proceso sí corre), después compila `release`, adjunta el binario a la
-  GitHub Release y genera una atestación de procedencia. Correr ahí un hash guardado, o
-  los tests en `release` (los *death tests* no pasan), es un hallazgo. Solo ese job tiene los
-  permisos para escribir la Release y la atestación. Publicar un binario compilado en el
-  contenedor de Arch contradice la Decisión 10: no corre en distros con una glibc más
-  vieja.
+- **CD (ADR-0035): el disparo y el orden.** Corre solo con un tag `v*`. **El paquete de
+  assets se cocina una vez** (en el contenedor de la CI, con Blender) y viaja como
+  artefacto a Linux y a Windows; cocinarlo en cada plataforma es un hallazgo (los dos
+  podrían llevar bytes distintos). Después: tests, Release dos veces, `strip` y
+  empaquetado por plataforma; las pruebas de humo; `SHA256SUMS`, una atestación por
+  paquete y **una release en borrador**. Publicar directo, sin borrador, contradice la
+  Decisión 7.
+- **CD: el toolchain.** **Linux, en el SDK de *sniper* con GCC 14; Windows, con
+  llvm-mingw cruzando desde Linux**, con Wine y lavapipe instalados en el job desde los
+  paquetes de la imagen. **Las dos imágenes, fijadas por *digest*** (`@sha256:…`); un tag
+  como `latest` es `importante`: rompe la reproducibilidad. Publicar un binario
+  compilado en el contenedor de Arch es `bloqueante`: no arranca en distros con una glibc
+  más vieja (medido). Una imagen propia en GHCR contradice la D1 del ADR-0029. MSVC, o
+  `clang-cl` en un runner de Windows, es una decisión nueva.
+- **CD: las pruebas.** Linux: los tests de `debug` en *sniper* **sin** las comparaciones
+  contra un hash guardado (el *replay* y el render offline del audio, ADR-0024; la del
+  *replay* de dos ejecuciones en el mismo proceso sí corre). Windows: los tests bajo Wine,
+  sin *sanitizers*, sin hashes guardados y **sin los tests que dependen de un
+  *sanitizer*** (los *death tests* de ASan del ADR-0010, excluidos por una etiqueta de
+  CTest; un *death test* sin la etiqueta hace fallar la CD); configurar, compilar y
+  probar en la misma imagen. **El runner `windows-latest` es la única excepción a la D6
+  del ADR-0029:** solo corre la prueba de humo; compilar ahí, o sumar otro job que no se
+  repite en local, es un hallazgo. **Las pruebas de humo corren el ejecutable final**, el mismo que se empaqueta
+  (contenedores de la última Ubuntu LTS y de la Debian estable más vieja con soporte, y
+  un runner `windows-latest`); probar un binario recompilado aparte es un hallazgo:
+  rompe "lo que se publica es lo que se probó". Correr un hash guardado fuera de la CI, o
+  los tests en `release` (los *death tests* no pasan), es un hallazgo.
+- **CD: reproducible.** El job exporta `SOURCE_DATE_EPOCH` con la fecha del commit (las
+  banderas, como `-ffile-prefix-map`, las audita `build-y-licencias`). **Cada Release se
+  compila dos veces en rutas distintas y el job falla si los bytes difieren;** que la
+  comparación solo informe es un hallazgo.
+- **CD: el paquete.** `MedievalZombies-<versión>-linux-x86_64.tar.gz` y
+  `MedievalZombies-<versión>-windows-x86_64.zip`: el ejecutable sin símbolos, `LICENSE`,
+  **`LICENSES/`** (MIT, CC BY 4.0 y OFL 1.1: la OFL y el MIT piden su texto junto a cada
+  copia; que falte es `importante`), `CREDITS.md` y el `LEEME.txt` en español e inglés; el `.exe` con ícono, `VERSIONINFO` y
+  manifiesto. **Sin empaquetadores (UPX) ni datos pegados al final del PE:** atraen las
+  heurísticas de los antivirus; es `importante`. AppImage, Flatpak o un instalador son
+  una decisión nueva. Los símbolos quedan como artefacto del workflow, sin publicarse.
+- **CD: la firma.** **Por ahora no se firma** (se retoma cuando haya un juego jugable).
+  Un paso de firma, o un certificado comprado, es una decisión nueva. Las notas de la
+  release explican el aviso de SmartScreen y cómo verificar el SHA-256 y la atestación.
+  **No se sube a VirusTotal antes de publicar;** un job que lo hace es una decisión nueva.
+- **CD: los secretos y los permisos.** **Un solo secreto, `BUTLER_API_KEY`, dentro del
+  entorno `itch.io`** (aprobación del autor, solo tags `v*`). Un secreto del repo, o
+  usado fuera de ese entorno, es `bloqueante`. Solo los jobs de release tienen
+  `contents: write`, `id-token: write` y `attestations: write`. **El job de itch.io
+  corre al publicar el borrador y sube los mismos archivos** de la release; recompilar o
+  re-empaquetar ahí es un hallazgo. `butler` en una versión fijada con su `sha256`.
+- **macOS queda fuera** del flujo (ADR-0035, dimensión 5): un job de macOS es una
+  decisión nueva.
 - **Puedes ejecutar `actionlint`** sobre los workflows si está instalado, porque solo
   lee.

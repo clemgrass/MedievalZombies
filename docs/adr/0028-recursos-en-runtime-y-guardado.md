@@ -9,6 +9,14 @@
   los actores horneados a 30 Hz, y los eventos), **o en el global si la usan varias
   zonas**, con el mismo reparto del cocinador. Una de un minuto con tres personajes pesa
   ~1,5 MB y entra en el slot. Se corrige en la Decisión 2.
+- **Fe de erratas:** 2026-11-09 (#82): el ADR-0035 cierra tres abiertos. **El paquete de
+  la CD se cocina una vez** (en el contenedor de la CI, con Blender) y viaja como
+  artefacto a los builds de Linux y de Windows. **En PE, `platform::` encuentra la
+  sección por la tabla de secciones**, con `VirtualSize` como tamaño; el nombre cabe en 8
+  bytes. **Las carpetas de Windows:** la tarjeta de memoria y las opciones en
+  `%APPDATA%\<juego>\` (lo que da `SDL_GetPrefPath`); la caché de pipelines y los
+  archivos de depuración en `%LOCALAPPDATA%\<juego>\`. Mach-O queda con macOS, fuera.
+  Se corrige en Abierto.
 
 ## Contexto y problema
 
@@ -578,12 +586,15 @@ Al aceptar este ADR se corrigieron, como fe de erratas (ADR-0014, regla 11):
 - **De dónde sale el paquete en la CI y en la CD:** compilar `release` ahora exige el
   paquete cocinado, con Blender. Si el job de `release` del ADR-0029 y la CD cocinan
   ellos mismos o reciben el paquete como artefacto de otro job, contra la meta de 10
-  minutos, lo deciden el ticket de la CI y el ADR-0035 (#82).
+  minutos, lo deciden el ticket de la CI y el ADR-0035 (#82). **Cerrado para la CD**
+  (ADR-0035): se cocina una vez y viaja como artefacto. El job de `release` de la CI
+  sigue en su ticket.
 - **Los nombres** de la organización y del juego en las carpetas: elegidos una vez,
   nunca se cambian, o el juego deja de encontrar la partida.
 - **Cómo encuentra `platform::` la sección del paquete** en cada formato de ejecutable
   (ELF hoy; PE y Mach-O si el ADR-0035 suma Windows y macOS), y las carpetas de cada
-  sistema.
+  sistema. **Cerrado para Windows** (ADR-0035): PE por la tabla de secciones, y las
+  carpetas en `%APPDATA%` y `%LOCALAPPDATA%`. Mach-O, con macOS, fuera por ahora.
 - **La compresión,** si el tamaño en disco lo pide.
 - **Recargar los datos del mundo** (colisión, navmesh, fases): hoy se recocina y se
   vuelve al checkpoint.

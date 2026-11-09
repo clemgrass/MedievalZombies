@@ -17,6 +17,11 @@
   ejecutable** en Release (dónde empieza su sección en el archivo). `SDL_AsyncIO` no se
   usa: en el prototipo, el frame que pide las lecturas costó de 10 a 15 ms. Se corrige
   en Consecuencias.
+- **Fe de erratas:** 2026-11-09 (#82): el ADR-0035 publica para Windows desde el primer
+  tag. **`platform::` suma su implementación de Windows:** los archivos (`CreateFileW`,
+  `ReadFile` y `WriteFile` con offset, `FlushFileBuffers`, `MoveFileExW`), los hilos, las
+  carpetas (`%APPDATA%` con `SDL_GetPrefPath`, y `%LOCALAPPDATA%` para la caché y el
+  estado) y **la sección del paquete en PE**. Se corrige en Consecuencias.
 
 ## Contexto y problema
 
@@ -197,6 +202,10 @@ integraciones que trae SDL3, en vez de resolverlos yo.
   sección del paquete de Release. `SDL_AsyncIO` no se usa: en el prototipo, el frame que
   pide las lecturas costó de 10 a 15 ms, como io_uring sin `IOSQE_ASYNC` (con los datos
   en la caché, la copia ocurre dentro del pedido).
+- **Windows** (ADR-0035): `platform::` tiene una segunda implementación de lo mismo:
+  archivos con offset (`ReadFile` con `OVERLAPPED`), hilos, las carpetas `%APPDATA%` y
+  `%LOCALAPPDATA%`, y la sección del paquete leída de la tabla de secciones de PE.
+  Ningún tipo de Windows sale del módulo, igual que con SDL.
 - Un backend propio sobre Wayland queda como posible proyecto aparte, fuera del
   alcance de este.
 

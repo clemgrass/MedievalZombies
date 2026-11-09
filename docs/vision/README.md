@@ -1,6 +1,8 @@
 # Visión del juego
 
-- **Versión:** 6 (2026-11-06): moverse es de tanque en la tercera y la primera persona, y
+- **Versión:** 7 (2026-11-09): hay build de Windows, además de la de Linux, desde el
+  primer corte vertical (#82, ADR-0035).
+  Versión 6 (2026-11-06): moverse es de tanque en la tercera y la primera persona, y
   relativo a la pantalla en las cámaras fijas; mientras apunta, la caballera camina muy
   despacio y da pasos laterales; esquivar va hacia donde apunta el stick, respecto del
   rumbo (en las fijas y los rieles, hacia donde se mueve); el stick derecho marca una posición, no una velocidad (#74, ADR-0032).
@@ -330,7 +332,8 @@ Es la demo que prueba que todo funciona junto, con calidad final. Es el **corte 
 objetivo**: se llega a él con varios cortes verticales más chicos, cada uno con su tag
 (ADR-0014). **Es para el autor:**
 algo que jugar antes de dedicarle mucho tiempo a construir el mundo. Que otros la jueguen
-es un bonus, así que no hacen falta una build para Windows ni un tutorial. **Lo único que
+es un bonus, así que no hace falta un tutorial. Igual sale para Linux y Windows, porque
+la CD publica las dos desde el primer corte vertical (ADR-0035). **Lo único que
 realmente importa en ella es que cortar se sienta increíble y no aburra.** Todo lo demás
 está al servicio de eso.
 

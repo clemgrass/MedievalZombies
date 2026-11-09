@@ -7,6 +7,10 @@
 - **Fe de erratas:** 2026-11-01 (#51): qué de todo esto corre en la CI y cuándo no lo
   decide el ADR-0014, sino el ADR-0029, que el ADR-0014 creó para eso. Se corrige en
   Contexto y en Consecuencias.
+- **Fe de erratas:** 2026-11-09 (#82): el ADR-0035 corre la suite también en Windows, en
+  la CD, **bajo Wine y sin *sanitizers***. Los tests que dependen de un *sanitizer* (los
+  *death tests* de ASan del ADR-0010) llevan una etiqueta de CTest y se excluyen ahí; en
+  Linux, la suite sigue entera en Debug con ASan y UBSan. Se corrige en la Decisión 5.
 
 ## Contexto y problema
 
@@ -239,7 +243,7 @@ caída se guarda y **se convierte en un test de regresión**.
 | 2 | Tipos de test | **Desde el inicio:** unitarios, de propiedades, de invariantes de malla, de regresión y fuzzing. **Cuando existan el renderer y el gameplay:** imágenes de referencia y *replay*. **La sensación del combate:** playtest |
 | 3 | TDD | **Estricto** en la matemática, la memoria, los contenedores, el ECS y las funciones del corte. **Tests después** en el renderer y el gameplay. **Sin tests** en los *spikes* |
 | 4 | Quién escribe los tests | **Claude escribe los tests y el autor los revisa.** En las zonas con TDD, Claude escribe primero el test que falla, a partir de la especificación acordada con el autor, y después la implementación que lo hace pasar |
-| 5 | Organización y cobertura | Un ejecutable por módulo (`tests/core/`, `tests/slicing/`…) más `tests/regression/`. CTest con etiquetas por tipo. Todo corre en el preset Debug, con ASan y UBSan. **Cobertura del 100 % en el core y en las zonas con TDD**, siguiendo los criterios de los sistemas críticos. El resto se mide sin meta |
+| 5 | Organización y cobertura | Un ejecutable por módulo (`tests/core/`, `tests/slicing/`…) más `tests/regression/`. CTest con etiquetas por tipo. Todo corre en el preset Debug, con ASan y UBSan (excepción, fe de erratas del ADR-0035: la suite de Windows de la CD corre bajo Wine sin *sanitizers*, y excluye por etiqueta los tests que dependen de uno). **Cobertura del 100 % en el core y en las zonas con TDD**, siguiendo los criterios de los sistemas críticos. El resto se mide sin meta |
 | 6.1 | Lista de bugs | **GitHub Issues con formulario `bug`, en un Project aparte de *bug hunting***, separado del Project #1, para no mezclar el dominio de los arreglos con el de las features |
 | 6.2 | Campos del reporte | Los de **ISO/IEC/IEEE 29119-3** adaptados, la severidad de **IEEE 1044** y las resoluciones de **Bugzilla** |
 | 6.3 | Enlace bug ↔ test | **Falla esperada (*xfail*)** con `WILL_FAIL` mientras el bug está abierto, y test de regresión clásico después. Enlace en los dos sentidos: el issue nombra al test, y el test lleva el número y la URL del issue |

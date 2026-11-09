@@ -7,6 +7,9 @@
 - **Fe de erratas:** 2026-11-01 (#46): el `README.md` de la raíz presenta solo el juego
   y el engine, sin el proceso. El modelo de colaboración se explica en este ADR, enlazado
   desde `docs/README.md`. Se corrige en la práctica 1.3 y en la Decisión 1.3.
+- **Fe de erratas:** 2026-11-09 (#82): el ADR-0035 decide la CD. **Publica en GitHub
+  Releases y en itch.io**, para Linux y Windows, desde un borrador que el autor prueba y
+  publica a mano; GitHub Packages no se usa. Se corrige en la Decisión 7.
 
 ## Contexto y problema
 
@@ -302,7 +305,7 @@ mismo Clang, CMake y SDL3 que la máquina del autor (ADR-0006).
 | 4 | Revisión | **Todo cambio entra por rama y PR, nunca directo a `main`.** Plantilla de PR con la lista de revisión de Google. **`main` está protegida** con un *ruleset* de GitHub, sin excepciones: PR obligatorio, conversaciones resueltas antes del merge, sin *force push* y sin borrado. Cuando exista la CI, se suma como chequeo obligatorio. No se exige aprobación (GitHub no deja aprobar el propio PR) ni historial lineal (para no restringir los métodos de merge). Antes de cada PR corre la **skill de auditoría** contra los ADRs. Sus hallazgos los revisan juntos el autor y Claude, y cada uno se decide: se corrige, se ignora o queda como deuda técnica |
 | 5 | Refactorización y deuda | **Regla del boy scout y regla de tres.** Los refactors van en PRs `refactor:` separados de las features. **Cada deuda deliberada tiene su issue** (label `deuda-técnica`) y un `TODO(#N)` en el código |
 | 6 | Versionado | **SemVer `0.y.z`**, con un tag de git por cada corte vertical y un **`CHANGELOG.md`** generado con git-cliff desde los Conventional Commits |
-| 7 | CI/CD | Lo decide un **ADR propio, el ADR-0029**. Este ADR solo fija que la CI existe desde el esqueleto andante y que la CD, si se logra, publica en GitHub (Releases o Packages). Si no se logra, no hay CD |
+| 7 | CI/CD | Lo decide un **ADR propio, el ADR-0029**. Este ADR solo fija que la CI existe desde el esqueleto andante y que la CD, si se logra, publica en GitHub (Releases o Packages). Si no se logra, no hay CD (fe de erratas: lo reemplaza el ADR-0035). **La CD la decide el ADR-0035:** GitHub Releases e itch.io, para Linux y Windows; GitHub Packages no se usa |
 | 8 | Documentación del código | **Código autoexplicativo y comentarios lo más concisos posible, sin referencias a ADRs.** Cada bloque se tiene que entender por sí solo, fuera de contexto, tanto para una persona como para una IA |
 | 9 | Rendimiento | **Medir antes de optimizar**, y cada PR de rendimiento incluye la medición antes y después |
 | 10 | Principios de diseño | **Híbrido, priorizando siempre DOD.** Módulos profundos en las fronteras, de SOLID solo lo que encaja (una responsabilidad por módulo, interfaces en las fronteras) y programación estratégica |

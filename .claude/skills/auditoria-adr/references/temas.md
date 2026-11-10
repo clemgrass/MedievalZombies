@@ -11,7 +11,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 | [proceso](#proceso) | 0001, 0002, 0014, 0020, 0033 | **Siempre** |
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
 | [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
-| [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `docs/performance/**` |
+| [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `cmake/mz_module.cmake`, `docs/performance/**` |
 | [memoria](#memoria) | 0010 | `engine/core/**`, `engine/gpu/**`, o código que reserve, libere o guarde memoria (arenas, pools, allocators, contenedores) |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags), 0035 (los builds de la CD: SDL3 estática, el loader de Vulkan en runtime, `-ffile-prefix-map`) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
 | [graficos](#graficos) | 0005, 0007 (frames en vuelo y subida de los pedazos), 0008 (proyección y buffers), 0010 (tamaño del *ring buffer*), 0022 (pipeline de render), 0035 (la carga de funciones de Vulkan) | `engine/gpu/**`, `engine/render*/**`, `shaders/**`, o código que llame a Vulkan |
@@ -191,6 +191,10 @@ Qué mirar:
   memoria dinámica en el camino de cada frame si el ADR lo restringe.
 - **Nombres (ADR-0013):** estilo STL en `snake_case`, miembros con prefijo `m_`,
   macros en `MAYÚSCULAS` e **identificadores en inglés** (fe de erratas, #153).
+- **Headers y namespaces (fe de erratas del ADR-0013, #91):** los headers públicos de un
+  módulo van en `engine/<módulo>/include/mz/<módulo>/*.h`, se incluyen como
+  `"mz/<módulo>/<archivo>.h"`, y el código va en `mz::<módulo>`. Un `include/` que no
+  sea el del propio módulo o el de un módulo enlazado es un hallazgo.
 - **Formato:** 4 espacios y 100 columnas, según `.clang-format`.
 - **Severidad:** los nombres y el formato son `importante` como máximo. Las flags del
   compilador (`-fno-exceptions`, `-fno-rtti`, warnings) no son de este tema: las audita
@@ -212,6 +216,10 @@ Qué mirar:
 - **Capas en una sola dirección:** `platform` → `core` → `gpu` → sistemas → `game`. Una
   capa nunca incluye ni enlaza una capa superior, y las dependencias en CMake respetan
   ese orden.
+- **Regla de capas en CMake:** cada módulo propio se declara con `mz_add_module` y su
+  capa, y la configuración falla si un módulo enlaza con uno de su capa o de una
+  superior. Un target propio declarado con `add_library` o `add_executable` a mano queda
+  fuera del chequeo: es un hallazgo.
 - **SDL3 solo detrás de la interfaz `platform::`.** Nada fuera de `engine/platform`
   incluye headers de SDL. `SDL_GPU` y `SDL_Renderer` están prohibidos. **Lo mismo con
   Windows** (fe de erratas del ADR-0004, por el ADR-0035): `windows.h` y los tipos de
@@ -329,7 +337,9 @@ Qué mirar:
   `bloqueante`.
 - **Flags:** `-Werror` y la lista ampliada de warnings del ADR-0013, sin `-Weverything`.
   **Por target, nunca globales** (fe de erratas del ADR-0013): un target de interfaz que
-  solo enlazan los targets propios. `add_compile_options` con warnings o `-Werror` es un
+  solo enlazan los targets propios, y `-Werror` con la propiedad
+  `COMPILE_WARNING_AS_ERROR` de cada target propio (fe de erratas, #91), que
+  `mz_add_module` enciende. `add_compile_options` con warnings o `-Werror` es un
   hallazgo, porque llega a las dependencias de `FetchContent`.
   `-fno-exceptions` y `-fno-rtti` (ADR-0009). **Sin `-ffast-math` y sin `-march`**
   (ADR-0008).

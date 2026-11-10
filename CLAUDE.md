@@ -4,7 +4,9 @@ Videojuego 3D sobre un apocalipsis zombie en la época medieval, con engine prop
 escrito en C++20 (ADR-0003).
 
 > **Estado actual:** milestone M3 (esqueleto andante). M0, M1 y M2 están cerrados:
-> todas las decisiones de sistemas están en ADRs. Todavía no existe código del juego.
+> todas las decisiones de sistemas están en ADRs. El código empezó con F1 (#91). Desde
+> su merge, cambiar la decisión de un ADR aceptado exige un ADR nuevo (ADR-0033,
+> Decisión 9).
 > El orden en que se construye está en `docs/plans/roadmap.md` (ADR-0033).
 
 ## El juego
@@ -77,7 +79,14 @@ escrito en C++20 (ADR-0003).
 
 Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 
-- `README.md`: presentación pública del juego y del engine, sin el proceso;
+- `README.md`: presentación pública del juego y del engine, sin el proceso, y cómo
+  compilar;
+- `engine/`: un módulo por carpeta (`platform`, `core`, `gpu` y los sistemas), cada uno
+  un target de CMake con su capa (ADR-0012);
+- `game/`: el ejecutable del juego;
+- `tests/`: las pruebas (ADR-0011); por ahora, los casos de prueba del build;
+- `cmake/`, `CMakeLists.txt` y `CMakePresets.json`: el build (ADR-0006), con
+  `mz_add_module` y la regla de capas;
 - `docs/`: ADRs, investigación, specs, planes, guías y diagramas técnicos (ADR-0030);
 - `.github/`: formularios de issue y plantilla de PR;
 - `.claude/`: skills y agentes de Claude Code, como la auditoría `/auditoria-adr`;

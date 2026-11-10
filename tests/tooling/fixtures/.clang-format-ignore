@@ -1,0 +1,4 @@
+# unformatted.cpp está mal formateado a propósito: ni el chequeo del repo ni el editor lo
+# formatean, y los tests de formato trabajan sobre una copia en el build. Los demás
+# fixtures sí siguen el formato, aunque rompan otras reglas.
+unformatted.cpp

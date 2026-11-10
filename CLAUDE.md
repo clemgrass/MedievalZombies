@@ -84,13 +84,17 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 - `engine/`: un módulo por carpeta (`platform`, `core`, `gpu` y los sistemas), cada uno
   un target de CMake con su capa (ADR-0012);
 - `game/`: el ejecutable del juego;
-- `tests/`: las pruebas (ADR-0011); por ahora, los casos de prueba del build;
+- `tests/`: las pruebas (ADR-0011); por ahora, los casos de prueba del build y de las
+  herramientas de análisis estático;
 - `cmake/`, `CMakeLists.txt` y `CMakePresets.json`: el build (ADR-0006), con
   `mz_add_module` y la regla de capas;
 - `docs/`: ADRs, investigación, specs, planes, guías y diagramas técnicos (ADR-0030);
 - `.github/`: formularios de issue y plantilla de PR;
 - `.claude/`: skills y agentes de Claude Code, como la auditoría `/auditoria-adr`;
-- `tools/`: scripts de configuración del repo;
+- `tools/`: scripts del repo. `tools/ci/` tiene un script por job de la CI (ADR-0029):
+  formato, subconjunto de C++ (ADR-0009), `clang-tidy`, y `lint.sh`, que corre los tres.
+  `install-hooks.sh` instala el hook de formato. Las reglas viven en la raíz:
+  `.clang-format`, `.clang-tidy` y `.editorconfig` (ADR-0013);
 - `LICENSE`, `LICENSES/`, `REUSE.toml` y `CREDITS.md`: licencias (ADR-0019).
 
 La spec de la base del proyecto define la estructura de `docs/`, el formato de ADR, el

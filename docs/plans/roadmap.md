@@ -40,7 +40,7 @@ sostienen están en la [nota de investigación](../research/organizacion-del-des
 | Milestone | Tag | Qué se juega al cerrarlo | Filas | Estado |
 |---|---|---|---|---|
 | **M3, esqueleto andante** | `v0.1.0` | Una sala con una malla estática cocinada desde Blender. Una tecla la parte en dos por un plano fijo, y los pedazos se separan, sin física. La CI en verde, y la CD deja el borrador de Linux y Windows | 62 | En curso: 62 átomos, #91 a #152 |
-| **M4, "el tajo"** | `v0.2.0` | La caballera apunta, carga y suelta. El maniquí con esqueleto se parte por donde apuntó, y los pedazos caen con física | 52 | — |
+| **M4, "el tajo"** | `v0.2.0` | La caballera apunta, carga y suelta. El maniquí con esqueleto se parte por donde apuntó, y los pedazos caen con física | 53 | — |
 | **M5, "todo pesa"** | `v0.3.0` | Carne y metal: rebote, tajo rápido, hendidura, hoja clavada, pausa de impacto, ragdoll, sangre y sonido del corte | 31 | — |
 | **M6, "la horda"** | `v0.4.0` | Zombies que persiguen y agarran en la arena cocinada, con checkpoints y el look PSX completo | 41 | — |
 | **M7, el corte vertical objetivo** | `v0.5.0` | Lo que pide la visión: la primera oleada, la horda y la pelea contra el alquimista, con la cámara del tajo, los menús, las opciones, los subtítulos y la accesibilidad, en 60 fps estables en la UHD 620 | 32 | — |
@@ -155,6 +155,7 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | Fila | Qué entrega | ADRs | Depende de | TDD | Issue |
 |---|---|---|---|---|---|
 | CI8 | verificadores de diagramas (a), (e) a (i): índice de símbolos, AST de Clang y traza de `debug` | 0030, 0029, 0021 | CI3, D3, CT1 | — | — |
+| CI9 | el resto de las reglas del ADR-0009 que el compilador no ve: STL por zonas (sin contenedores que asignan en el código de cada frame) y `virtual` solo en las fronteras | 0009, 0029, 0012 | F2, GL1, EC1 | — | — |
 | D4 | registro por frame (R1-R4) y memoria (statm + memory_budget); en M4 vive en memoria, y su escritura a disco espera al hilo de I/O (RE2), como D8. Con él se verifica por primera vez R1 en el escenario del corte de SK1 | 0021, 0020 | GL1, G2.2 | — | — |
 | D5 | dibujo de depuración immediate mode | 0021 | R1 | — | — |
 | D6 | replay: las acciones de cada paso, encabezado, hash cada 60 pasos; en M4 vive en memoria, y su escritura por bloques espera al hilo de I/O (RE2), como D8 | 0021, 0032 | EC2.2, IN3 | — | — |
@@ -351,3 +352,4 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 |---|---|
 | 2026-11-09 | Primera versión (#75, ADR-0033): cinco milestones, 216 filas (14 de contenido y las pruebas del DualShock) y ocho riesgos. Se juntaron el trabajo repetido entre listas (la grabación de las acciones en el *replay*, la navmesh en el binario de la zona y la recarga de la tabla de sonidos) y se separó el culling por zonas del culling por la niebla. M3 queda en curso, por partir en átomos |
 | 2026-11-09 | Se abre M3: sus 51 filas se parten en 62 átomos (+22 %), #91 a #152, con la numeración con punto. Lo que escribe a disco (el log, el archivo de CVars) espera al hilo de I/O: D1 y D2 quedan sin archivo en M3, y su escritura pasa a D8 y D9 en M6. CD2 porta lo que `platform::` tiene en M3, y los hilos y las carpetas de Windows pasan a CD10, en M6. RE9 (las carpetas XDG) sube de M7 a M6, antes de RE8, porque la tarjeta de memoria necesita su carpeta. Los agujeros de la tapa salen de CT3 a CT11, en M4, antes de CT6. Se suma el label `área:core` (manda la carpeta: fe de erratas del ADR-0033), y los identificadores van en inglés (fe de erratas del ADR-0013). La auditoría de #153 sumó las dependencias que los cuerpos usaban sin tenerlas (RE6 pasa después de C1), y anotó que D4 y D6 viven en memoria hasta el hilo de I/O. R1 se verifica por primera vez con D4, no con Tracy. Los verificadores de diagramas que faltaban entran como CI8, al principio de M4 |
+| 2026-11-10 | La auditoría de F2 (#92) encontró que ninguna fila recogía el resto de las verificaciones del ADR-0009: F2 cubre `std::shared_ptr` y las corrutinas, pero no la STL por zonas ni `virtual` solo en las fronteras. Entran como CI9 en M4, después de GL1 y EC1, cuando el código de cada frame (ADR-0012) ya existe |

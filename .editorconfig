@@ -1,0 +1,14 @@
+# Lo básico para cualquier editor. El formato del C++ lo decide .clang-format;
+# esto cubre lo que clang-format no ve: los demás archivos y los bytes del archivo.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,d2}]
+indent_size = 2

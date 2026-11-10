@@ -1,0 +1,4 @@
+# Los fixtures de las evals rompen las reglas a propósito para que la auditoría las
+# encuentre: ni tools/ci/format.sh ni el editor los formatean. Es `**` y no `*`: el `*`
+# de estos patrones no cruza `/`, y los fixtures están en subcarpetas.
+**

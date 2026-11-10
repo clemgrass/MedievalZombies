@@ -1,0 +1,78 @@
+# Análisis estático. Las familias bugprone, performance y modernize van completas, y cada
+# check que se desactiva lleva su razón al lado. De readability y cppcoreguidelines solo
+# entran los checks elegidos. clangd lee este mismo archivo en el editor, y
+# tools/ci/clang-tidy.sh en la CI.
+Checks:
+  - -*
+
+  - bugprone-*
+  # Salta en cada función con dos parámetros seguidos del mismo tipo, como
+  # vec3(float x, float y, float z). En código matemático es ruido, no un bug.
+  - -bugprone-easily-swappable-parameters
+
+  - performance-*
+
+  - modernize-*
+  # Obliga a escribir `auto f() -> int` en todas partes. Es solo estilo, no encuentra
+  # bugs, y el estilo de la biblioteca estándar pone el tipo de retorno adelante.
+  - -modernize-use-trailing-return-type
+
+  # Nombres: snake_case y m_ en los miembros (ver CheckOptions).
+  - readability-identifier-naming
+  # Conversiones implícitas a bool (un puntero o un entero en un if) que ocultan la
+  # comparación de verdad.
+  - readability-implicit-bool-conversion
+  - readability-else-after-return
+  - readability-container-size-empty
+  - readability-make-member-function-const
+  - readability-inconsistent-declaration-parameter-name
+  - readability-redundant-*
+  - readability-simplify-boolean-expr
+  - readability-misleading-indentation
+
+  # Regla de cinco: si una clase define un miembro especial, define todos.
+  - cppcoreguidelines-special-member-functions
+  # Miembros sin inicializar: leerlos es comportamiento indefinido.
+  - cppcoreguidelines-pro-type-member-init
+  - cppcoreguidelines-virtual-class-destructor
+  # Copiar una derivada en su base pierde la parte derivada sin avisar.
+  - cppcoreguidelines-slicing
+  - cppcoreguidelines-prefer-member-initializer
+  - cppcoreguidelines-missing-std-forward
+  - cppcoreguidelines-rvalue-reference-param-not-moved
+  # El código propio no llama a malloc/free: la memoria del frame sale de arenas y pools
+  # reservados con mmap al iniciar, y fuera del frame, de los contenedores de la STL.
+  - cppcoreguidelines-no-malloc
+  # Fuera a propósito: owning-memory (pide la biblioteca GSL) y
+  # pro-bounds-pointer-arithmetic (un engine recorre buffers con aritmética de punteros).
+
+WarningsAsErrors: '*'
+
+# Solo los headers propios. Los de las dependencias no son código del proyecto.
+HeaderFilterRegex: '.*/(engine|game)/.*'
+
+CheckOptions:
+  # El estilo de la biblioteca estándar.
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.ClassCase: lower_case
+  readability-identifier-naming.StructCase: lower_case
+  readability-identifier-naming.UnionCase: lower_case
+  readability-identifier-naming.EnumCase: lower_case
+  readability-identifier-naming.EnumConstantCase: lower_case
+  readability-identifier-naming.TypeAliasCase: lower_case
+  readability-identifier-naming.TypedefCase: lower_case
+  readability-identifier-naming.ConceptCase: lower_case
+  readability-identifier-naming.FunctionCase: lower_case
+  readability-identifier-naming.MethodCase: lower_case
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ParameterCase: lower_case
+  # Las constantes siguen el snake_case general.
+  readability-identifier-naming.ConstantCase: lower_case
+  readability-identifier-naming.ConstexprVariableCase: lower_case
+  # m_ en todos los miembros: se ve de inmediato qué es del objeto, y un parámetro del
+  # constructor no choca con el miembro que inicializa (-Wshadow).
+  readability-identifier-naming.MemberCase: lower_case
+  readability-identifier-naming.MemberPrefix: m_
+  # Por convención: macros en MAYÚSCULAS y parámetros de template en PascalCase.
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+  readability-identifier-naming.TemplateParameterCase: CamelCase

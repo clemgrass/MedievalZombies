@@ -49,7 +49,7 @@ Checks:
 WarningsAsErrors: '*'
 
 # Solo los headers propios. Los de las dependencias no son código del proyecto.
-HeaderFilterRegex: '.*/(engine|game)/.*'
+HeaderFilterRegex: '.*/(engine|game|tests)/.*'
 
 CheckOptions:
   # El estilo de la biblioteca estándar.

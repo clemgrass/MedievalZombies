@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# clang-tidy sobre el C++ de engine/ y game/, con la configuración de .clang-tidy y las
-# banderas reales de cada archivo, sacadas de la base de compilación de CMake
+# clang-tidy sobre el C++ de engine/, game/ y tests/, con la configuración de .clang-tidy
+# y las banderas reales de cada archivo, sacadas de la base de compilación de CMake
 # (compile_commands.json).
 #
 #   tools/ci/clang-tidy.sh [carpeta-de-build]
@@ -22,4 +22,6 @@ fi
 
 # run-clang-tidy corre un clang-tidy por archivo, en paralelo, y falla si alguno falla. El
 # último argumento filtra los archivos de la base de compilación: solo el código propio.
-run-clang-tidy -quiet -p "$build_dir" "^$root/(engine|game)/"
+# Los fixtures de tests/cmake/ y tests/tooling/ no entran: no están en la base de
+# compilación, porque los compilan proyectos aparte o ninguno.
+run-clang-tidy -quiet -p "$build_dir" "^$root/(engine|game|tests)/"

@@ -4,8 +4,9 @@
 #
 #   tools/ci/cpp-subset.sh [archivos...]
 #
-# Sin archivos, revisa el C++ versionado de engine/ y game/. Falla con el archivo, la
-# línea y la regla que se rompe.
+# Sin archivos, revisa el C++ versionado de engine/, game/ y tests/, sin los fixtures de
+# tests/cmake/ y tests/tooling/, que rompen las reglas a propósito. Falla con el archivo,
+# la línea y la regla que se rompe.
 #
 # Las excepciones y la RTTI no se buscan aquí: -fno-exceptions y -fno-rtti cambian el
 # lenguaje que acepta el compilador. std::shared_ptr y las corrutinas, en cambio, son C++
@@ -22,7 +23,9 @@ if [[ ${#files[@]} -eq 0 ]]; then
     # Desde la raíz, para que los mensajes muestren rutas relativas al repo.
     cd "$root"
     mapfile -t files < <(git ls-files -- \
-        'engine/*.cpp' 'engine/*.h' 'engine/*.hpp' 'game/*.cpp' 'game/*.h' 'game/*.hpp')
+        'engine/*.cpp' 'engine/*.h' 'engine/*.hpp' 'game/*.cpp' 'game/*.h' 'game/*.hpp' \
+        'tests/*.cpp' 'tests/*.h' 'tests/*.hpp' \
+        ':(exclude)tests/cmake/cases/**' ':(exclude)tests/tooling/fixtures/**')
 fi
 if [[ ${#files[@]} -eq 0 ]]; then
     exit 0

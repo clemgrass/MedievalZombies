@@ -23,7 +23,17 @@
             "displayName": "Debug",
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "MZ_SANITIZE": "ON"
+            }
+        },
+        {
+            "name": "coverage",
+            "displayName": "Coverage (cobertura con llvm-cov, sin sanitizers)",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "MZ_COVERAGE": "ON"
             }
         },
         {
@@ -47,6 +57,7 @@
     ],
     "buildPresets": [
         { "name": "debug", "configurePreset": "debug" },
+        { "name": "coverage", "configurePreset": "coverage" },
         { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
         { "name": "release", "configurePreset": "release" }
     ],

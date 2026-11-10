@@ -17,7 +17,7 @@ docs/
 ├── README.md        este archivo: mapa e índice de todos los ADRs
 ├── vision/          diseño del juego: premisa, pilares, alcance, enemigos; la historia
 │                    (con spoilers) y el mapa del castillo
-├── process/         cómo trabajamos: tickets, convenciones git
+├── process/         cómo trabajamos: tickets, convenciones git, la CI en local
 ├── specs/           specs aprobadas
 ├── plans/           planes de implementación y el roadmap del código (documento vivo)
 ├── adr/             ADRs transversales y plantilla (template.md)

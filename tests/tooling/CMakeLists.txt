@@ -1,4 +1,5 @@
-# Tests de las herramientas de análisis estático y de los chequeos del subconjunto de C++.
+# Tests de las herramientas de análisis estático, de los chequeos del subconjunto de C++ y
+# de la decisión de qué cambió un PR (changes.sh).
 # Corren los mismos scripts de tools/ci/ que usa la CI sobre los fixtures de fixtures/,
 # que rompen una regla a propósito o la cumplen.
 #
@@ -43,6 +44,27 @@ mz_tooling_test(tooling.subset.coroutine
     EXPECT "coroutine\\.cpp:8: .*ADR-0009, Decisión 7")
 mz_tooling_test(tooling.subset.clean
     COMMAND bash ${tools_dir}/cpp-subset.sh ${fixtures}/subset_clean.cpp)
+
+# Qué cambió un PR: de esta decisión dependen los jobs que la CI salta, y un salto cuenta
+# como éxito. Cada caso es un repo git temporal donde el PR agrega un solo archivo.
+function(mz_changes_test test_name changed_file expected)
+    mz_tooling_test(${test_name}
+        COMMAND ${CMAKE_COMMAND}
+            -DSCRIPT=${tools_dir}/changes.sh
+            -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/${test_name}
+            -DCHANGED_FILE=${changed_file}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_changes_case.cmake
+        EXPECT "${expected}")
+endfunction()
+
+mz_changes_test(tooling.changes.docs_only docs/notas.md "code=false")
+mz_changes_test(tooling.changes.engine engine/core/a.cpp "code=true")
+# Un C++ fuera de las carpetas de código también cuenta: el formato revisa todo el C++.
+mz_changes_test(tooling.changes.cpp_elsewhere tools/otra/a.cpp "code=true")
+# Sin base (un push a main), todo cuenta como cambiado.
+mz_tooling_test(tooling.changes.no_base
+    COMMAND bash ${tools_dir}/changes.sh
+    EXPECT "code=true")
 
 # clang-tidy: prueba la configuración del repo, no solo que la herramienta corre.
 find_program(MZ_CLANG_TIDY clang-tidy)

@@ -1,0 +1,15 @@
+# Las herramientas que solo usa la CI. tools/ci/install.sh las instala en el contenedor
+# junto con el toolchain y con la misma fecha, pero no se comparan con la máquina del
+# autor: en local corren dentro del contenedor, con tools/ci/run.sh.
+#
+# Un paquete por línea; lo que va después de # se ignora.
+
+# El clon real del repo: reuse y git ls-files necesitan el .git.
+git
+
+# Las licencias de cada archivo.
+reuse
+
+# Los workflows de GitHub Actions. actionlint usa shellcheck para revisar los run:.
+actionlint
+shellcheck

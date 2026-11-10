@@ -1,0 +1,123 @@
+# La CI de cada PR hacia main y de cada push a main.
+#
+# Los jobs corren en el contenedor archlinux:latest con los repositorios congelados en la
+# fecha de tools/ci/archive-date: el mismo toolchain que la máquina del autor. Cada job
+# solo llama a un script de tools/ci/, que en local corre igual, con la misma fecha:
+#
+#   tools/ci/run.sh <job>
+#
+# El único chequeo obligatorio de "Proteger main" es ci-ok. Lo que no hace falta en un
+# PR se salta con un if: según lo que decide el job changes, nunca con paths:.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Un push nuevo a un PR cancela la corrida anterior del mismo PR. En main no: cada commit
+# de main se prueba entero. Por eso cada push tiene su propio grupo (su SHA): en un grupo
+# compartido, una corrida nueva cancela a la que espera aunque cancel-in-progress sea
+# false.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Qué cambió el PR. Corre en el runner, sin contenedor: solo necesita git.
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.changes.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: changes
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: tools/ci/changes.sh "$BASE" "$HEAD" >>"$GITHUB_OUTPUT"
+
+  # Etapa rápida, chequeos del C++: solo si el PR toca código.
+  fast-cpp:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        job: [format, cpp-subset]
+    steps:
+      # Sin git en el contenedor, checkout baja un tarball del commit: alcanza para leer
+      # la fecha y las listas de paquetes.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - run: bash tools/ci/install.sh
+      # Con git ya instalado, un clon real en lugar del tarball: los scripts usan
+      # git ls-files.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - env:
+          JOB: ${{ matrix.job }}
+        run: bash "tools/ci/$JOB.sh"
+
+  # Etapa rápida, chequeos de todo el repo: corren siempre.
+  fast-repo:
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        job: [reuse, actionlint]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - run: bash tools/ci/install.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - env:
+          JOB: ${{ matrix.job }}
+        run: bash "tools/ci/$JOB.sh"
+
+  # El único chequeo obligatorio. Corre siempre, también si la corrida se cancela, y
+  # falla si algún job falló o se canceló. Un job saltado por su if: cuenta como éxito.
+  # Agregar un job es sumarlo a needs, sin tocar el ruleset. No llama a un script porque
+  # no hay nada que repetir en local: solo lee los resultados de GitHub.
+  ci-ok:
+    needs: [changes, fast-cpp, fast-repo]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) exit 1 ;;
+            esac
+          done

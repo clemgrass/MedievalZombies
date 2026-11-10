@@ -131,6 +131,23 @@ un tercio de esos vértices: serían unos 0,2 a 0,3 ms.
   cada pedazo. Los pedazos chicos son cuerpos rígidos, los grandes pasan a *ragdoll*, y
   los personajes los empujan al pasar sin trabarse.
 
+## Compilar
+
+En Linux, con CMake 3.29 o más nuevo, Ninja, Clang y `lld`:
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
+./build/debug/game/game
+```
+
+Hay tres presets: `debug`, `relwithdebinfo` (optimizado, con símbolos y *frame pointers*,
+para perfilar) y `release`. Cada uno compila en `build/<preset>`.
+
+Los warnings del código propio son errores. Para experimentar sin que detengan el build:
+`cmake --preset debug --compile-no-warning-as-error`.
+
 ## Licencia
 
 - **Código:** [MIT](LICENSES/MIT.txt).

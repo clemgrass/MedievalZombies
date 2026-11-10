@@ -12,7 +12,15 @@
   la Decisión 2 fijaba el estilo de los nombres pero no su idioma. **Los identificadores
   van en inglés**, como los que ya usan los ADRs (`nearly_equal`, `slice_request`,
   `mesh_slicer`) y como en la industria; la documentación sigue en español. Se corrige
-  en la Decisión 2.
+  en la Decisión 2. 2026-11-10 (#91): **`-Werror` sale del target de interfaz y pasa a
+  la propiedad `COMPILE_WARNING_AS_ERROR`** de cada target propio. Sigue valiendo solo
+  para el código propio, y CMake trae un interruptor para bajarlo al experimentar
+  (`--compile-no-warning-as-error`); dentro del target de interfaz no se podía bajar sin
+  editar el archivo. Además, la Decisión 2 no fijaba **dónde van los headers ni los
+  namespaces:** cada módulo pone sus headers públicos en
+  `engine/<módulo>/include/mz/<módulo>/`, se incluyen como `"mz/<módulo>/<archivo>.h"`
+  y su código va en el namespace `mz::<módulo>`. Así un módulo solo ve los headers de
+  los módulos con que enlaza. Se corrige en la Decisión 2 y en Consecuencias.
 
 ## Contexto y problema
 
@@ -117,7 +125,7 @@ consciente.
 | # | Subdecisión | Elección |
 |---|---|---|
 | 1 | Formato | Base **LLVM**, con **4 espacios** y **100 columnas**, aplicado automáticamente al guardar |
-| 2 | Nombres | **Estilo de la biblioteca estándar:** tipos, funciones y variables en `snake_case` (`mesh_slicer`, `slice_mesh()`, `vertex_count`). Miembros con prefijo **`m_`** (`m_count`). **Los identificadores, en inglés** (fe de erratas, #153) |
+| 2 | Nombres | **Estilo de la biblioteca estándar:** tipos, funciones y variables en `snake_case` (`mesh_slicer`, `slice_mesh()`, `vertex_count`). Miembros con prefijo **`m_`** (`m_count`). **Los identificadores, en inglés** (fe de erratas, #153). **Headers públicos en `engine/<módulo>/include/mz/<módulo>/`, con extensión `.h`, y namespace `mz::<módulo>`** (fe de erratas, #91) |
 | 3 | Warnings | **Máxima rigurosidad:** `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` y más, con **warnings como errores (`-Werror`) en todas las configuraciones** |
 | 4 | `clang-tidy` | Familias **`bugprone`, `performance` y `modernize`** completas, con cada excepción escrita junto a su razón. De `readability` y `cppcoreguidelines`, solo checks seleccionados |
 | 5 | Cuándo se aplica | **En el editor** (`clangd`) **y en CI**. Hook `pre-commit` solo para el formato |
@@ -131,17 +139,21 @@ consciente.
   `m_`. Por convención, las macros van en `MAYÚSCULAS` y los parámetros de template en
   `PascalCase` (`template <typename Vertex>`). Las constantes siguen el `snake_case`
   general.
-- **Los warnings van por target:** un target de interfaz de CMake lleva los warnings y
-  `-Werror`, y solo lo enlazan los targets propios. Con `add_compile_options`, que es
-  global, llegan también a las dependencias descargadas con `FetchContent`, y su build
-  falla (ADR-0029).
+- **Los warnings van por target:** un target de interfaz de CMake lleva los warnings, y
+  solo lo enlazan los targets propios; `-Werror` lo pone la propiedad
+  `COMPILE_WARNING_AS_ERROR` de cada target propio (fe de erratas, #91). Con
+  `add_compile_options`, que es global, llegan también a las dependencias descargadas con
+  `FetchContent`, y su build falla (ADR-0029).
+- **Un módulo solo ve los headers de los módulos con que enlaza:** su carpeta `include/`
+  es pública y `src/` es privada (fe de erratas, #91).
 - **Lista de warnings:** además de la base, `-Wold-style-cast`, `-Wsign-conversion`,
   `-Wdouble-promotion`, `-Wnull-dereference`, `-Wimplicit-fallthrough`,
   `-Wnon-virtual-dtor`, `-Wcast-align` y `-Wformat=2`. No se usa `-Weverything` de
   Clang: la propia documentación de Clang desaconseja usarlo como configuración
   permanente.
-- **`-Werror` siempre:** ningún warning llega a un commit. Mientras se experimenta, un
-  warning frena la compilación hasta corregirlo, y ese es el costo aceptado.
+- **`-Werror` siempre en lo que se integra:** ningún warning llega a un commit. Al
+  experimentar se puede bajar en local con `--compile-no-warning-as-error`; los presets y
+  la CI lo dejan encendido (fe de erratas, #91).
 - **Los warnings se aplican solo al código propio.** Las dependencias (SDL3, headers
   de Vulkan) se incluyen como headers *de sistema*, para que sus warnings no rompan el
   build.

@@ -1,0 +1,25 @@
+# El toolchain de la CI: los paquetes que tienen que coincidir con la máquina del autor.
+# tools/ci/install.sh los instala en el contenedor, en su versión de la fecha de
+# tools/ci/archive-date, y tools/ci/compare-toolchain.sh compara esta lista con la máquina.
+#
+# Un paquete por línea; lo que va después de # se ignora.
+
+# Clang, el compilador principal, con su linker y los sanitizers.
+clang
+llvm
+llvm-libs
+lld
+compiler-rt
+
+# GCC, el compilador secundario, y la biblioteca de C.
+gcc
+gcc-libs
+glibc
+
+# El build.
+cmake
+ninja
+
+# Las bibliotecas que enlaza el engine y las de los tests.
+sdl3
+gtest

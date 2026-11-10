@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Hook pre-commit: solo revisa el formato del C++ que entra al commit. No modifica nada:
+# si falla, se arregla con tools/ci/format.sh --fix y se vuelve a agregar el archivo. Se
+# instala con tools/install-hooks.sh.
+#
+# Revisa el contenido en stage (git show :archivo), no el del disco: si solo una parte del
+# archivo está en stage, lo que importa es lo que entra al commit.
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+
+mapfile -t files < <(git diff --cached --name-only --diff-filter=ACMR -- \
+    '*.cpp' '*.h' '*.hpp')
+
+failed=()
+for file in "${files[@]}"; do
+    if ! git show ":$file" |
+        clang-format --style="file:$root/.clang-format" --assume-filename="$root/$file" \
+            --dry-run --Werror >/dev/null 2>&1; then
+        failed+=("$file")
+    fi
+done
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+    echo "Archivos sin formatear en el commit:" >&2
+    printf '  %s\n' "${failed[@]}" >&2
+    echo "Arréglalos con: tools/ci/format.sh --fix ${failed[*]}" >&2
+    echo "y vuelve a agregarlos con git add." >&2
+    exit 1
+fi

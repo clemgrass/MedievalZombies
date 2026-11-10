@@ -1,0 +1,8 @@
+# Formato del código: base LLVM, 4 espacios y 100 columnas. Se aplica solo, al guardar en
+# el editor (clangd) o con tools/ci/format.sh --fix, y no se discute en la revisión.
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+# Con 4 espacios, LLVM deja public:/private: a 2, a medio camino entre la clase y sus
+# miembros. Así quedan alineados con la palabra class.
+AccessModifierOffset: -4

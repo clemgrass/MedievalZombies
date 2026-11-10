@@ -106,7 +106,9 @@ Qué mirar:
   `sugerencia`: se parte, o el PR explica por qué no se puede.
 - **La trazabilidad (ADR-0033):** la tarea tiene su sección "ADRs" (el primero es el
   dueño, y su área coincide con el label `área:`, salvo las tareas de contenido, que
-  llevan `área:contenido` por la Decisión 8), su milestone (el corte en curso) y sus
+  llevan `área:contenido` por la Decisión 8, y las tareas cuyo código vive en
+  `engine/platform` o `engine/core`, que llevan `área:core` por la fe de erratas de la
+  Decisión 4), su milestone (el corte en curso) y sus
   dependencias como *blocked by* nativas. En el código no hay épicas ni `tipo:feature`.
 - **El roadmap (ADR-0033):** el PR que abre o cierra un milestone actualiza
   `docs/plans/roadmap.md` (las filas, el número de issue de cada átomo, los riesgos).
@@ -187,8 +189,8 @@ Qué mirar:
 - **Sin corrutinas.** La recursión del código que corre cada frame tiene un límite.
 - **STL por zonas:** lo que el ADR-0009 permite en cada zona. Por ejemplo, no reservar
   memoria dinámica en el camino de cada frame si el ADR lo restringe.
-- **Nombres (ADR-0013):** estilo STL en `snake_case`, miembros con prefijo `m_` y
-  macros en `MAYÚSCULAS`.
+- **Nombres (ADR-0013):** estilo STL en `snake_case`, miembros con prefijo `m_`,
+  macros en `MAYÚSCULAS` e **identificadores en inglés** (fe de erratas, #153).
 - **Formato:** 4 espacios y 100 columnas, según `.clang-format`.
 - **Severidad:** los nombres y el formato son `importante` como máximo. Las flags del
   compilador (`-fno-exceptions`, `-fno-rtti`, warnings) no son de este tema: las audita

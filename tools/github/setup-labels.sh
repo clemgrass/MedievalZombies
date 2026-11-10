@@ -15,7 +15,7 @@ create() { gh label create "$1" --repo "$REPO" --color "$2" --description "$3" -
 for t in épica tarea bug investigación; do
   create "tipo:$t" 5319e7 "Tipo de ticket"
 done
-for a in graphics slicing physics animation ai gameplay audio ui tooling docs contenido; do
+for a in core graphics slicing physics animation ai gameplay audio ui tooling docs contenido; do
   create "área:$a" 0e8a16 "Área del proyecto"
 done
 create "modo:dirigido" fbca04 "El autor explica el flujo y Claude lo escribe (ADR-0014)"

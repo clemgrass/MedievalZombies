@@ -55,7 +55,7 @@ más chicas, ya es del tamaño justo.
 | Grupo | Labels | Para qué |
 |---|---|---|
 | Tipo | `tipo:épica`, `tipo:tarea`, `tipo:bug`, `tipo:investigación` | Qué clase de ticket es. Una `tipo:investigación` produce un ADR |
-| Área | `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:audio`, `área:ui`, `área:tooling`, `área:docs`, `área:contenido` | Qué parte del proyecto toca. En el código, es el sistema. `área:contenido` es para los assets: mallas, rigs, clips, texturas, sonidos y niveles |
+| Área | `área:core`, `área:graphics`, `área:slicing`, `área:physics`, `área:animation`, `área:ai`, `área:gameplay`, `área:audio`, `área:ui`, `área:tooling`, `área:docs`, `área:contenido` | Qué parte del proyecto toca. En el código, es el sistema. `área:core` es todo el código de `engine/platform` y `engine/core` (memoria, matemática, utilidades, ECS, game loop, formatos y lo que viva ahí): manda la carpeta. `área:tooling` es el build, la CI, la CD, el cocinador y las herramientas fuera de esas carpetas. `área:contenido` es para los assets: mallas, rigs, clips, texturas, sonidos y niveles |
 | Modo | `modo:dirigido`, `modo:propuesto` | Cómo se trabaja la tarea (ADR-0014): el autor dirige el diseño, o Claude lo propone |
 | Deuda | `deuda-técnica` | Un atajo deliberado que hay que pagar. Su `TODO(#N)` en el código apunta al issue |
 
@@ -95,7 +95,13 @@ Lo decide el ADR-0033. El plan completo vive en el [roadmap](../plans/roadmap.md
   siguientes quedan como filas del roadmap, sin issues.
 - **Cada tarea dice a qué ADRs pertenece,** en su sección "ADRs": uno o varios, y el
   primero es el dueño. Su área da el label `área:`, salvo en las tareas de contenido,
-  que llevan `área:contenido`.
+  que llevan `área:contenido`, y en las tareas cuyo código vive en `engine/platform` o
+  `engine/core`, que llevan `área:core` sin importar el área de su ADR dueño: **manda la
+  carpeta** (fe de erratas del ADR-0033, #153). Por ejemplo, el formato de asset vive en
+  `engine/core` y lleva `área:core`, aunque su ADR dueño sea el de los assets. Si un ADR
+  deja que el ticket decida la carpeta, el label se ajusta cuando el ticket la decide. Si
+  una tarea escribe en varias carpetas, **manda la de la mayor parte de su código de
+  producción**.
 - **Las dependencias son las nativas de GitHub:** una tarea que necesita otra se crea con
   `--blocked-by`, y el tablero la marca como bloqueada.
 - **Al cerrar un milestone,** el autor juega el tag y un PR actualiza el roadmap y los

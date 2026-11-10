@@ -8,7 +8,11 @@
   el código propio. Los warnings se aplican por target, con un target de interfaz que
   solo enlazan los targets propios, nunca con `add_compile_options`: el *spike* del
   ADR-0029 midió que, con banderas globales, `-Werror` llega al código de SDL3 descargado
-  con `FetchContent` y su build falla. Se corrige en Consecuencias.
+  con `FetchContent` y su build falla. Se corrige en Consecuencias. 2026-11-10 (#153):
+  la Decisión 2 fijaba el estilo de los nombres pero no su idioma. **Los identificadores
+  van en inglés**, como los que ya usan los ADRs (`nearly_equal`, `slice_request`,
+  `mesh_slicer`) y como en la industria; la documentación sigue en español. Se corrige
+  en la Decisión 2.
 
 ## Contexto y problema
 
@@ -113,7 +117,7 @@ consciente.
 | # | Subdecisión | Elección |
 |---|---|---|
 | 1 | Formato | Base **LLVM**, con **4 espacios** y **100 columnas**, aplicado automáticamente al guardar |
-| 2 | Nombres | **Estilo de la biblioteca estándar:** tipos, funciones y variables en `snake_case` (`mesh_slicer`, `slice_mesh()`, `vertex_count`). Miembros con prefijo **`m_`** (`m_count`) |
+| 2 | Nombres | **Estilo de la biblioteca estándar:** tipos, funciones y variables en `snake_case` (`mesh_slicer`, `slice_mesh()`, `vertex_count`). Miembros con prefijo **`m_`** (`m_count`). **Los identificadores, en inglés** (fe de erratas, #153) |
 | 3 | Warnings | **Máxima rigurosidad:** `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` y más, con **warnings como errores (`-Werror`) en todas las configuraciones** |
 | 4 | `clang-tidy` | Familias **`bugprone`, `performance` y `modernize`** completas, con cada excepción escrita junto a su razón. De `readability` y `cppcoreguidelines`, solo checks seleccionados |
 | 5 | Cuándo se aplica | **En el editor** (`clangd`) **y en CI**. Hook `pre-commit` solo para el formato |

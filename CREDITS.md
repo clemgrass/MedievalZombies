@@ -29,3 +29,4 @@ para saber de dónde vino cada archivo.
 | [dr_flac](https://github.com/mackron/dr_libs) | MIT-0 (o dominio público; se usa bajo MIT-0) | Leer los sonidos fuente (FLAC), solo en el cocinador de assets (ADR-0024) |
 | [libvorbis](https://xiph.org/vorbis/) | BSD-3-Clause | Codificar la música en Vorbis, solo en el cocinador de assets (ADR-0024) |
 | [libogg](https://xiph.org/ogg/) | BSD-3-Clause | Contenedor Ogg de la música, solo en el cocinador de assets (ADR-0024) |
+| [GoogleTest](https://github.com/google/googletest) | BSD-3-Clause | Tests del engine, solo en los ejecutables de tests; no se distribuye (ADR-0011) |

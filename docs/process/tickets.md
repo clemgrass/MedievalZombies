@@ -186,17 +186,25 @@ fija al clasificar el bug (puede ser distinta).
 2. **Confirmar.** Reproducirlo y llenar Severidad, Prioridad y Reproducibilidad en el
    Project. Si se puede reproducir con código, **se escribe el test de regresión ahora**,
    antes de arreglarlo:
-   - va en `tests/regression/bug_<N>.cpp` y se llama `Bug<N>_<descripción>`, con la URL
-     del issue en un comentario;
+   - va en `tests/regression/bug_<N>.cpp` y su suite se llama `Bug<N>_<Descripción>`
+     (por ejemplo, `TEST(Bug123_ThirdCutLeavesHole, ...)`), con la URL del issue en un
+     comentario;
    - verifica el comportamiento **correcto**, así que falla mientras el bug existe;
-   - se registra en CTest con `WILL_FAIL` (falla esperada), para que la suite siga en
-     verde;
+   - se registra en CTest con `mz_add_regression_test(BUG <N> XFAIL)` en
+     `tests/regression/CMakeLists.txt`: `XFAIL` es `WILL_FAIL` (falla esperada), para
+     que la suite siga en verde. Si solo falla con un *sanitizer* encendido, también
+     `SANITIZER`. La función registra además `regression.bug<N>.selected`, que se pone en
+     rojo si el filtro no encuentra el test (por ejemplo, con el número mal escrito);
+   - si el bug hace caer el proceso (un `assert`, un *segfault*), la sentencia va dentro
+     de `EXPECT_EXIT({ …; std::exit(0); }, ::testing::ExitedWithCode(0), "")`: CTest
+     marca en rojo un proceso muerto por una señal aunque tenga `WILL_FAIL`, y así la
+     caída queda en un proceso hijo;
    - su ruta y nombre van al campo Test de regresión.
 
    Estado: `Confirmado`.
 3. **Arreglar.** Rama `<N>-descripcion` y estado `En progreso`. Cuando el arreglo
    funciona, el test **pasa de forma inesperada** y CTest lo marca. En el mismo PR se
-   **quita `WILL_FAIL`**: desde ahí es un test de regresión normal, que queda para
+   **quita `XFAIL`**: desde ahí es un test de regresión normal, que queda para
    siempre.
 4. **Cerrar.** El PR lleva `Closes #N`. Al hacer merge, el issue se cierra y el Project
    lo pasa a `Cerrado`. **La Resolución se llena a mano**: `FIXED`.

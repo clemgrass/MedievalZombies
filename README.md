@@ -142,8 +142,26 @@ ctest --preset debug
 ./build/debug/game/game
 ```
 
-Hay tres presets: `debug`, `relwithdebinfo` (optimizado, con símbolos y *frame pointers*,
-para perfilar) y `release`. Cada uno compila en `build/<preset>`.
+Hay cuatro presets: `debug` (con AddressSanitizer y UndefinedBehaviorSanitizer),
+`relwithdebinfo` (optimizado, con símbolos y *frame pointers*, para perfilar), `release`
+y `coverage`. Cada uno compila en `build/<preset>`.
+
+Los tests usan GoogleTest y CTest, con etiquetas por módulo (`core`…) y por tipo (`unit`,
+`property`, `regression`, `sanitizer`):
+
+```bash
+ctest --preset debug -L core         # solo los tests de engine_core
+ctest --preset debug -LE sanitizer   # sin los que dependen de un sanitizer
+```
+
+Un test de propiedades que falla imprime su semilla y el comando que lo reproduce
+(`--seed=N`). La cobertura de líneas y ramas, con `llvm-cov`:
+
+```bash
+cmake --preset coverage
+cmake --build --preset coverage --target coverage
+# build/coverage/coverage/html/index.html y summary.txt (resumen por módulo)
+```
 
 Los warnings del código propio son errores. Para experimentar sin que detengan el build:
 `cmake --preset debug --compile-no-warning-as-error`.

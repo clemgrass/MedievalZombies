@@ -66,7 +66,7 @@ function(mz_add_module name)
         MZ_LAYER ${arg_LAYER}
     )
     target_link_libraries(${name}
-        PRIVATE mz_warnings mz_engine_flags
+        PRIVATE mz_warnings mz_engine_flags mz_sanitizers mz_coverage
         PUBLIC ${arg_PUBLIC_DEPS}
         PRIVATE ${arg_PRIVATE_DEPS}
     )

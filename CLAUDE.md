@@ -84,7 +84,10 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 - `engine/`: un módulo por carpeta (`platform`, `core`, `gpu` y los sistemas), cada uno
   un target de CMake con su capa (ADR-0012);
 - `game/`: el ejecutable del juego;
-- `tests/`: las pruebas (ADR-0011); por ahora, los casos de prueba del build y de las
+- `tests/`: las pruebas (ADR-0011): un ejecutable de GoogleTest por módulo
+  (`mz_add_test_suite`, en `cmake/mz_testing.cmake`), `support/` (el `main` y el
+  generador de los tests de propiedades), `regression/` (los bugs, flujo *xfail*),
+  `toolchain/` (los *sanitizers* y los *death tests*), y los casos del build y de las
   herramientas de análisis estático;
 - `cmake/`, `CMakeLists.txt` y `CMakePresets.json`: el build (ADR-0006), con
   `mz_add_module` y la regla de capas;

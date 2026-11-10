@@ -16,7 +16,11 @@ sostienen están en la [nota de investigación](../research/organizacion-del-des
 - **Solo el milestone en curso va en átomos.** Los demás quedan como filas, y se
   refinan al abrirlos (*rolling wave planning*).
 - **ADRs:** el primero es el dueño; los demás comparten el trabajo. El label `área:` sale
-  del dueño, salvo en las filas de contenido, que llevan `área:contenido`.
+  del dueño, salvo en las filas de contenido, que llevan `área:contenido`, y en las que
+  escriben código de `engine/platform` o `engine/core`, que llevan `área:core`: manda la
+  carpeta (fe de erratas del ADR-0033).
+- **Una fila partida en varios átomos** se numera con punto: F5 da F5.1, F5.2 y F5.3. Una
+  dependencia de otro milestone apunta al átomo que necesita.
 - **Depende de:** filas que tienen que estar terminadas antes. Dentro de un milestone,
   las filas van en un orden que respeta esas dependencias. En GitHub, se marcan como
   *blocked by*.
@@ -35,11 +39,11 @@ sostienen están en la [nota de investigación](../research/organizacion-del-des
 
 | Milestone | Tag | Qué se juega al cerrarlo | Filas | Estado |
 |---|---|---|---|---|
-| **M3, esqueleto andante** | `v0.1.0` | Una sala con una malla estática cocinada desde Blender. Una tecla la parte en dos por un plano fijo, y los pedazos se separan, sin física. La CI en verde, y la CD deja el borrador de Linux y Windows | 51 | En curso: por partir en átomos |
-| **M4, "el tajo"** | `v0.2.0` | La caballera apunta, carga y suelta. El maniquí con esqueleto se parte por donde apuntó, y los pedazos caen con física | 50 | — |
+| **M3, esqueleto andante** | `v0.1.0` | Una sala con una malla estática cocinada desde Blender. Una tecla la parte en dos por un plano fijo, y los pedazos se separan, sin física. La CI en verde, y la CD deja el borrador de Linux y Windows | 62 | En curso: 62 átomos, #91 a #152 |
+| **M4, "el tajo"** | `v0.2.0` | La caballera apunta, carga y suelta. El maniquí con esqueleto se parte por donde apuntó, y los pedazos caen con física | 52 | — |
 | **M5, "todo pesa"** | `v0.3.0` | Carne y metal: rebote, tajo rápido, hendidura, hoja clavada, pausa de impacto, ragdoll, sangre y sonido del corte | 31 | — |
-| **M6, "la horda"** | `v0.4.0` | Zombies que persiguen y agarran en la arena cocinada, con checkpoints y el look PSX completo | 37 | — |
-| **M7, el corte vertical objetivo** | `v0.5.0` | Lo que pide la visión: la primera oleada, la horda y la pelea contra el alquimista, con la cámara del tajo, los menús, las opciones, los subtítulos y la accesibilidad, en 60 fps estables en la UHD 620 | 33 | — |
+| **M6, "la horda"** | `v0.4.0` | Zombies que persiguen y agarran en la arena cocinada, con checkpoints y el look PSX completo | 41 | — |
+| **M7, el corte vertical objetivo** | `v0.5.0` | Lo que pide la visión: la primera oleada, la horda y la pelea contra el alquimista, con la cámara del tajo, los menús, las opciones, los subtítulos y la accesibilidad, en 60 fps estables en la UHD 620 | 32 | — |
 | **Producción** | — | Varias zonas, el castillo y las cinemáticas. Se planifica al cerrar M7, junto con lo que la historia pide y ningún ADR cubre | 14 | Sin planificar |
 
 ## El contenido, en resumen
@@ -83,78 +87,90 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 
 | Fila | Qué entrega | ADRs | Depende de | TDD | Issue |
 |---|---|---|---|---|---|
-| F1 | monorepo y CMake: un target por capa, presets, toolchain Clang C++20 | 0006 | — | — | — |
-| F2 | clang-format, clang-tidy y chequeos del subconjunto (0009) | 0013 | F1 | — | — |
-| F3 | framework de tests, CTest, sanitizers y cobertura | 0011 | F1 | — | — |
-| P1 | platform: ventana SDL3, eventos crudos y reloj | 0004 | F1 | — | — |
-| D3 | macro de zona y Tracy on-demand | 0021 | F1 | — | — |
-| G3 | shaders: glslc en CMake | 0006 | F1 | — | — |
-| CD1 | spike: engine real en sniper y llvm-mingw, tests bajo Wine | 0035 | F1 | — | — |
-| F4 | assert con mensaje, result<T,E> y handle con generación | 0009 | F3 | estricto | — |
-| F5 | matemática: vec, mat, quat, convención de ejes y reverse-Z | 0008 | F3 | estricto | — |
-| CI1 | contenedor Arch con fecha, script por job, chequeos rápidos, ci-ok en el ruleset | 0029 | F1, F2 | — | — |
-| G1 | Vulkan base: tabla propia de funciones, instancia, dispositivo, swapchain, validation, 2 frames en vuelo | 0005, 0035, 0022 | P1 | — | — |
-| IN1 | piezas puras: zona muerta, curva, contadores, regla del paso por timestamp, buffer | 0032 | F3 | estricto | — |
-| IN2 | platform: eventos con timestamp, teclas por posición, mouse relativo | 0032 | P1 | — | — |
-| CD2 | platform en Windows y sección del paquete en PE | 0035, 0004, 0028 | P1, CD1 | — | — |
-| CD3 | presets de la CD (toolchain file, estáticos, prefix-map, SOURCE_DATE_EPOCH, strip) | 0035 | CD1 | — | — |
-| F6 | regiones de platform (mmap+POPULATE), arena, scratch con marcador, contadores | 0010 | F4 | estricto | — |
-| F8 | allocator de offsets tipo TLSF | 0010 | F4 | estricto | — |
-| D2 | CVars: registro, archivo de valores cambiados, constantes en Release | 0021 | F4 | — | — |
-| CI2 | build y tests debug con Clang (ASan/UBSan/LSan) y GCC | 0029 | CI1, F3 | — | — |
-| CI4 | Blender y D2 por tarball con sha256 y caché; verificadores de diagramas (b)(c)(d) | 0029 | CI1 | — | — |
-| CI7 | seguridad: permisos, actions por SHA, Dependabot | 0029 | CI1 | — | — |
-| AS1 | formato de asset en core: cabecera y secciones planas | 0017 | F4 | estricto | — |
-| CD4 | recursos del .exe | 0035 | CD3 | — | — |
-| F7 | pools con lista libre y contenedores de capacidad fija | 0010 | F6 | estricto | — |
-| F9 | detección en debug: envenenamiento ASan, guardas, comprobación al cerrar | 0010 | F6 | estricto | — |
-| GL1 | game loop: paso fijo 60 Hz, acumulador, tope 8 pasos y 250 ms, alfa de interpolación | 0012 | P1, F6 | estricto | — |
-| D1 | logging: 5 niveles, categoría por módulo, ring buffer | 0021 | F6 | — | — |
-| CI3 | cobertura 100 % y clang-tidy | 0029 | CI2 | — | — |
-| CI5 | corrida nocturna con archlinux:latest | 0029 | CI2 | — | — |
-| G2 | gpu::Allocator por vida, ring buffer y cola de liberación por frame | 0010 | G1, F8 | estricto | — |
-| AS2 | cocinador mínimo: blender -b fijado, cgltf, malla estática a binario, regla CMake | 0017 | AS1 | estricto | — |
-| RE1 | formato del paquete y cargador con validación | 0028, 0035 | AS1 | estricto | — |
-| EC1 | ECS: sparse sets, handles, capacidad fija, iteración en orden de id | 0012 | F7 | estricto | — |
-| AS9 | datos del corte: índice soldado, cáscaras y validación manifold (malla estática) | 0007, 0017 | AS2 | estricto | — |
-| R6 | destino de 640x360 y blit al swapchain con factor entero | 0022, 0020 | G2, G3 | — | — |
-| RE6 | paquete dentro del ejecutable en Release | 0028, 0035 | RE1 | — | — |
-| C1 | contenido: malla estática simple y la sala en .blend, cerradas y manifold | 0017, 0019, 0007 | AS2 | — | — |
-| EC2 | ECS: destrucción diferida, consultas y hash del estado | 0012 | EC1 | estricto | — |
-| EC3 | colas de eventos entre sistemas en la arena del paso | 0012 | EC1, F6 | estricto | — |
-| CT1 | clasificar y partir triángulos con el índice soldado | 0007 | F5, AS9 | estricto | — |
-| R1 | malla con reverse-Z y test del front face | 0022, 0008 | R6, F5, AS2 | — | — |
-| CD5 | modo de prueba de humo | 0035, 0028 | RE6 | — | — |
-| CT2 | encadenar contornos (con el abierto que falla) | 0007 | CT1 | estricto | — |
-| IN3 | capa de acciones: contextos, controles por defecto, disparadores | 0032, 0018 | IN1, IN2, EC3 | — | — |
-| CD6 | workflow de la CD, con git-cliff y el CHANGELOG.md | 0035 | CD3, CD5, CI2 | — | — |
-| CT3 | tapa: cortar orejas en la base del plano | 0007 | CT2 | estricto | — |
-| CD7 | configuración del repo: releases inmutables, ruleset de tags, entorno itch.io | 0035 | CD6 | — | — |
-| CD8 | job de itch.io con butler | 0035 | CD6 | — | — |
-| CD9 | LEEME, LICENSES en el paquete, notas | 0035 | CD6 | — | — |
-| CT5 | pedazos: fragmentos conexos (malla estática) | 0007 | CT3 | estricto | — |
-| SK1 | corte mínimo en el juego: una tecla, plano fijo, pedazos como entidades que se separan, sin física | 0007, 0012, 0032, 0022 | CT5, EC3, IN3, R1, C1 | — | — |
+| F1 | monorepo y CMake: un target por capa, presets, toolchain Clang C++20 | 0006, 0012, 0009, 0013 | — | — | #91 |
+| F2 | clang-format, clang-tidy y chequeos del subconjunto (0009) | 0013, 0009 | F1 | — | #92 |
+| F3 | GoogleTest, CTest, sanitizers y cobertura | 0011, 0006 | F1 | — | #93 |
+| P1 | platform: ventana SDL3, eventos crudos y reloj | 0004, 0012, 0006 | F1 | — | #94 |
+| D3 | macro de zona propia y Tracy on-demand | 0021, 0006, 0019 | F1 | — | #95 |
+| G3 | shaders: glslc en CMake | 0006, 0022 | F1 | — | #96 |
+| CD1 | spike (rama `spike/97-…` sin merge, informe en el issue): engine real en sniper y llvm-mingw, tests bajo Wine | 0035, 0014, 0029, 0006 | F1, F3 | — | #97 |
+| F4 | assert con mensaje, result<T,E> y handle con generación | 0009, 0010, 0012 | F3 | estricto | #98 |
+| F5.1 | matemática: vec y mat | 0008 | F3 | estricto | #99 |
+| F5.2 | matemática: cuaterniones | 0008 | F5.1 | estricto | #100 |
+| F5.3 | matemática: convención de ejes, vista, proyección reverse-Z y plano | 0008, 0022 | F5.1 | estricto | #101 |
+| CI1 | contenedor Arch con fecha, script por job, chequeos rápidos, ci-ok en el ruleset | 0029, 0013, 0019 | F1, F2 | — | #102 |
+| G1.1 | Vulkan base: tabla propia de funciones, instancia, validation, dispositivo | 0005, 0035, 0022, 0004 | P1, F4 | — | #103 |
+| G1.2 | Vulkan base: swapchain, 2 frames en vuelo, clear en pantalla | 0022, 0005, 0007, 0030 | G1.1 | — | #104 |
+| IN1.1 | piezas puras: zona muerta radial, curva, histéresis de los gatillos | 0032 | F3 | estricto | #105 |
+| IN1.2 | piezas puras: contadores, regla del paso por timestamp, buffer en pasos, traza cruda | 0032, 0012, 0010 | F3 | estricto | #106 |
+| IN2 | platform: eventos con timestamp, teclas por posición, mouse relativo | 0032, 0004 | P1 | — | #107 |
+| CD3 | presets de la CD (toolchain file, estáticos, prefix-map, SOURCE_DATE_EPOCH, strip) | 0035, 0006 | CD1 | — | #108 |
+| F6.1 | regiones de platform (mmap+POPULATE) | 0010, 0004 | F4 | estricto | #109 |
+| F6.2 | arena, scratch con marcador, contadores | 0010, 0009 | F6.1 | estricto | #110 |
+| F8 | allocator de offsets tipo TLSF | 0010 | F4 | estricto | #111 |
+| D2 | CVars: registro y constantes en Release (el archivo, en D9) | 0021, 0010 | F4 | — | #112 |
+| CI2 | build y tests debug con Clang (ASan/UBSan/LSan) y GCC; compilar relwithdebinfo y release | 0029, 0011, 0006 | CI1, F3 | — | #113 |
+| CI4.1 | Blender por tarball con sha256 y caché | 0029, 0017 | CI1 | — | #114 |
+| CI4.2 | D2 por tarball; verificadores de diagramas (b)(c)(d) | 0030, 0029 | CI1 | — | #115 |
+| CI7 | seguridad: actions por SHA, Dependabot, valores del evento por `env:` | 0029 | CI1 | — | #116 |
+| AS1 | formato de asset en core: cabecera y secciones planas | 0017, 0028 | F4 | estricto | #117 |
+| CD4 | recursos del .exe | 0035, 0019 | CD3 | — | #118 |
+| F7 | pools con lista libre y contenedores de capacidad fija | 0010, 0009 | F6.2 | estricto | #119 |
+| F9 | detección en debug: envenenamiento ASan, guardas, comprobación al cerrar | 0010, 0011 | F6.2, F7 | estricto | #120 |
+| GL1 | game loop: paso fijo 60 Hz, acumulador, tope 8 pasos y 250 ms, alfa de interpolación | 0012, 0010, 0030 | P1, F6.2, D3 | estricto | #121 |
+| D1 | logging: 5 niveles, categoría por módulo, ring buffer a stderr (el archivo, en D8) | 0021, 0010, 0028 | F6.2 | — | #122 |
+| CI3 | cobertura 100 % y clang-tidy | 0029, 0011, 0013 | CI2 | — | #123 |
+| CI5 | corrida nocturna con archlinux:latest | 0029 | CI2 | — | #124 |
+| G2.1 | gpu::Allocator con bloques por vida | 0010, 0005, 0022 | G1.1, F8 | estricto | #125 |
+| G2.2 | ring buffer por frame y cola de liberación | 0010, 0005, 0022 | G2.1, G1.2 | estricto | #126 |
+| AS2.1 | cocinador mínimo: blender -b fijado, .blend a .glb determinista, regla CMake | 0017, 0029, 0006 | F1, CI4.1 | — | #127 |
+| AS2.2 | cocinador mínimo: cgltf, malla estática a binario | 0017, 0008, 0006, 0019 | AS1, AS2.1 | estricto | #128 |
+| RE1 | formato del paquete, cargador con validación y primitivas de archivo | 0028, 0035, 0017, 0004 | AS1 | estricto | #129 |
+| EC1 | ECS: sparse sets, handles, capacidad fija, iteración en orden de id | 0012, 0010, 0009, 0030 | F7 | estricto | #130 |
+| AS9.1 | datos del corte: índice soldado y cáscaras (malla estática) | 0007, 0017 | AS2.2 | estricto | #131 |
+| AS9.2 | datos del corte: validación manifold que falla el build | 0007, 0017 | AS9.1 | estricto | #132 |
+| R6 | destino de 640x360 y blit al swapchain con factor entero | 0022, 0020, 0030 | G2.2, G3 | — | #133 |
+| C1 | contenido: malla estática simple y la sala en .blend, cerradas, manifold y con cáscaras convexas | 0017, 0019, 0007 | AS9.2 | — | #135 |
+| RE6 | paquete dentro del ejecutable en Release | 0028, 0035, 0004 | RE1, AS2.2, C1 | — | #134 |
+| EC2.1 | ECS: destrucción diferida y consultas | 0012, 0010 | EC1 | estricto | #136 |
+| EC2.2 | ECS: hash del estado | 0021, 0012, 0029 | EC1, CI2 | estricto | #137 |
+| EC3 | colas de eventos entre sistemas en la arena del paso | 0012, 0010 | EC1, F6.2 | estricto | #138 |
+| CT1 | clasificar y partir triángulos con el índice soldado | 0007, 0008, 0010, 0011, 0030 | F5.1, F5.3, F6.2, AS9.1 | estricto | #139 |
+| R1 | malla con reverse-Z y test del front face | 0022, 0008, 0005, 0030 | R6, F5.1, F5.3, AS2.2, RE1 | — | #140 |
+| CD2 | platform de M3 en Windows y sección del paquete en PE (hilos y carpetas, en CD10) | 0035, 0004, 0028 | CD1, IN2, F6.1, RE6, R1, C1 | — | #141 |
+| CD5 | modo de prueba de humo (paquete y Vulkan) | 0035, 0028 | RE6, G1.1 | — | #142 |
+| CT2 | encadenar contornos (con el abierto que falla) | 0007, 0011, 0030 | CT1 | estricto | #143 |
+| IN3 | capa de acciones: contextos, controles por defecto, disparadores | 0032, 0018, 0012, 0021 | IN1.1, IN1.2, IN2, EC3, D2 | — | #144 |
+| CD6.1 | workflow de la CD: cocinar, Linux, Windows, bytes comparados, pruebas de humo | 0035, 0029, 0011 | CD3, CD4, CD5, CI2, CI4.1, AS2.2 | — | #145 |
+| CD6.2 | workflow de la CD: SHA256SUMS, atestaciones, git-cliff, CHANGELOG.md, borrador | 0035, 0029 | CD6.1 | — | #146 |
+| CT3 | tapa: cortar orejas en la base del plano (los agujeros, en CT11) | 0007, 0008, 0011, 0030 | CT2, C1 | estricto | #147 |
+| CD7 | configuración del repo: releases inmutables, ruleset de tags, entorno itch.io | 0035 | CD6.2 | — | #148 |
+| CD8 | job de itch.io con butler | 0035 | CD7 | — | #149 |
+| CD9 | LEEME, LICENSES en el paquete, notas | 0035, 0019 | CD6.1 | — | #150 |
+| CT5 | pedazos: fragmentos conexos (malla estática) | 0007, 0011, 0030 | CT3 | estricto | #151 |
+| SK1 | corte mínimo en el juego: una tecla, plano fijo, pedazos como entidades que se separan, sin física | 0007, 0012, 0032, 0022, 0010, 0021 | CT5, EC2.1, EC2.2, EC3, IN3, R1, C1, D2, D3 | — | #152 |
 
 ### M4, "el tajo"
 
 | Fila | Qué entrega | ADRs | Depende de | TDD | Issue |
 |---|---|---|---|---|---|
-| D4 | registro por frame (R1-R4) y memoria (statm + memory_budget) | 0021, 0020 | GL1, G2 | — | — |
+| CI8 | verificadores de diagramas (a), (e) a (i): índice de símbolos, AST de Clang y traza de `debug` | 0030, 0029, 0021 | CI3, D3, CT1 | — | — |
+| D4 | registro por frame (R1-R4) y memoria (statm + memory_budget); en M4 vive en memoria, y su escritura a disco espera al hilo de I/O (RE2), como D8. Con él se verifica por primera vez R1 en el escenario del corte de SK1 | 0021, 0020 | GL1, G2.2 | — | — |
 | D5 | dibujo de depuración immediate mode | 0021 | R1 | — | — |
-| D6 | replay: las acciones de cada paso, encabezado, hash cada 60 pasos | 0021, 0032 | EC2, IN3 | — | — |
-| D7 | timestamps de GPU y captura de RenderDoc in-app | 0021 | G2 | — | — |
-| AS3 | formato de vértice de 32 B: pesos unorm8 que suman 255, normal octaédrica | 0017 | AS2 | estricto | — |
-| AS6 | texturas PNG a RGBA8 con stb_image y mipmaps | 0017 | AS2 | estricto | — |
-| AS8 | colisión del escenario: prefijos UBX_/UCP_/USP_ con sus fallas | 0017 | AS2 | estricto | — |
-| AN1 | esqueleto, pose, jerarquía local a global y paleta | 0015 | F5, EC1 | estricto | — |
-| PH1 | formas y pruebas de superposición: esfera, cápsula, caja | 0016 | F5 | estricto | — |
-| PH8 | geometría de recortar una cápsula (core) | 0016, 0007 | F5 | estricto | — |
+| D6 | replay: las acciones de cada paso, encabezado, hash cada 60 pasos; en M4 vive en memoria, y su escritura por bloques espera al hilo de I/O (RE2), como D8 | 0021, 0032 | EC2.2, IN3 | — | — |
+| D7 | timestamps de GPU y captura de RenderDoc in-app | 0021 | G2.2 | — | — |
+| AS3 | formato de vértice de 32 B: pesos unorm8 que suman 255, normal octaédrica | 0017 | AS2.2 | estricto | — |
+| AS6 | texturas PNG a RGBA8 con stb_image y mipmaps | 0017 | AS2.2 | estricto | — |
+| AS8 | colisión del escenario: prefijos UBX_/UCP_/USP_ con sus fallas | 0017 | AS2.2 | estricto | — |
+| AN1 | esqueleto, pose, jerarquía local a global y paleta | 0015 | F5.2, EC1 | estricto | — |
+| PH1 | formas y pruebas de superposición: esfera, cápsula, caja | 0016 | F5.2 | estricto | — |
+| PH8 | geometría de recortar una cápsula (core) | 0016, 0007 | F5.3 | estricto | — |
 | CB1 | la caballera: carga con su curva, energía y cancelación | 0018 | GL1, IN3 | — | — |
-| CA1 | resorte críticamente amortiguado y barrido de esfera de la cámara | 0031 | F5 | estricto | — |
+| CA1 | resorte críticamente amortiguado y barrido de esfera de la cámara | 0031 | F5.2, F5.3 | estricto | — |
 | IN4 | movimiento: tanque, paso lateral, esquivar, relativo a la pantalla | 0032, 0018, 0031 | IN3 | — | — |
 | IN5 | guía de la espada: stick por posición, mouse por deltas | 0032, 0015, 0031 | IN3 | — | — |
-| IN6 | modo D con present_wait2 y caída al modo A | 0032, 0022 | G1 | — | — |
-| C4 | contenido: la espada | 0017, 0018, 0019 | AS2 | — | — |
+| IN6 | modo D con present_wait2 y caída al modo A | 0032, 0022 | G1.2 | — | — |
+| C4 | contenido: la espada | 0017, 0018, 0019 | AS2.2 | — | — |
 | CI6 | replay en relwithdebinfo: hash guardado y métricas deterministas que bloquean | 0029, 0021, 0020 | D6, CI2 | — | — |
 | AS4 | esqueletos: rotación 180°, recorte de huesos marcados, fundir pesos | 0017 | AS3 | estricto | — |
 | AN5 | IK analítica de dos huesos | 0015 | AN1 | estricto | — |
@@ -163,13 +179,14 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | PH4 | cuerpos rígidos: impulsos secuenciales, fricción, dormir | 0016 | PH1 | — | — |
 | PH7 | detección del tajo: sector de anillo contra cápsulas | 0016 | PH1 | estricto | — |
 | CT4 | des-deformar y mezclar, recortar y cuantizar pesos | 0007, 0015 | CT1, AN1 | estricto | — |
+| CT11 | tapa: agujeros dentro de la misma cáscara | 0007 | CT3 | estricto | — |
 | R2 | texturas nearest con mipmaps y bindless | 0022 | R1, AS6 | — | — |
 | R3 | skinning en el vertex shader | 0022, 0015 | R1, AN1, AS3 | — | — |
 | R11 | ImGui y dibujo de depuración en sus pasadas | 0022, 0021 | R1, D5 | — | — |
 | C7 | contenido: textura de detalle de la carne de la tapa | 0022, 0019 | AS6 | — | — |
 | AS5 | clips a 30 Hz y canales constantes | 0017 | AS4 | estricto | — |
 | AS7 | cápsulas por hueso ajustadas y correcciones a mano | 0017 | AS4 | estricto | — |
-| AS9B | datos del corte: marca de malla cortable y huesos dominantes por cáscara | 0007, 0017 | AS9, AS4 | estricto | — |
+| AS9B | datos del corte: marca de malla cortable y huesos dominantes por cáscara | 0007, 0017 | AS9.2, AS4 | estricto | — |
 | AN3 | skinning en la CPU igual al del shader, con el test que los compara | 0015, 0022 | AN1, R3 | estricto | — |
 | PH11 | fase amplia por fuerza bruta y test de dos ejecuciones | 0016 | PH4 | — | — |
 | CA2 | tercera persona con colisión y screen-door | 0031 | CA1, PH2 | — | — |
@@ -180,7 +197,7 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | C3 | contenido: clips de la caballera (quieta, caminar, postura de carga, paso del tajo) | 0017, 0015, 0019 | AS5 | — | — |
 | AN4 | interpolación de la pose en el render | 0015 | AN2, GL1 | — | — |
 | AN6 | el tajo: arco en el plano, IK de los brazos, torso, clip del paso, valores como CVars | 0015 | AN5, AN2, D2, C3, C4 | — | — |
-| CT6 | corte completo de punta a punta: pedazos al ECS con máscara, cápsulas e índice extendido | 0007, 0016, 0015 | CT5B, SK1, EC2, PH8, C2 | estricto | — |
+| CT6 | corte completo de punta a punta: pedazos al ECS con máscara, cápsulas e índice extendido | 0007, 0016, 0015 | CT5B, CT11, SK1, EC2.1, PH8, C2 | estricto | — |
 | CB2 | plano por el pecho y punto apuntado | 0018 | CB1, PH2, CA3 | — | — |
 | AN7 | guía de la espada antes de soltar (sigue un objetivo, con peso) | 0015 | AN6, IN5 | — | — |
 | PH9 | cuerpos compuestos de los pedazos | 0016, 0007 | PH4, CT6 | — | — |
@@ -202,7 +219,7 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | V9 | campo de distancia y capas de la tapa | 0025, 0007, 0022 | CT6, R8 | estricto | — |
 | AU1 | dispositivo de audio en platform, callback y reloj | 0024 | P1 | — | — |
 | AU2 | cola SPSC | 0024 | F3 | estricto | — |
-| AU4 | cocinador de audio y tabla de sonidos | 0024 | AS2 | estricto | — |
+| AU4 | cocinador de audio y tabla de sonidos | 0024 | AS2.2 | estricto | — |
 | CA6 | sacudida con trauma | 0031 | CA2 | — | — |
 | C5 | contenido: los tres tipos de la primera oleada, con el maniquí y su material por cápsula (carne, cota, placa) | 0018, 0017, 0019 | C2 | — | — |
 | C9 | contenido: clips del zombie mutilado (cojear, arrastrarse con dos brazos y con uno) | 0015, 0017, 0019 | AS5 | — | — |
@@ -234,11 +251,11 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | R5 | dithering y vértices que tiemblan | 0022 | R1 | — | — |
 | R9 | sombras blob | 0022 | R1 | — | — |
 | R10 | screen-door de la caballera | 0022 | R1 | — | — |
-| IA1 | navmesh: formato, A* y funnel, sobre una navmesh a mano | 0023 | F5 | — | — |
+| IA1 | navmesh: formato, A* y funnel, sobre una navmesh a mano | 0023 | F5.1 | — | — |
 | AU7 | emisores | 0024 | AU6 | — | — |
 | N1 | cocinador de una zona: instancias, ids, marcadores, luces, colisión | 0027 | AS8 | estricto | — |
-| RE2 | hilo de I/O y sus dos colas | 0028 | P1, F6 | estricto | — |
-| RE7 | arranque: VkPipelineCache y pantalla de carga | 0028 | G1 | — | — |
+| RE2 | hilo de I/O y sus dos colas | 0028 | P1, F6.2 | estricto | — |
+| RE7 | arranque: VkPipelineCache y pantalla de carga | 0028 | G1.2 | — | — |
 | C10 | contenido: clips de los zombies (caminar, trotar, atacar, agarrar, ensartado) | 0015, 0017, 0019 | AS5 | — | — |
 | C11 | contenido: los demás sonidos y la música | 0024, 0019 | AU4 | — | — |
 | R7 | culling por esfera hasta el final de la niebla (las zonas, en N11) | 0022, 0027 | R4 | — | — |
@@ -246,10 +263,14 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | IA3 | seguir el camino, rayo en la navmesh, reparto de recálculos | 0023 | IA1, PH2 | — | — |
 | AU8 | música: decodificadores, estados, crossfade | 0024 | AU5, C11 | — | — |
 | N2 | textos de zona y de mundo con validaciones | 0027 | N1 | estricto | — |
-| N4 | cargar una zona en el ECS en orden de id, con hash | 0027 | N1, EC2 | estricto | — |
-| RE3 | slots en CPU y bloques en GPU, cola de liberación de zonas | 0028 | RE2, G2, F7 | estricto | — |
+| N4 | cargar una zona en el ECS en orden de id, con hash | 0027 | N1, EC2.1, EC2.2 | estricto | — |
+| RE3 | slots en CPU y bloques en GPU, cola de liberación de zonas | 0028 | RE2, G2.2, F7 | estricto | — |
 | RE5 | cocinador: binarios por zona, global, arranque, música, reparto | 0028 | RE1, N1 | estricto | — |
-| RE8 | tarjeta de memoria y test que mata el proceso | 0028 | RE2 | estricto | — |
+| RE9 | opciones y carpetas XDG, y las carpetas en la prueba de humo de CD5 | 0028, 0035 | RE2 | — | — |
+| D8 | log a un archivo de la carpeta de estado por el hilo de I/O, y vaciado antes de abortar | 0021, 0028 | D1, RE2, RE9 | — | — |
+| D9 | archivo de CVars cambiadas, escrito por el hilo de I/O | 0021, 0028 | D2, RE2, RE9 | — | — |
+| CD10 | platform en Windows: hilos y carpetas de %APPDATA% y %LOCALAPPDATA% | 0035, 0004, 0028 | CD2, RE2, RE9 | — | — |
+| RE8 | tarjeta de memoria y test que mata el proceso | 0028 | RE2, RE9 | estricto | — |
 | C8 | contenido: la arena (ruinas, colisión con prefijos, antorchas, marcadores) | 0027, 0017, 0019 | N1 | — | — |
 | IA2 | el cocinador genera la navmesh de la arena y la guarda en el binario de la zona | 0023, 0017, 0027 | IA1, N1, C8 | estricto | — |
 | IA4 | ORCA entre agentes | 0023 | IA3, PH3 | — | — |
@@ -274,11 +295,10 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 |---|---|---|---|---|---|
 | V8 | frames de impacto: máscara en alfa y postproceso | 0025 | R6 | — | — |
 | V10 | contadores y CVars de los efectos | 0025 | V1, R11 | — | — |
-| UI1 | cocinador de fuentes | 0026 | AS2 | estricto | — |
-| UI2 | cocinador de textos y archivo de anchos | 0026 | AS2 | estricto | — |
+| UI1 | cocinador de fuentes | 0026 | AS2.2 | estricto | — |
+| UI2 | cocinador de textos y archivo de anchos | 0026 | AS2.2 | estricto | — |
 | UI3 | lista de dibujo y pasada de UI a 640x360 | 0026 | R6 | — | — |
 | UI10 | señales diegéticas | 0026, 0015, 0024, 0025 | AN6, AU5, V2 | — | — |
-| RE9 | opciones y carpetas XDG | 0028 | RE2 | — | — |
 | RE10 | recarga en caliente: inotify, región, corte de la grabación, incluida la tabla de sonidos | 0028, 0024 | RE3, AU4 | — | — |
 | RE11 | panel, zonas de Tracy y metas de carga | 0028 | R11 | — | — |
 | CA4 | cámara del tajo que sigue la hoja, cámara lenta | 0031, 0018 | CA3, CB3 | — | — |
@@ -323,10 +343,11 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | K10 | panel de cinemáticas | 0034 | R11 | — | — |
 | N10 | navmesh partida por zona con portales | 0027, 0023 | N9, IA1 | — | — |
 | N11 | culling por niebla y zonas visibles | 0027, 0022 | N9, R7 | — | — |
-| K4 | mundo detenido | 0034, 0012 | K1, EC2 | — | — |
+| K4 | mundo detenido | 0034, 0012 | K1, EC2.1 | — | — |
 
 ## Historial
 
 | Fecha | Cambio |
 |---|---|
 | 2026-11-09 | Primera versión (#75, ADR-0033): cinco milestones, 216 filas (14 de contenido y las pruebas del DualShock) y ocho riesgos. Se juntaron el trabajo repetido entre listas (la grabación de las acciones en el *replay*, la navmesh en el binario de la zona y la recarga de la tabla de sonidos) y se separó el culling por zonas del culling por la niebla. M3 queda en curso, por partir en átomos |
+| 2026-11-09 | Se abre M3: sus 51 filas se parten en 62 átomos (+22 %), #91 a #152, con la numeración con punto. Lo que escribe a disco (el log, el archivo de CVars) espera al hilo de I/O: D1 y D2 quedan sin archivo en M3, y su escritura pasa a D8 y D9 en M6. CD2 porta lo que `platform::` tiene en M3, y los hilos y las carpetas de Windows pasan a CD10, en M6. RE9 (las carpetas XDG) sube de M7 a M6, antes de RE8, porque la tarjeta de memoria necesita su carpeta. Los agujeros de la tapa salen de CT3 a CT11, en M4, antes de CT6. Se suma el label `área:core` (manda la carpeta: fe de erratas del ADR-0033), y los identificadores van en inglés (fe de erratas del ADR-0013). La auditoría de #153 sumó las dependencias que los cuerpos usaban sin tenerlas (RE6 pasa después de C1), y anotó que D4 y D6 viven en memoria hasta el hilo de I/O. R1 se verifica por primera vez con D4, no con Tracy. Los verificadores de diagramas que faltaban entran como CI8, al principio de M4 |

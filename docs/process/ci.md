@@ -15,26 +15,56 @@ fallo de la CI se repite en local con un comando.
 | `fast-cpp (cpp-subset)` | `cpp-subset.sh` | Si el PR toca código |
 | `fast-repo (reuse)` | `reuse.sh` | Siempre |
 | `fast-repo (actionlint)` | `actionlint.sh` | Siempre |
+| `build (debug)` | `build.sh debug` | Si el PR toca código y la etapa rápida pasó |
+| `build (debug-gcc)` | `build.sh debug-gcc` | Igual |
+| `build (relwithdebinfo)` | `build.sh relwithdebinfo` | Igual |
+| `build (release)` | `build.sh release` | Igual |
 | `ci-ok` | — | Siempre. Falla si algún job falló o se canceló |
 
 En un push a `main` corre todo.
+
+Los jobs `build` son la segunda etapa del ADR-0029: arrancan solo si pasaron `fast-cpp`
+y `fast-repo`. Cada uno corre un *workflow preset* de `CMakePresets.json`, que configura,
+compila y, en los dos `debug`, corre los tests:
+
+| Preset | Compilador | Qué hace |
+|---|---|---|
+| `debug` | Clang | Compila con ASan, UBSan y LSan, y corre los tests |
+| `debug-gcc` | GCC | Lo mismo con el compilador secundario: hereda todo de `debug` menos el compilador |
+| `relwithdebinfo` | Clang | Solo compila |
+| `release` | Clang | Solo compila |
+
+Un warning es un error en los cuatro, así que un warning que solo da GCC también rompe
+la CI. El caso `cmake.warnings.gcc_only` (solo en el build de GCC) lo comprueba.
 
 ## Correr un job en local
 
 ```sh
 tools/ci/run.sh <job>            # por ejemplo: tools/ci/run.sh reuse
 tools/ci/run.sh format --fix     # los argumentos pasan al script
+tools/ci/run.sh build debug-gcc  # un job build, con su preset
 ```
 
 Necesita Docker. `run.sh` levanta el mismo contenedor que la CI, instala el toolchain de
 la fecha con `tools/ci/install.sh` y corre el script con tu usuario. La primera vez baja
 todos los paquetes (unos minutos). Después quedan en el volumen de Docker
 `mz-ci-pacman-<fecha>`, y cada corrida tarda unos 40 s, casi todos de instalación: igual
-que en la CI, el contenedor se instala desde cero cada vez.
+que en la CI, el contenedor se instala desde cero cada vez. Un job `build` suma lo que
+tarda en compilar (hoy, de 60 a 95 s en total).
 
-Para el día a día, sin Docker y con las herramientas de tu máquina, está
-`tools/ci/lint.sh` (formato, subconjunto de C++ y `clang-tidy`). `run.sh` sirve para
-repetir exactamente lo que vio la CI.
+El contenedor no usa tu `build/`: `/src/build` es un volumen que se borra al terminar.
+Compila desde cero, como la CI, y tu build sigue intacto (CMake no acepta una caché
+configurada en otra carpeta).
+
+Para el día a día, sin Docker y con las herramientas de tu máquina, están
+`tools/ci/lint.sh` (formato, subconjunto de C++ y `clang-tidy`) y los *workflow
+presets*, que son lo mismo que corren los jobs `build`:
+
+```sh
+cmake --workflow --preset debug-gcc   # configurar, compilar y probar con GCC
+```
+
+`run.sh` sirve para repetir exactamente lo que vio la CI.
 
 ## Cambiar la fecha del snapshot
 

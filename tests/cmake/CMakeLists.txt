@@ -38,11 +38,13 @@ mz_add_cmake_case(cmake.layers.same_layer CASE layers_same
 mz_add_cmake_case(cmake.layers.manual_link CASE layers_manual_link
     EXPECT "engine_platform \\(capa platform\\) enlaza con engine_core \\(capa core\\)")
 
-# Subconjunto de C++. Los mensajes cubren Clang y GCC.
+# Subconjunto de C++. Los mensajes cubren Clang y GCC. GCC cita con comillas tipográficas
+# (‘typeid’) si el locale es UTF-8, y con ' en el locale C del contenedor: la regex
+# acepta cualquiera de las dos.
 mz_add_cmake_case(cmake.flags.no_exceptions CASE no_exceptions
     EXPECT "exceptions disabled|exception handling disabled")
 mz_add_cmake_case(cmake.flags.no_rtti CASE no_rtti
-    EXPECT "typeid requires -frtti|cannot use 'typeid' with '-fno-rtti'")
+    EXPECT "typeid requires -frtti|cannot use .+typeid.+ with .+-fno-rtti")
 
 # Un warning del código propio rompe el build en las tres configuraciones.
 foreach(build_type IN ITEMS Debug RelWithDebInfo Release)
@@ -51,6 +53,13 @@ foreach(build_type IN ITEMS Debug RelWithDebInfo Release)
         BUILD_TYPE ${build_type}
         EXPECT "\\[-Werror[,=]")
 endforeach()
+
+# Un warning que solo da GCC también rompe el build de GCC. Con Clang ese código compila,
+# así que el caso solo existe en el build de GCC (el preset debug-gcc).
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    mz_add_cmake_case(cmake.warnings.gcc_only CASE gcc_only_warning
+        EXPECT "shadow\\.cpp.*\\[-Werror=shadow\\]")
+endif()
 
 # Una dependencia con warnings compila, porque los warnings son por target. El caso de
 # control aplica las mismas banderas en forma global y comprueba que ahí sí falla.

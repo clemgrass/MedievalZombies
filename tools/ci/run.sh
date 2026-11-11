@@ -11,9 +11,13 @@
 #   tools/ci/run.sh format --fix
 #
 # El repo se monta en /src. install.sh corre como root y su salida solo se muestra si
-# falla; el job corre con el usuario del autor, para que lo que escriba (build/, o
-# format --fix) no quede como root. Los paquetes bajados quedan en un volumen de Docker
-# por fecha (mz-ci-pacman-AAAA-MM-DD): la segunda corrida no los vuelve a bajar.
+# falla; el job corre con el usuario del autor, para que lo que escriba (format --fix)
+# no quede como root. Los paquetes bajados quedan en un volumen de Docker por fecha
+# (mz-ci-pacman-AAAA-MM-DD): la segunda corrida no los vuelve a bajar.
+#
+# /src/build es un volumen anónimo, que se borra al terminar: el contenedor compila desde
+# cero, como la CI, y no toca el build/ de la máquina. Ese build/ está configurado con las
+# rutas de la máquina, y CMake no acepta una caché creada en otra carpeta.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -48,14 +52,19 @@ if ! bash tools/ci/install.sh >/tmp/install.log 2>&1; then
     echo "Falló la instalación del toolchain." >&2
     exit 1
 fi
+chown "$HOST_UID:$HOST_GID" /src/build
 job="$1"
 shift
 exec setpriv --reuid="$HOST_UID" --regid="$HOST_GID" --clear-groups \
     env HOME=/tmp bash "tools/ci/$job.sh" "$@"
 '
 
+# El punto de montaje de /src/build: si no existiera, Docker lo crearía como root.
+mkdir -p "$root/build"
+
 docker run --rm "${tty[@]}" \
     --volume "$root:/src" --workdir /src \
+    --volume /src/build \
     --volume "$volume:/var/cache/pacman/pkg" \
     --env HOST_UID="$(id -u)" --env HOST_GID="$(id -g)" \
     archlinux:latest \

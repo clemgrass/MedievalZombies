@@ -28,6 +28,15 @@
             }
         },
         {
+            "name": "debug-gcc",
+            "displayName": "Debug con GCC (el compilador secundario)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
             "name": "coverage",
             "displayName": "Coverage (cobertura con llvm-cov, sin sanitizers)",
             "inherits": "base",
@@ -57,6 +66,7 @@
     ],
     "buildPresets": [
         { "name": "debug", "configurePreset": "debug" },
+        { "name": "debug-gcc", "configurePreset": "debug-gcc" },
         { "name": "coverage", "configurePreset": "coverage" },
         { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
         { "name": "release", "configurePreset": "release" }
@@ -65,10 +75,48 @@
         {
             "name": "base",
             "hidden": true,
-            "output": { "outputOnFailure": true }
+            "output": { "outputOnFailure": true },
+            "execution": { "noTestsAction": "error" }
         },
         { "name": "debug", "inherits": "base", "configurePreset": "debug" },
+        { "name": "debug-gcc", "inherits": "base", "configurePreset": "debug-gcc" },
         { "name": "relwithdebinfo", "inherits": "base", "configurePreset": "relwithdebinfo" },
         { "name": "release", "inherits": "base", "configurePreset": "release" }
+    ],
+    "workflowPresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug con Clang: configurar, compilar y probar",
+            "steps": [
+                { "type": "configure", "name": "debug" },
+                { "type": "build", "name": "debug" },
+                { "type": "test", "name": "debug" }
+            ]
+        },
+        {
+            "name": "debug-gcc",
+            "displayName": "Debug con GCC: configurar, compilar y probar",
+            "steps": [
+                { "type": "configure", "name": "debug-gcc" },
+                { "type": "build", "name": "debug-gcc" },
+                { "type": "test", "name": "debug-gcc" }
+            ]
+        },
+        {
+            "name": "relwithdebinfo",
+            "displayName": "RelWithDebInfo: configurar y compilar",
+            "steps": [
+                { "type": "configure", "name": "relwithdebinfo" },
+                { "type": "build", "name": "relwithdebinfo" }
+            ]
+        },
+        {
+            "name": "release",
+            "displayName": "Release: configurar y compilar",
+            "steps": [
+                { "type": "configure", "name": "release" },
+                { "type": "build", "name": "release" }
+            ]
+        }
     ]
 }

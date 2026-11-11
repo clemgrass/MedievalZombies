@@ -142,9 +142,14 @@ ctest --preset debug
 ./build/debug/game/game
 ```
 
-Hay cuatro presets: `debug` (con AddressSanitizer y UndefinedBehaviorSanitizer),
-`relwithdebinfo` (optimizado, con símbolos y *frame pointers*, para perfilar), `release`
-y `coverage`. Cada uno compila en `build/<preset>`.
+Hay cinco presets: `debug` (con AddressSanitizer y UndefinedBehaviorSanitizer),
+`debug-gcc` (lo mismo con GCC, el compilador secundario), `relwithdebinfo` (optimizado,
+con símbolos y *frame pointers*, para perfilar), `release` y `coverage`. Cada uno compila
+en `build/<preset>`. Configurar, compilar y probar en un solo comando:
+
+```bash
+cmake --workflow --preset debug      # o debug-gcc; relwithdebinfo y release no corren tests
+```
 
 Los tests usan GoogleTest y CTest, con etiquetas por módulo (`core`…) y por tipo (`unit`,
 `property`, `regression`, `sanitizer`):

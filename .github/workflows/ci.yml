@@ -101,12 +101,42 @@ jobs:
           JOB: ${{ matrix.job }}
         run: bash "tools/ci/$JOB.sh"
 
+  # Segunda etapa: arranca solo si la rápida pasó, y solo si el PR toca código. Cada
+  # entrada de la matriz es un workflow preset de CMakePresets.json (build.sh <preset>):
+  # debug con Clang y debug con GCC compilan y corren los tests, con ASan, UBSan y LSan;
+  # relwithdebinfo y release solo compilan. Los warnings son errores en los cuatro.
+  build:
+    needs: [changes, fast-cpp, fast-repo]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [debug, debug-gcc, relwithdebinfo, release]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - run: bash tools/ci/install.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - env:
+          PRESET: ${{ matrix.preset }}
+        run: bash tools/ci/build.sh "$PRESET"
+
   # El único chequeo obligatorio. Corre siempre, también si la corrida se cancela, y
   # falla si algún job falló o se canceló. Un job saltado por su if: cuenta como éxito.
   # Agregar un job es sumarlo a needs, sin tocar el ruleset. No llama a un script porque
   # no hay nada que repetir en local: solo lee los resultados de GitHub.
   ci-ok:
-    needs: [changes, fast-cpp, fast-repo]
+    needs: [changes, fast-cpp, fast-repo, build]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5

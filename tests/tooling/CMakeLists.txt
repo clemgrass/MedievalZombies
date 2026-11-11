@@ -66,6 +66,31 @@ mz_tooling_test(tooling.changes.no_base
     COMMAND bash ${tools_dir}/changes.sh
     EXPECT "code=true")
 
+# La meta de cobertura del 100 %: cada falta en una carpeta con meta se informa con su
+# archivo y su línea, y lo que está fuera de la meta no cuenta. Los reportes lcov son
+# fixtures escritos a mano, sobre el árbol falso de fixtures/coverage/.
+function(mz_coverage_goal_test test_name lcov)
+    mz_tooling_test(${test_name}
+        COMMAND ${CMAKE_COMMAND}
+            -DMZ_CMAKE_DIR=${PROJECT_SOURCE_DIR}/cmake
+            -DTREE=${fixtures}/coverage
+            -DLCOV=${fixtures}/coverage/${lcov}
+            -DGOAL=engine/core
+            -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/${test_name}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_coverage_goal_case.cmake
+        ${ARGN})
+endfunction()
+
+mz_coverage_goal_test(tooling.coverage.complete complete.lcov)
+mz_coverage_goal_test(tooling.coverage.uncovered_line uncovered_line.lcov
+    EXPECT "engine/core/src/math\\.cpp:3: línea sin cubrir")
+mz_coverage_goal_test(tooling.coverage.untaken_branch untaken_branch.lcov
+    EXPECT "engine/core/src/math\\.cpp:2: la condición 2 nunca fue falsa")
+mz_coverage_goal_test(tooling.coverage.unevaluated_branch unevaluated_branch.lcov
+    EXPECT "engine/core/src/math\\.cpp:2: la condición 1 nunca fue verdadera")
+mz_coverage_goal_test(tooling.coverage.missing_file missing_file.lcov
+    EXPECT "engine/core/src/math\\.cpp: no está en el reporte")
+
 # clang-tidy: prueba la configuración del repo, no solo que la herramienta corre.
 find_program(MZ_CLANG_TIDY clang-tidy)
 if(NOT MZ_CLANG_TIDY)

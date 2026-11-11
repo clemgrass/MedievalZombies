@@ -131,12 +131,67 @@ jobs:
           PRESET: ${{ matrix.preset }}
         run: bash tools/ci/build.sh "$PRESET"
 
+  # Segunda etapa: la cobertura con la meta del 100 % en líneas y ramas, en las carpetas
+  # de tests/CMakeLists.txt. Falla si queda algo sin cubrir, y el resumen del
+  # job dice qué. El reporte HTML se sube como artefacto también si falla, que es cuando
+  # hace falta revisarlo.
+  coverage:
+    needs: [changes, fast-cpp, fast-repo]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - run: bash tools/ci/install.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash tools/ci/coverage.sh
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cobertura
+          path: |
+            build/coverage/coverage/html
+            build/coverage/coverage/summary.txt
+          retention-days: 14
+
+  # Segunda etapa: clang-tidy sobre engine/, game/ y tests/, con la configuración de
+  # .clang-tidy, donde cada hallazgo es un error. Solo configura, para tener la base de
+  # compilación: no compila.
+  clang-tidy:
+    needs: [changes, fast-cpp, fast-repo]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - run: bash tools/ci/install.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash tools/ci/clang-tidy.sh
+
   # El único chequeo obligatorio. Corre siempre, también si la corrida se cancela, y
   # falla si algún job falló o se canceló. Un job saltado por su if: cuenta como éxito.
   # Agregar un job es sumarlo a needs, sin tocar el ruleset. No llama a un script porque
   # no hay nada que repetir en local: solo lee los resultados de GitHub.
   ci-ok:
-    needs: [changes, fast-cpp, fast-repo, build]
+    needs: [changes, fast-cpp, fast-repo, build, coverage, clang-tidy]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5

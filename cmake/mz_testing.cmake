@@ -96,12 +96,26 @@ function(mz_add_test_suite module)
     endforeach()
 endfunction()
 
-#   mz_add_coverage_target()
+#   mz_add_coverage_target(GOAL <carpeta>...)
 #
 # Con MZ_COVERAGE, crea el target `coverage`: corre los tests de C++ y deja en
 # <build>/coverage/ el reporte HTML (líneas y ramas) y summary.txt, con un resumen por
 # módulo de engine/. Se llama después de declarar todos los ejecutables de tests.
+#
+# GOAL son las carpetas con la meta del 100 % en líneas y ramas, relativas a la raíz del
+# repo: el target falla si en ellas queda algo sin cubrir
+# (cmake/mz_coverage_goal.cmake). Las carpetas se validan siempre, también sin
+# MZ_COVERAGE: una carpeta mal escrita dejaría la meta vacía sin avisar.
 function(mz_add_coverage_target)
+    cmake_parse_arguments(PARSE_ARGV 0 arg "" "" "GOAL")
+    if(NOT arg_GOAL)
+        message(FATAL_ERROR "mz_add_coverage_target: falta GOAL, las carpetas con meta.")
+    endif()
+    foreach(dir IN LISTS arg_GOAL)
+        if(NOT IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${dir})
+            message(FATAL_ERROR "mz_add_coverage_target: la carpeta con meta ${dir} no existe.")
+        endif()
+    endforeach()
     if(NOT MZ_COVERAGE)
         return()
     endif()
@@ -114,7 +128,8 @@ function(mz_add_coverage_target)
         list(APPEND objects "$<TARGET_FILE:${executable}>")
     endforeach()
 
-    # La lista viaja separada por | : un ; partiría el argumento en varios.
+    # Las listas viajan separadas por | : un ; partiría el argumento en varios.
+    string(JOIN "|" goal ${arg_GOAL})
     add_custom_target(coverage
         COMMAND ${CMAKE_COMMAND}
             -DCTEST=${CMAKE_CTEST_COMMAND}
@@ -124,6 +139,7 @@ function(mz_add_coverage_target)
             -DSOURCE_DIR=${PROJECT_SOURCE_DIR}
             -DOUTPUT_DIR=${PROJECT_BINARY_DIR}/coverage
             "-DOBJECTS=$<JOIN:${objects},|>"
+            "-DGOAL=${goal}"
             -P ${PROJECT_SOURCE_DIR}/cmake/mz_coverage_report.cmake
         USES_TERMINAL
         VERBATIM

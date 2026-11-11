@@ -1,0 +1,11 @@
+# La línea 3 de engine/core/src/math.cpp nunca se ejecutó. Es la única falta: el
+# archivo no tiene ramas.
+SF:@SOURCE_DIR@/engine/core/src/math.cpp
+DA:1,4
+DA:2,4
+DA:3,0
+DA:4,4
+end_of_record
+SF:@SOURCE_DIR@/engine/gpu/src/gpu.cpp
+DA:1,1
+end_of_record

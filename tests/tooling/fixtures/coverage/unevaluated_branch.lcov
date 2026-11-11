@@ -1,0 +1,13 @@
+# En lcov, un - en lugar de las veces significa que la condición nunca se evaluó. Cuenta
+# como una rama sin tomar, igual que un 0. Aquí, la condición de la línea 2 nunca fue
+# verdadera.
+SF:@SOURCE_DIR@/engine/core/src/math.cpp
+DA:1,4
+DA:2,4
+DA:3,4
+BRDA:2,0,0,-
+BRDA:2,0,1,4
+end_of_record
+SF:@SOURCE_DIR@/engine/gpu/src/gpu.cpp
+DA:1,1
+end_of_record

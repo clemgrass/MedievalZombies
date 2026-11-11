@@ -19,6 +19,8 @@ fallo de la CI se repite en local con un comando.
 | `build (debug-gcc)` | `build.sh debug-gcc` | Igual |
 | `build (relwithdebinfo)` | `build.sh relwithdebinfo` | Igual |
 | `build (release)` | `build.sh release` | Igual |
+| `coverage` | `coverage.sh` | Igual |
+| `clang-tidy` | `clang-tidy.sh` | Igual |
 | `ci-ok` | — | Siempre. Falla si algún job falló o se canceló |
 
 En un push a `main` corre todo.
@@ -37,12 +39,32 @@ compila y, en los dos `debug`, corre los tests:
 Un warning es un error en los cuatro, así que un warning que solo da GCC también rompe
 la CI. El caso `cmake.warnings.gcc_only` (solo en el build de GCC) lo comprueba.
 
+En la misma etapa corren otros dos jobs:
+
+- **`coverage`** corre el *workflow preset* `coverage`: compila con la cobertura de
+  Clang, corre los tests y mide con `llvm-cov`. Tiene la **meta del 100 % en líneas y
+  ramas** del ADR-0011 en las carpetas de `tests/CMakeLists.txt`
+  (`mz_add_coverage_target(GOAL …)`), que es la única lista. El job falla si en esas
+  carpetas queda una línea sin ejecutar, un lado de una condición que nunca se tomó o un
+  `.cpp` que ningún ejecutable de tests enlaza, y el resumen del job dice cuál es, con su
+  archivo y su línea. El reporte HTML queda como artefacto `cobertura` (14 días), también
+  cuando el job falla.
+- **`clang-tidy`** corre `clang-tidy` sobre `engine/`, `game/` y `tests/` con la
+  configuración de `.clang-tidy`, que trata cada hallazgo como un error.
+
+Una zona nueva con TDD suma su carpeta a la lista en el mismo ticket que la crea. Si
+alguna vez una línea no se puede cubrir, el ADR-0011 pide una justificación escrita junto
+al código. `llvm-cov` no tiene marcadores para excluir una línea: el ticket que traiga el
+primer caso agrega el mecanismo a `cmake/mz_coverage_goal.cmake`, con su test en
+`tests/tooling/`.
+
 ## Correr un job en local
 
 ```sh
 tools/ci/run.sh <job>            # por ejemplo: tools/ci/run.sh reuse
 tools/ci/run.sh format --fix     # los argumentos pasan al script
 tools/ci/run.sh build debug-gcc  # un job build, con su preset
+tools/ci/run.sh coverage         # la cobertura con la meta (el HTML se borra al salir)
 ```
 
 Necesita Docker. `run.sh` levanta el mismo contenedor que la CI, instala el toolchain de

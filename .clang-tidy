@@ -70,9 +70,12 @@ CheckOptions:
   readability-identifier-naming.ConstantCase: lower_case
   readability-identifier-naming.ConstexprVariableCase: lower_case
   # m_ en todos los miembros: se ve de inmediato qué es del objeto, y un parámetro del
-  # constructor no choca con el miembro que inicializa (-Wshadow).
+  # constructor no choca con el miembro que inicializa (-Wshadow). Los miembros estáticos
+  # también: para clang-tidy son ClassMember, no Member.
   readability-identifier-naming.MemberCase: lower_case
   readability-identifier-naming.MemberPrefix: m_
+  readability-identifier-naming.ClassMemberCase: lower_case
+  readability-identifier-naming.ClassMemberPrefix: m_
   # Por convención: macros en MAYÚSCULAS y parámetros de template en PascalCase.
   readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
   readability-identifier-naming.TemplateParameterCase: CamelCase

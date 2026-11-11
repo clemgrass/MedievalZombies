@@ -4,7 +4,7 @@
 
 namespace {
 
-// Ejemplo hasta que llegue la primera API real de engine_core.
+// game/main.cpp usa module_name() para comprobar que las capas enlazan.
 TEST(CoreTest, ModuleNameIsCore) { EXPECT_EQ(mz::core::module_name(), "core"); }
 
 } // namespace

@@ -46,6 +46,11 @@ mz_add_cmake_case(cmake.flags.no_exceptions CASE no_exceptions
 mz_add_cmake_case(cmake.flags.no_rtti CASE no_rtti
     EXPECT "typeid requires -frtti|cannot use .+typeid.+ with .+-fno-rtti")
 
+# Ignorar un result (es [[nodiscard]]) no compila: el error se perdería sin que nadie lo
+# mire. Clang lo llama -Wunused-value y GCC, -Wunused-result.
+mz_add_cmake_case(cmake.flags.result_nodiscard CASE result_nodiscard
+    EXPECT "ignored\\.cpp.*nodiscard.*\\[-Werror(,-W|=)unused-(value|result)\\]")
+
 # Un warning del código propio rompe el build en las tres configuraciones.
 foreach(build_type IN ITEMS Debug RelWithDebInfo Release)
     string(TOLOWER ${build_type} suffix)

@@ -1,0 +1,16 @@
+# Todas las líneas se ejecutaron, pero en la línea 2, un `if (a && b)`, la segunda
+# condición (b) nunca fue falsa: llvm-cov da dos entradas por condición, la de id par
+# para el lado verdadero y la de id impar para el falso.
+SF:@SOURCE_DIR@/engine/core/src/math.cpp
+DA:1,4
+DA:2,4
+DA:3,2
+DA:4,2
+BRDA:2,0,0,3
+BRDA:2,0,1,1
+BRDA:2,1,2,3
+BRDA:2,1,3,0
+end_of_record
+SF:@SOURCE_DIR@/engine/gpu/src/gpu.cpp
+DA:1,1
+end_of_record

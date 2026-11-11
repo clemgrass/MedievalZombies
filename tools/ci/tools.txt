@@ -10,6 +10,10 @@ git
 # Las licencias de cada archivo.
 reuse
 
+# run-clang-tidy, que corre clang-tidy en paralelo, es un script de Python, y el paquete
+# clang no trae Python como dependencia obligatoria.
+python
+
 # Los workflows de GitHub Actions. actionlint usa shellcheck para revisar los run:.
 actionlint
 shellcheck

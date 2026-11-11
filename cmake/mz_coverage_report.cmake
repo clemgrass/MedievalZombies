@@ -9,15 +9,22 @@
 # 2. llvm-profdata junta todos los .profraw en un .profdata.
 # 3. llvm-cov cruza ese perfil con el mapa de cobertura que el compilador dejó en cada
 #    ejecutable, y escribe el HTML y un resumen por módulo, con líneas y ramas.
+# 4. La meta: en las carpetas de GOAL, cada línea sin cubrir y cada lado de una condición
+#    que nunca se tomó va al resumen con su archivo y su línea, y el script falla
+#    (cmake/mz_coverage_goal.cmake). Falla al final, cuando el HTML y el resumen ya están
+#    escritos, para que se puedan revisar.
 #
 # Solo mide el código propio de engine/: ni los tests ni las dependencias.
 
-foreach(var IN ITEMS CTEST LLVM_PROFDATA LLVM_COV BUILD_DIR SOURCE_DIR OUTPUT_DIR OBJECTS)
+foreach(var IN ITEMS CTEST LLVM_PROFDATA LLVM_COV BUILD_DIR SOURCE_DIR OUTPUT_DIR OBJECTS
+        GOAL)
     if(NOT DEFINED ${var})
         message(FATAL_ERROR "mz_coverage_report: falta -D${var}.")
     endif()
 endforeach()
 string(REPLACE "|" ";" objects "${OBJECTS}")
+string(REPLACE "|" ";" goal "${GOAL}")
+include(${CMAKE_CURRENT_LIST_DIR}/mz_coverage_goal.cmake)
 
 set(profraw_dir ${OUTPUT_DIR}/profraw)
 set(profdata ${OUTPUT_DIR}/coverage.profdata)
@@ -144,7 +151,32 @@ foreach(module IN LISTS modules)
     string(APPEND summary "${row}\n")
 endforeach()
 
+# La meta, con el detalle por línea que el JSON resumido no tiene: sale del formato lcov.
+execute_process(
+    COMMAND ${LLVM_COV} export ${common_args} -format=lcov
+    OUTPUT_FILE ${OUTPUT_DIR}/coverage.lcov
+    COMMAND_ERROR_IS_FATAL ANY
+)
+mz_coverage_goal_check(${OUTPUT_DIR}/coverage.lcov ${SOURCE_DIR} "${goal}" failures)
+
+list(JOIN goal ", " goal_text)
+string(APPEND summary "\nMeta del 100 % en líneas y ramas: ${goal_text}\n")
+list(LENGTH failures failure_count)
+if(failure_count EQUAL 0)
+    string(APPEND summary "Cumplida.\n")
+else()
+    string(APPEND summary "No se cumple. Sin cubrir (${failure_count}):\n")
+    foreach(failure IN LISTS failures)
+        string(APPEND summary "  ${failure}\n")
+    endforeach()
+endif()
+
 file(WRITE ${OUTPUT_DIR}/summary.txt "${summary}")
 message("${summary}")
 message("Reporte HTML: ${OUTPUT_DIR}/html/index.html")
 message("Resumen por módulo: ${OUTPUT_DIR}/summary.txt")
+
+if(failure_count GREATER 0)
+    message(FATAL_ERROR "No se cumple la meta del 100 % de cobertura: ${failure_count} "
+        "faltas, listadas en el resumen.")
+endif()

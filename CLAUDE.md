@@ -98,7 +98,8 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 - `tools/`: scripts del repo. `tools/ci/` tiene un script por job de la CI (ADR-0029):
   formato, subconjunto de C++ (ADR-0009), `clang-tidy`, `reuse`, `actionlint`,
   `build.sh <preset>` (la segunda etapa: los *workflow presets* `debug`, `debug-gcc`,
-  `relwithdebinfo` y `release`), y `lint.sh`, que corre los tres primeros en la
+  `relwithdebinfo` y `release`), `coverage.sh` (la meta del 100 %, con las carpetas en
+  `tests/CMakeLists.txt`), y `lint.sh`, que corre los tres primeros en la
   máquina. También la fecha del snapshot
   del Arch Linux Archive (`archive-date`), las listas de paquetes, `install.sh` (instala
   en el contenedor), `run.sh <job>` (corre un job en local, en el mismo contenedor) y

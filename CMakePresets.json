@@ -68,6 +68,7 @@
         { "name": "debug", "configurePreset": "debug" },
         { "name": "debug-gcc", "configurePreset": "debug-gcc" },
         { "name": "coverage", "configurePreset": "coverage" },
+        { "name": "coverage-report", "configurePreset": "coverage", "targets": ["coverage"] },
         { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
         { "name": "release", "configurePreset": "release" }
     ],
@@ -100,6 +101,15 @@
                 { "type": "configure", "name": "debug-gcc" },
                 { "type": "build", "name": "debug-gcc" },
                 { "type": "test", "name": "debug-gcc" }
+            ]
+        },
+        {
+            "name": "coverage",
+            "displayName": "Coverage: configurar, compilar y medir, con la meta del 100 %",
+            "steps": [
+                { "type": "configure", "name": "coverage" },
+                { "type": "build", "name": "coverage" },
+                { "type": "build", "name": "coverage-report" }
             ]
         },
         {

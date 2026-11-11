@@ -1,0 +1,5 @@
+# engine/core/src/math.cpp existe pero no está en el reporte: ningún ejecutable de tests
+# lo enlaza, así que llvm-cov no sabe que existe.
+SF:@SOURCE_DIR@/engine/gpu/src/gpu.cpp
+DA:1,1
+end_of_record

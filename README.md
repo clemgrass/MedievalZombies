@@ -163,10 +163,13 @@ Un test de propiedades que falla imprime su semilla y el comando que lo reproduc
 (`--seed=N`). La cobertura de líneas y ramas, con `llvm-cov`:
 
 ```bash
-cmake --preset coverage
-cmake --build --preset coverage --target coverage
+cmake --workflow --preset coverage
 # build/coverage/coverage/html/index.html y summary.txt (resumen por módulo)
 ```
+
+Las carpetas listadas en `tests/CMakeLists.txt` tienen una meta del 100 % en líneas y
+ramas: si algo queda sin cubrir, el comando falla y `summary.txt` lista cada línea y cada
+rama que falta.
 
 Los warnings del código propio son errores. Para experimentar sin que detengan el build:
 `cmake --preset debug --compile-no-warning-as-error`.

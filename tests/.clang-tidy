@@ -1,0 +1,7 @@
+# Las reglas de la raíz, más una excepción que solo vale en los tests.
+InheritParentConfig: true
+
+CheckOptions:
+  # Los fixtures de GoogleTest se llaman como su suite (ResultTest), y mz_add_test_suite
+  # lee el tipo de test en el sufijo de ese nombre.
+  readability-identifier-naming.ClassIgnoredRegexp: '^[A-Z][A-Za-z0-9]*(Test|Property)$'

@@ -12,8 +12,8 @@ namespace mz::core {
 //
 // T es solo una etiqueta: handle<mesh_piece> y handle<body> son tipos distintos, y T puede
 // estar sin definir. La generación 0 está reservada para el handle nulo: un handle creado
-// por defecto (o memoria en cero) nunca coincide con un objeto vivo, porque los pools
-// empiezan cada slot en la generación 1.
+// por defecto (o memoria en cero) nunca coincide con un objeto vivo, porque un pool nunca
+// entrega la generación 0 (ver pool.h).
 template <typename T> class handle {
 public:
     static constexpr std::uint32_t null_generation = 0;

@@ -17,10 +17,18 @@
 
 #include <algorithm>
 #include <bit>
+#include <concepts>
 #include <cstddef>
+#include <limits>
 #include <string_view>
+#include <type_traits>
 
 namespace mz::core {
+
+// Lo que se puede guardar en la memoria de una arena: un objeto (ni referencia, ni void, ni
+// arreglo) que se pueda destruir. Su alineación se revisa al pedir el lugar.
+template <typename T>
+concept arena_storable = std::is_object_v<T> && !std::is_array_v<T> && std::destructible<T>;
 
 class arena {
 public:
@@ -48,6 +56,18 @@ public:
         m_used = start + size;
         m_peak = std::max(m_peak, m_used);
         return m_block.data() + start;
+    }
+
+    // Lugar para `count` objetos T, alineado para T y sin construir: quien lo pide crea los
+    // objetos (std::construct_at) y los destruye. Es lo que usan los contenedores.
+    template <arena_storable T> [[nodiscard]] T *allocate_storage(std::size_t count) {
+        static_assert(alignof(T) <= max_alignment, "T pide más alineación que una arena");
+        // count × sizeof(T) con un count enorme da la vuelta y parece un pedido chico.
+        MZ_CHECK(count <= max_count<T>(), "arena \"{}\": {} objetos de {} bytes no caben en size_t",
+                 name(), count, sizeof(T));
+        // Bytes alineados para T, todavía sin objetos: el puntero sirve para construirlos
+        // ahí (std::construct_at), no para leer antes de hacerlo.
+        return reinterpret_cast<T *>(allocate(count * sizeof(T), alignof(T)));
     }
 
     // Todo lo entregado deja de valer. El pico no cambia.
@@ -85,6 +105,10 @@ public:
     [[nodiscard]] std::size_t peak() const { return m_peak; }
 
 private:
+    template <typename T> static constexpr std::size_t max_count() {
+        return std::numeric_limits<std::size_t>::max() / sizeof(T);
+    }
+
     region m_block;
     std::size_t m_used = 0;
     std::size_t m_peak = 0;

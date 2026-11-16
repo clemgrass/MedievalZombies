@@ -1,5 +1,6 @@
-# Soporte de los tests: el main propio y el generador de los tests de propiedades.
-add_library(mz_test_support STATIC src/main.cpp src/property.cpp)
+# Soporte de los tests: el main propio, el generador de los tests de propiedades y las
+# preguntas de los tests de memoria al sistema operativo.
+add_library(mz_test_support STATIC src/main.cpp src/memory.cpp src/property.cpp)
 target_include_directories(mz_test_support PUBLIC include)
 target_compile_features(mz_test_support PUBLIC cxx_std_20)
 set_target_properties(mz_test_support PROPERTIES

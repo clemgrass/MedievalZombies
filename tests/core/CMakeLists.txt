@@ -12,6 +12,8 @@ mz_add_test_suite(core
         plane_test.cpp
         quat_test.cpp
         region_test.cpp
+        arena_test.cpp
+        scratch_test.cpp
     DEPS engine_core
 )
 

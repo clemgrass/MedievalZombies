@@ -8,6 +8,8 @@ mz_add_test_suite(core
         scalar_test.cpp
         vec_test.cpp
         mat_test.cpp
+        projection_test.cpp
+        plane_test.cpp
     DEPS engine_core
 )
 

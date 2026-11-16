@@ -3,5 +3,6 @@ mz_add_module(engine_core LAYER core
         src/assert.cpp
         src/core.cpp
         src/mat.cpp
+        src/projection.cpp
     PRIVATE_DEPS engine_platform
 )

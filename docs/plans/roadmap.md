@@ -29,6 +29,12 @@ sostienen están en la [nota de investigación](../research/organizacion-del-des
   mezcla las dos cosas (por ejemplo, las cámaras fijas con las validaciones del
   cocinador), "estricto" vale para su parte de núcleo o de cocinador, que al partirla
   queda en su propio átomo.
+- **Modo:** lo fija el label `modo:` de cada átomo, con la regla del ADR-0014 (Decisión
+  1.1): dirigido para los sistemas grandes (renderer, corte, física, animación, IA) y
+  propuesto para lo periférico. **La matemática (F5) va en modo propuesto.** El ADR-0008,
+  en Consecuencias, llama a la biblioteca "núcleo (modo dirigido)", pero la regla de los
+  modos es del ADR-0014, y en ese caso manda él. Los puntos de decisión de la matemática
+  igual los decide el autor en la sesión, como en cualquier átomo propuesto.
 - **Prefijos de las filas:** F (fundaciones), P (`platform::`), GL (game loop), EC
   (ECS), D (depuración), CI, G (GPU), AS (assets y cocinador), R (render), AN
   (animación), PH (física), CT (corte), SK (esqueleto), CB (combate), V (VFX), IA, AU
@@ -353,3 +359,4 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | 2026-11-09 | Primera versión (#75, ADR-0033): cinco milestones, 216 filas (14 de contenido y las pruebas del DualShock) y ocho riesgos. Se juntaron el trabajo repetido entre listas (la grabación de las acciones en el *replay*, la navmesh en el binario de la zona y la recarga de la tabla de sonidos) y se separó el culling por zonas del culling por la niebla. M3 queda en curso, por partir en átomos |
 | 2026-11-09 | Se abre M3: sus 51 filas se parten en 62 átomos (+22 %), #91 a #152, con la numeración con punto. Lo que escribe a disco (el log, el archivo de CVars) espera al hilo de I/O: D1 y D2 quedan sin archivo en M3, y su escritura pasa a D8 y D9 en M6. CD2 porta lo que `platform::` tiene en M3, y los hilos y las carpetas de Windows pasan a CD10, en M6. RE9 (las carpetas XDG) sube de M7 a M6, antes de RE8, porque la tarjeta de memoria necesita su carpeta. Los agujeros de la tapa salen de CT3 a CT11, en M4, antes de CT6. Se suma el label `área:core` (manda la carpeta: fe de erratas del ADR-0033), y los identificadores van en inglés (fe de erratas del ADR-0013). La auditoría de #153 sumó las dependencias que los cuerpos usaban sin tenerlas (RE6 pasa después de C1), y anotó que D4 y D6 viven en memoria hasta el hilo de I/O. R1 se verifica por primera vez con D4, no con Tracy. Los verificadores de diagramas que faltaban entran como CI8, al principio de M4 |
 | 2026-11-10 | La auditoría de F2 (#92) encontró que ninguna fila recogía el resto de las verificaciones del ADR-0009: F2 cubre `std::shared_ptr` y las corrutinas, pero no la STL por zonas ni `virtual` solo en las fronteras. Entran como CI9 en M4, después de GL1 y EC1, cuando el código de cada frame (ADR-0012) ya existe |
+| 2026-11-16 | La auditoría de F5.3 (#101) encontró que el ADR-0008 y el ADR-0014 dan modos distintos para la matemática. Se anota en "Cómo se lee" que manda el ADR-0014, dueño de la regla de los modos: F5.1, F5.2 y F5.3 van en modo propuesto |

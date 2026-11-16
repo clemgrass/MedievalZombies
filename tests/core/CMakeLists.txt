@@ -5,6 +5,9 @@ mz_add_test_suite(core
         assert_ndebug_test.cpp
         handle_test.cpp
         result_test.cpp
+        scalar_test.cpp
+        vec_test.cpp
+        mat_test.cpp
     DEPS engine_core
 )
 

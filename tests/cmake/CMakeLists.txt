@@ -51,6 +51,11 @@ mz_add_cmake_case(cmake.flags.no_rtti CASE no_rtti
 mz_add_cmake_case(cmake.flags.result_nodiscard CASE result_nodiscard
     EXPECT "ignored\\.cpp.*nodiscard.*\\[-Werror(,-W|=)unused-(value|result)\\]")
 
+# == entre floats no compila: se compara con nearly_equal, o con exactly_equal cuando el
+# valor exacto es lo que se quiere.
+mz_add_cmake_case(cmake.flags.float_equal CASE float_equal
+    EXPECT "compared\\.cpp.*\\[-Werror[,=]-?W?float-equal\\]")
+
 # Un warning del código propio rompe el build en las tres configuraciones.
 foreach(build_type IN ITEMS Debug RelWithDebInfo Release)
     string(TOLOWER ${build_type} suffix)

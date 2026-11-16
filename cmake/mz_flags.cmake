@@ -23,6 +23,8 @@ target_compile_options(mz_warnings INTERFACE
     -Wsign-conversion
     -Wold-style-cast
     -Wdouble-promotion
+    # == y != entre floats: se compara con nearly_equal (o exactly_equal, a propósito).
+    -Wfloat-equal
     -Wnull-dereference
     -Wimplicit-fallthrough
     -Wnon-virtual-dtor

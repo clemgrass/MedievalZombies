@@ -1,8 +1,10 @@
+[English](README.en.md)
+
 # MedievalZombies
 
 Un juego de acción en tercera persona sobre un apocalipsis zombie medieval, con engine
-propio. Un caballero con armadura completa se abre paso a tajos de mandoble por un
-castillo tomado por los muertos. **Cada tajo lo apuntas y lo cargas tú, y corta la malla
+propio. Con armadura completa y un mandoble, te abres paso a tajos por un castillo
+tomado por los muertos. **Cada tajo lo apuntas y lo cargas tú, y corta la malla
 del zombie de verdad, por donde lo apuntaste.**
 
 > **En desarrollo temprano:** todavía no hay una versión jugable.
@@ -10,8 +12,8 @@ del zombie de verdad, por donde lo apuntaste.**
 ## El juego
 
 En un día de celebración, casi todo el castillo se convirtió en zombies, y nadie sabe por
-qué. La princesa quedó atrapada en la torre más alta, y un caballero tiene que atravesar
-el castillo y sus alrededores para llegar hasta ella.
+qué. La princesa quedó atrapada en la torre más alta, y hay que atravesar el castillo y
+sus alrededores para llegar hasta ella.
 
 ### El tajo
 
@@ -25,8 +27,8 @@ Aquí **el ángulo, la fuerza y el punto del corte los decide el jugador:**
   decide *por dónde* corta, y la fuerza *hasta dónde* llega: un brazo, un zombie entero
   o varios en línea.
 - **Todo pesa.** Cargar, corregir el ángulo, trotar y soltarse de un agarre gastan la
-  misma energía. El caballero no tiene barra de vida: los zombies lo agarran, y si se
-  queda sin energía antes de soltarse, muere.
+  misma energía. No hay barra de vida: los zombies te agarran, y si te quedas sin
+  energía antes de soltarte, mueres.
 
 ### Los enemigos
 
@@ -37,7 +39,7 @@ a la horda y se esconde detrás de un guardaespaldas acorazado.
 
 Un zombie partido no siempre muere. Un corte en la cabeza lo mata, pero mientras
 conserve la cabeza y algo más, sigue: si se corta por la cintura, la mitad de arriba se
-arrastra hacia el caballero.
+arrastra hacia ti.
 
 ### El estilo
 
@@ -69,7 +71,7 @@ solo estético: abarata el trabajo de la GPU y deja tiempo de CPU para cortar.
 El tajo corta la geometría de verdad: no es un efecto del shader ni un corte en puntos
 fijos. Cuando la hoja atraviesa a un zombie, dentro del paso de simulación pasa esto:
 
-1. **El plano.** El plano del tajo pasa por el pecho del caballero y por el punto
+1. **El plano.** El plano del tajo pasa por el pecho del personaje y por el punto
    apuntado, con la dirección de la línea que dibujó el jugador.
 2. **La pose.** El zombie se está moviendo, así que la CPU deforma su malla en la pose
    exacta del momento del golpe, con la misma cuenta que hace la GPU al dibujarlo.
@@ -106,7 +108,7 @@ un tercio de esos vértices: serían unos 0,2 a 0,3 ms.
 - **La fuerza se gasta al cruzar el cuerpo.** Cuanto más área atraviesa la hoja, más
   fuerza consume, y la que sobra sigue al zombie siguiente.
 - **La carne no frena la entrada, el metal sí.** Cada parte de la armadura tiene un
-  umbral de entrada. Bajo el umbral, el tajo rebota y el caballero queda aturdido un
+  umbral de entrada. Bajo el umbral, el tajo rebota y el personaje queda aturdido un
   momento.
 - **El ángulo y las juntas cuentan.** Un tajo que cruza el hueso de costado entra mejor
   que uno que corre a lo largo de él, y cerca de una articulación el umbral baja.
@@ -114,7 +116,7 @@ un tercio de esos vértices: serían unos 0,2 a 0,3 ms.
   atravesar, empieza una secuencia de *quick time*: el zombie avanza ensartado en la
   espada, el resto de la horda casi se detiene, y el jugador tiene que terminar el corte
   antes de que lo agarre o se quede sin energía.
-- **El impacto.** En cada tajo, el caballero y el zombie golpeado se congelan entre
+- **El impacto.** En cada tajo, el personaje y el zombie golpeado se congelan entre
   50 y 80 ms mientras el resto sigue (*hit-stop*). En los cortes especiales, una cámara
   lenta acompaña a la hoja a través del cuerpo.
 
@@ -182,3 +184,5 @@ Los warnings del código propio son errores. Para experimentar sin que detengan 
   [`CREDITS.md`](CREDITS.md).
 
 Más detalle técnico en [`docs/`](docs/README.md).
+
+Página en itch.io: https://cgrassdev.itch.io/medieval-zombies

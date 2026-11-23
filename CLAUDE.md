@@ -81,6 +81,8 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 
 - `README.md`: presentación pública del juego y del engine, sin el proceso, y cómo
   compilar;
+- `README.en.md`: la traducción al inglés de `README.md`. Si cambias `README.md`,
+  actualiza `README.en.md`;
 - `engine/`: un módulo por carpeta (`platform`, `core`, `gpu` y los sistemas), cada uno
   un target de CMake con su capa (ADR-0012);
 - `game/`: el ejecutable del juego;

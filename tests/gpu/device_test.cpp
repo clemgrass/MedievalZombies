@@ -71,6 +71,26 @@ VKAPI_ATTR VkResult VKAPI_CALL no_present(VkPhysicalDevice /*gpu*/, std::uint32_
     return VK_SUCCESS;
 }
 
+// Una superficie que solo ofrece colores lineales (UNORM), sin sRGB.
+VKAPI_ATTR VkResult VKAPI_CALL no_srgb(VkPhysicalDevice /*gpu*/, VkSurfaceKHR /*surface*/,
+                                       std::uint32_t *count, VkSurfaceFormatKHR *formats) {
+    if (formats != nullptr) {
+        formats[0] = {.format = VK_FORMAT_B8G8R8A8_UNORM,
+                      .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+    }
+    *count = 1;
+    return VK_SUCCESS;
+}
+
+// Una superficie que el compositor siempre mezcla con lo de atrás, según el alfa.
+VKAPI_ATTR VkResult VKAPI_CALL no_opaque(VkPhysicalDevice gpu, VkSurfaceKHR surface,
+                                         VkSurfaceCapabilitiesKHR *capabilities) {
+    const VkResult result = fake_loader::real<PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR>(
+        "vkGetPhysicalDeviceSurfaceCapabilitiesKHR")(gpu, surface, capabilities);
+    capabilities->supportedCompositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+    return result;
+}
+
 // La cadena que arma device_features: Features2 -> Vulkan12Features -> Vulkan13Features.
 VKAPI_ATTR void VKAPI_CALL no_synchronization2(VkPhysicalDevice gpu,
                                                VkPhysicalDeviceFeatures2 *features) {
@@ -215,6 +235,24 @@ TEST_F(DeviceTest, NeedsAQueueThatPresentsOnTheSurface) {
     const mz::gpu::init_error error = failure_of_device();
     EXPECT_EQ(error.m_failure, init_failure::no_suitable_gpu);
     EXPECT_EQ(error.m_name, "una cola de gráficos que presente en la ventana");
+}
+
+TEST_F(DeviceTest, NeedsAnSrgbFormatOnTheSurface) {
+    fake_loader::replace("vkGetPhysicalDeviceSurfaceFormatsKHR", &no_srgb);
+
+    const mz::gpu::init_error error = failure_of_device();
+    EXPECT_EQ(error.m_failure, init_failure::no_suitable_gpu);
+    EXPECT_EQ(error.m_name, mz::gpu::srgb_format_requirement);
+    EXPECT_FALSE(mz::gpu::purpose_of(error.m_name).empty());
+}
+
+TEST_F(DeviceTest, NeedsTheCompositorToIgnoreAlpha) {
+    fake_loader::replace("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", &no_opaque);
+
+    const mz::gpu::init_error error = failure_of_device();
+    EXPECT_EQ(error.m_failure, init_failure::no_suitable_gpu);
+    EXPECT_EQ(error.m_name, "VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR");
+    EXPECT_FALSE(mz::gpu::purpose_of(error.m_name).empty());
 }
 
 // El criterio del ticket: sin una feature, un error que la nombra, no un crash.

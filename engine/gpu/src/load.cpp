@@ -58,7 +58,7 @@ device_functions load_device(PFN_vkGetDeviceProcAddr get, VkDevice device) {
     return table;
 }
 
-void check_enumeration(VkResult result, const char *call) {
+void check_call(VkResult result, const char *call) {
     // Los códigos de éxito de Vulkan son >= 0 (VK_SUCCESS, VK_INCOMPLETE); los errores, < 0.
     MZ_CHECK(result >= 0, "{} devolvió el error {}", call, static_cast<int>(result));
 }

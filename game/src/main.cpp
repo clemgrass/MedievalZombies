@@ -1,7 +1,10 @@
+#include "mz/gpu/clear.h"
 #include "mz/gpu/device.h"
+#include "mz/gpu/frame_loop.h"
 #include "mz/gpu/init_error.h"
 #include "mz/gpu/instance.h"
 #include "mz/gpu/surface.h"
+#include "mz/gpu/swapchain.h"
 #include "mz/platform/context.h"
 #include "mz/platform/event.h"
 #include "mz/platform/message_box.h"
@@ -16,6 +19,7 @@
 #include <format>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 namespace {
 
@@ -25,9 +29,47 @@ using mz::platform::message_kind;
 
 constexpr std::string_view title = "MedievalZombies";
 
-// Lo que tarda en volver wait_event si no llega nada. Todavía no hay frames: el juego
-// duerme hasta el próximo evento.
-constexpr int event_timeout_ms = 100;
+// Mientras no se dibuja (la ventana minimizada), el juego igual da una vuelta por frame:
+// espera eventos hasta este tope. Lo que corre una vez por frame (el audio, cuando exista)
+// sigue vivo, y la CPU casi no trabaja.
+constexpr int idle_frame_ms = 16;
+
+// El fondo: un gris azulado oscuro, el ambiente frío de la noche. En lineal: el swapchain
+// sRGB lo convierte al escribirlo.
+constexpr VkClearColorValue background{{0.02F, 0.03F, 0.05F, 1.0F}};
+
+// Lo que dicen los eventos del frame.
+struct window_state {
+    bool m_quit = false;
+    bool m_minimized = false;
+    bool m_resized = false;
+};
+
+void apply(const event &received, window_state &state) {
+    switch (received.m_type) {
+    case event_type::quit_requested:
+        state.m_quit = true;
+        break;
+    case event_type::resized:
+        state.m_resized = true;
+        break;
+    // Cuando exista la pausa, minimizar la abre, como Esc. Mientras está minimizada, el
+    // juego no dibuja: nadie lo vería.
+    case event_type::minimized:
+        state.m_minimized = true;
+        break;
+    case event_type::restored:
+        state.m_minimized = false;
+        break;
+    default:
+        break;
+    }
+}
+
+VkExtent2D pixels_of(const mz::platform::window &target) {
+    const mz::platform::pixel_size size = target.size_in_pixels();
+    return {.width = size.m_width, .height = size.m_height};
+}
 
 // El texto de un mensaje, armado en la pila.
 using message_buffer = std::array<char, 1024>;
@@ -102,12 +144,52 @@ int main() {
         static_cast<void>(mz::platform::show_message(message_kind::warning, title, warning));
     }
 
+    mz::gpu::swapchain output =
+        mz::gpu::swapchain::create(vulkan.value(), gpu.value(), target, pixels_of(*main_window));
+    // Se destruye primero: al destruirse espera a que la GPU termine (vkDeviceWaitIdle), y
+    // después se destruye todo lo demás, en orden inverso.
+    mz::gpu::frame_loop frames = mz::gpu::frame_loop::create(gpu.value());
+
     // Sale solo con el aviso de cierre: el botón o el atajo del compositor, o Ctrl+C. Esc no
     // cierra el juego: va a abrir la pausa.
+    window_state state;
+    bool drawing = true;
     while (true) {
-        const std::optional<event> received = platform->wait_event(event_timeout_ms);
-        if (received && received->m_type == event_type::quit_requested) {
+        // Sin dibujar, nada frena la vuelta (con FIFO la frena el vsync): se espera el
+        // próximo evento, hasta un frame.
+        if (!drawing) {
+            if (const std::optional<event> received = platform->wait_event(idle_frame_ms)) {
+                apply(*received, state);
+            }
+        }
+        while (const std::optional<event> received = platform->poll_event()) {
+            apply(*received, state);
+        }
+        if (state.m_quit) {
             return 0;
+        }
+
+        // Tamaño 0: en Windows, la ventana minimizada. Un swapchain no puede medir 0.
+        const VkExtent2D size = pixels_of(*main_window);
+        drawing = !state.m_minimized && size.width != 0 && size.height != 0;
+        if (!drawing) {
+            continue;
+        }
+        // En Wayland, cambiar el tamaño no hace que la presentación avise: el swapchain se
+        // recrea con el evento.
+        if (std::exchange(state.m_resized, false)) {
+            output.recreate(size);
+        }
+
+        const std::optional<mz::gpu::frame> current = frames.begin(output);
+        if (!current) {
+            output.recreate(size);
+            continue;
+        }
+        mz::gpu::record_clear(gpu.value(), *current, background);
+        if (frames.end(*current, output, mz::gpu::clear_waits_image_at) ==
+            mz::gpu::present_result::recreate_swapchain) {
+            output.recreate(size);
         }
     }
 }

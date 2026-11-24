@@ -37,6 +37,8 @@
     X(vkGetPhysicalDeviceQueueFamilyProperties)                                                    \
     X(vkEnumerateDeviceExtensionProperties)                                                        \
     X(vkGetPhysicalDeviceSurfaceSupportKHR)                                                        \
+    X(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)                                                   \
+    X(vkGetPhysicalDeviceSurfaceFormatsKHR)                                                        \
     X(vkDestroySurfaceKHR)                                                                         \
     X(vkCreateDevice)                                                                              \
     X(vkGetDeviceProcAddr)
@@ -51,7 +53,31 @@
 
 #define MZ_VK_DEVICE_FUNCTIONS(X)                                                                  \
     X(vkDestroyDevice)                                                                             \
-    X(vkGetDeviceQueue)
+    X(vkGetDeviceQueue)                                                                            \
+    X(vkDeviceWaitIdle)                                                                            \
+    X(vkCreateSwapchainKHR)                                                                        \
+    X(vkDestroySwapchainKHR)                                                                       \
+    X(vkGetSwapchainImagesKHR)                                                                     \
+    X(vkAcquireNextImageKHR)                                                                       \
+    X(vkQueuePresentKHR)                                                                           \
+    X(vkCreateImageView)                                                                           \
+    X(vkDestroyImageView)                                                                          \
+    X(vkCreateSemaphore)                                                                           \
+    X(vkDestroySemaphore)                                                                          \
+    X(vkCreateFence)                                                                               \
+    X(vkDestroyFence)                                                                              \
+    X(vkWaitForFences)                                                                             \
+    X(vkResetFences)                                                                               \
+    X(vkCreateCommandPool)                                                                         \
+    X(vkDestroyCommandPool)                                                                        \
+    X(vkResetCommandPool)                                                                          \
+    X(vkAllocateCommandBuffers)                                                                    \
+    X(vkBeginCommandBuffer)                                                                        \
+    X(vkEndCommandBuffer)                                                                          \
+    X(vkQueueSubmit2)                                                                              \
+    X(vkCmdPipelineBarrier2)                                                                       \
+    X(vkCmdBeginRendering)                                                                         \
+    X(vkCmdEndRendering)
 
 namespace mz::gpu {
 

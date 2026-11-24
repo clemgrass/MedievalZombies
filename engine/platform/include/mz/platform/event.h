@@ -30,6 +30,10 @@ enum class event_type : std::uint8_t {
     resized,
     focus_gained,
     focus_lost,
+    // La minimizaron, o volvió a mostrarse. En Windows y X11; en Wayland la app nunca se
+    // entera, y no llegan. restored también llega al dejar de estar maximizada.
+    minimized,
+    restored,
     // Una tecla bajó o subió: m_key dice cuál, y m_repeat si es la repetición automática
     // del sistema con la tecla mantenida.
     key_down,

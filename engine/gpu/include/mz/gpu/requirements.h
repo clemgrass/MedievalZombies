@@ -32,6 +32,12 @@ inline constexpr std::array<const char *, 1> required_device_extensions = {
 inline constexpr std::string_view graphics_queue_requirement =
     "una cola de gráficos que presente en la ventana";
 
+// Lo que la superficie de la ventana tiene que aceptar para el swapchain (swapchain.h): un
+// formato sRGB, y que el compositor ignore el alfa de la imagen.
+inline constexpr std::string_view srgb_format_requirement =
+    "un formato sRGB para mostrar en la ventana";
+inline constexpr std::string_view opaque_requirement = "VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR";
+
 // Una feature, por su nombre, el miembro que la guarda en su estructura de Vulkan y para
 // qué la usa el juego (va en el mensaje si falta).
 template <typename Features> struct required_feature {

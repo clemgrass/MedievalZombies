@@ -7,6 +7,7 @@
 #include "mz/gpu/instance.h"
 #include "mz/gpu/requirements.h"
 #include "mz/gpu/surface.h"
+#include "mz/gpu/swapchain.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -43,9 +44,8 @@ std::optional<std::uint32_t> graphics_and_present_family(const instance_function
             continue;
         }
         VkBool32 presents = VK_FALSE;
-        detail::check_enumeration(
-            vk.vkGetPhysicalDeviceSurfaceSupportKHR(gpu, family, target, &presents),
-            "vkGetPhysicalDeviceSurfaceSupportKHR");
+        detail::check_call(vk.vkGetPhysicalDeviceSurfaceSupportKHR(gpu, family, target, &presents),
+                           "vkGetPhysicalDeviceSurfaceSupportKHR");
         if (presents == VK_TRUE) {
             return family;
         }
@@ -88,6 +88,24 @@ examined examine(const instance_functions &vk, VkPhysicalDevice gpu,
     const std::optional<std::uint32_t> family = graphics_and_present_family(vk, gpu, target);
     if (!family) {
         return lacking(graphics_queue_requirement);
+    }
+
+    // Lo que necesita el swapchain de la superficie. Se mira aquí, y no al crearlo, para que
+    // el juego lo diga al arrancar, como los demás requisitos.
+    const std::vector<VkSurfaceFormatKHR> formats = detail::enumerate<VkSurfaceFormatKHR>(
+        "vkGetPhysicalDeviceSurfaceFormatsKHR",
+        [&](std::uint32_t *count, VkSurfaceFormatKHR *items) {
+            return vk.vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, target, count, items);
+        });
+    if (!choose_surface_format(formats)) {
+        return lacking(srgb_format_requirement);
+    }
+    // NOLINTNEXTLINE(bugprone-invalid-enum-default-initialization): la llamada la llena entera.
+    VkSurfaceCapabilitiesKHR capabilities{};
+    detail::check_call(vk.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, target, &capabilities),
+                       "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
+    if ((capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) == 0) {
+        return lacking(opaque_requirement);
     }
 
     device_features supported;

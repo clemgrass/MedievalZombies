@@ -4,7 +4,7 @@
 
 namespace mz::core {
 
-/// Nombre del módulo. game/main.cpp lo usa para comprobar que las capas enlazan.
+/// Nombre del módulo. Relleno del primer ticket del build; lo prueba tests/core.
 std::string_view module_name();
 
 } // namespace mz::core

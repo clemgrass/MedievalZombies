@@ -10,7 +10,7 @@ vez. **La guía orienta, pero manda el texto del ADR.**
 |---|---|---|
 | [proceso](#proceso) | 0001, 0002, 0014, 0020, 0033 | **Siempre** |
 | [docs-y-adrs](#docs-y-adrs) | 0001, 0014 (reglas 8 y 11), `CLAUDE.md` | **Siempre** |
-| [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
+| [cpp-y-convenciones](#cpp-y-convenciones) | 0003, 0009, 0013, 0014 (reglas 8 y 10), 0036 (nombres de las tablas de Vulkan) | `*.cpp`, `*.hpp`, `*.h`, `*.inl`, `.clang-format`, `.clang-tidy`, `.editorconfig` |
 | [arquitectura](#arquitectura) | 0004, 0012, 0016 (consultas directas), 0020 | `engine/**`, `game/**`, cualquier `CMakeLists.txt`, `cmake/mz_module.cmake`, `docs/performance/**` |
 | [memoria](#memoria) | 0010 | `engine/core/**`, `engine/gpu/**`, o código que reserve, libere o guarde memoria (arenas, pools, allocators, contenedores) |
 | [build-y-licencias](#build-y-licencias) | 0006, 0013 (warnings), 0019, 0008 y 0009 (flags), 0035 (los builds de la CD: SDL3 estática, el loader de Vulkan en runtime, `-ffile-prefix-map`) | `CMakeLists.txt`, `CMakePresets.json`, `cmake/**`, `LICENSE*`, `LICENSES/**`, `REUSE.toml`, `CREDITS.md`, `assets/**`, `tools/third_party/**`, cualquier dependencia nueva |
@@ -176,7 +176,7 @@ Qué mirar:
 ## cpp-y-convenciones
 
 **ADRs:** 0003 (C++20), 0009 (subconjunto de C++), 0013 (convenciones y análisis
-estático), 0014 (reglas 8 y 10).
+estático), 0014 (reglas 8 y 10), 0036 (nombres de las tablas de funciones de Vulkan).
 
 Qué mirar:
 
@@ -191,6 +191,10 @@ Qué mirar:
   memoria dinámica en el camino de cada frame si el ADR lo restringe.
 - **Nombres (ADR-0013):** estilo STL en `snake_case`, miembros con prefijo `m_`,
   macros en `MAYÚSCULAS` e **identificadores en inglés** (fe de erratas, #153).
+  **Excepción (ADR-0036):** los punteros de las tablas de funciones de Vulkan en
+  `engine/gpu` llevan el nombre de la especificación (`vkCreateDevice`), sin `m_`, y la
+  aplica `engine/gpu/.clang-tidy`. Esa excepción en otra carpeta, o para otros nombres, es
+  un hallazgo.
 - **Headers y namespaces (fe de erratas del ADR-0013, #91):** los headers públicos de un
   módulo van en `engine/<módulo>/include/mz/<módulo>/*.h`, se incluyen como
   `"mz/<módulo>/<archivo>.h"`, y el código va en `mz::<módulo>`. Un `include/` que no

@@ -15,6 +15,8 @@
 #include "mz/platform/context.h"
 #include "mz/platform/event.h"
 
+#include <vulkan/vulkan_core.h>
+
 #include <cstdint>
 #include <optional>
 
@@ -37,6 +39,13 @@ public:
 
     // El tamaño actual en píxeles reales: el que va a tener el swapchain.
     [[nodiscard]] pixel_size size_in_pixels() const;
+
+    // Crea la superficie de Vulkan de esta ventana: donde el swapchain presenta. La
+    // instancia tiene que haberse creado con vulkan_library::instance_extensions().
+    // VK_NULL_HANDLE si no se puede; el motivo queda en last_error(). La superficie es de
+    // quien la pide: la destruye con vkDestroySurfaceKHR antes que la instancia y que esta
+    // ventana.
+    [[nodiscard]] VkSurfaceKHR create_vulkan_surface(VkInstance instance) const;
 
 private:
     explicit window(void *native) : m_native(native) {}

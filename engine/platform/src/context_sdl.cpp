@@ -1,6 +1,6 @@
 #include "mz/platform/context.h"
 
-#include "open_windows.h"
+#include "dependents.h"
 
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
@@ -25,6 +25,11 @@ bool &context_alive() {
 }
 
 int &open_windows() {
+    static int count = 0;
+    return count;
+}
+
+int &loaded_vulkan_libraries() {
     static int count = 0;
     return count;
 }
@@ -108,6 +113,10 @@ context::~context() {
     if (open_windows() != 0) {
         fail("se destruye con una ventana viva; la ventana se destruye antes que su context");
     }
+    if (loaded_vulkan_libraries() != 0) {
+        fail("se destruye con el loader de Vulkan cargado; vulkan_library se destruye antes "
+             "que su context");
+    }
     // Cierra todo SDL, y con él el origen del reloj.
     SDL_Quit();
     context_alive() = false;
@@ -142,6 +151,9 @@ namespace detail {
 
 void window_opened() { ++open_windows(); }
 void window_closed() { --open_windows(); }
+
+void vulkan_loaded() { ++loaded_vulkan_libraries(); }
+void vulkan_unloaded() { --loaded_vulkan_libraries(); }
 
 } // namespace detail
 

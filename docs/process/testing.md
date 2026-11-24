@@ -67,3 +67,32 @@ enlaza a cada ejecutable. Define dos cosas:
 - un constructor que corre antes de `main` y pone
   `VK_LOADER_DISABLE_DYNAMIC_LIBRARY_UNLOADING=1`, para que el loader de Vulkan no
   descargue sus drivers antes de que LSan reporte.
+
+## Los tests de Vulkan
+
+Los tests de `engine/gpu` corren con lavapipe y la ventana `offscreen`, como los de la
+ventana (`OffscreenTest`, en `tests/support`). La validación la prende cada preset con
+`MZ_VULKAN_VALIDATION`, y los presets que corren tests (`debug`, `debug-gcc` y
+`coverage`) la tienen encendida: un error de la validación aborta el test con su mensaje,
+y los warnings se cuentan con `gpu::validation_warnings()`. En un build sin ella, cada
+test de gpu que usa Vulkan falla al empezar, con un mensaje que lo dice.
+
+### Los caminos de error, con un loader falso
+
+Una GPU sin una feature, un driver viejo o un `vkCreateDevice` que falla no se pueden
+pedir a lavapipe. Los tests los provocan con un loader falso, `tests/gpu/fake_loader.h`.
+
+`engine/gpu` pide todas sus funciones a partir de un solo puntero,
+`vkGetInstanceProcAddr`. El falso envuelve al real y devuelve lo mismo que él, salvo las
+funciones que el test reemplaza. También envuelve `vkGetDeviceProcAddr`, que sale del
+primero:
+
+```cpp
+fake_loader::replace("vkGetPhysicalDeviceFeatures2", &no_synchronization2);
+const vulkan_setup setup;   // la instancia se crea con el loader falso
+const auto made = device::create(setup.m_instance, setup.m_surface);   // falla
+```
+
+Un reemplazo vale para los objetos que se crean después de pedirlo, porque gpu carga sus
+tablas al crear cada objeto. El código de producción no tiene ningún gancho para los
+tests: la tabla propia de funciones ya es el punto de entrada.

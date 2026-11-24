@@ -10,6 +10,7 @@ project(MedievalZombies
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(mz_module)
 include(mz_sdl3)
+include(mz_vulkan)
 
 enable_testing()
 

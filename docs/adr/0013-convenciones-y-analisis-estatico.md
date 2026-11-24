@@ -3,7 +3,8 @@
 - **Estado:** Aceptado
 - **Fecha:** 2026-10-18
 - **Ticket:** #23
-- **Reemplaza / Reemplazado por:** —
+- **Reemplaza / Reemplazado por:** una parte de la Decisión 2 (el `m_` y el `snake_case`
+  de los punteros de las tablas de funciones de Vulkan en `engine/gpu`), por el ADR-0036
 - **Fe de erratas:** 2026-11-01 (#51): "`-Werror` en todas las configuraciones" vale para
   el código propio. Los warnings se aplican por target, con un target de interfaz que
   solo enlazan los targets propios, nunca con `add_compile_options`: el *spike* del

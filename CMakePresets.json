@@ -24,7 +24,8 @@
             "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "MZ_SANITIZE": "ON"
+                "MZ_SANITIZE": "ON",
+                "MZ_VULKAN_VALIDATION": "ON"
             }
         },
         {
@@ -42,7 +43,8 @@
             "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "MZ_COVERAGE": "ON"
+                "MZ_COVERAGE": "ON",
+                "MZ_VULKAN_VALIDATION": "ON"
             }
         },
         {

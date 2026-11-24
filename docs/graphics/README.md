@@ -11,3 +11,5 @@ Investigación: [`research/api-grafica.md`](research/api-grafica.md),
 
 - [`adr/`](adr/): ADRs del área.
 - [`research/`](research/): notas largas de investigación y resúmenes de papers.
+- [`diagramas/`](diagramas/README.md): los diagramas de `engine/gpu` y del renderer, tal
+  como están construidos (el frame mínimo).

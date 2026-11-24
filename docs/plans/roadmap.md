@@ -326,7 +326,7 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | UI5 | controles immediate mode, foco y navegación | 0026 | UI4 | estricto | — |
 | UI8 | subtítulos | 0026 | UI4, AU5 | — | — |
 | UI9 | ayudas del HUD, avisos y línea del tajo | 0026, 0031 | UI4, CA3 | — | — |
-| UI6 | pila de pantallas y pausa | 0026, 0012, 0024 | UI5, GL1 | — | — |
+| UI6 | pila de pantallas y pausa; minimizar la ventana (el evento `minimized` de platform) abre la pausa, como Esc | 0026, 0012, 0024 | UI5, GL1 | — | — |
 | UI7 | íconos por dispositivo | 0026, 0032 | UI5, IN8 | — | — |
 | UI11 | accesibilidad: acento, x2, placas, lista viva | 0026 | UI8 | — | — |
 | CA9 | opciones de cámara en el menú | 0031, 0026 | CA2, UI5 | — | — |
@@ -360,3 +360,4 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | 2026-11-09 | Se abre M3: sus 51 filas se parten en 62 átomos (+22 %), #91 a #152, con la numeración con punto. Lo que escribe a disco (el log, el archivo de CVars) espera al hilo de I/O: D1 y D2 quedan sin archivo en M3, y su escritura pasa a D8 y D9 en M6. CD2 porta lo que `platform::` tiene en M3, y los hilos y las carpetas de Windows pasan a CD10, en M6. RE9 (las carpetas XDG) sube de M7 a M6, antes de RE8, porque la tarjeta de memoria necesita su carpeta. Los agujeros de la tapa salen de CT3 a CT11, en M4, antes de CT6. Se suma el label `área:core` (manda la carpeta: fe de erratas del ADR-0033), y los identificadores van en inglés (fe de erratas del ADR-0013). La auditoría de #153 sumó las dependencias que los cuerpos usaban sin tenerlas (RE6 pasa después de C1), y anotó que D4 y D6 viven en memoria hasta el hilo de I/O. R1 se verifica por primera vez con D4, no con Tracy. Los verificadores de diagramas que faltaban entran como CI8, al principio de M4 |
 | 2026-11-10 | La auditoría de F2 (#92) encontró que ninguna fila recogía el resto de las verificaciones del ADR-0009: F2 cubre `std::shared_ptr` y las corrutinas, pero no la STL por zonas ni `virtual` solo en las fronteras. Entran como CI9 en M4, después de GL1 y EC1, cuando el código de cada frame (ADR-0012) ya existe |
 | 2026-11-16 | La auditoría de F5.3 (#101) encontró que el ADR-0008 y el ADR-0014 dan modos distintos para la matemática. Se anota en "Cómo se lee" que manda el ADR-0014, dueño de la regla de los modos: F5.1, F5.2 y F5.3 van en modo propuesto |
+| 2026-11-24 | En G1.2 (#104), el autor decidió qué pasa al minimizar la ventana: el juego se pausa, como con Esc, y no dibuja mientras está minimizada. `platform` suma los eventos `minimized` y `restored`, y la fila UI6 anota que el evento abre la pausa |

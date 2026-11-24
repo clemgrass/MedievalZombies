@@ -76,6 +76,10 @@ std::optional<event> translate(const SDL_Event &sdl_event) {
         return of_type(event_type::focus_gained);
     case SDL_EVENT_WINDOW_FOCUS_LOST:
         return of_type(event_type::focus_lost);
+    case SDL_EVENT_WINDOW_MINIMIZED:
+        return of_type(event_type::minimized);
+    case SDL_EVENT_WINDOW_RESTORED:
+        return of_type(event_type::restored);
     // Por el scancode (la posición), no por el keycode (la letra que da según la
     // distribución del teclado).
     case SDL_EVENT_KEY_DOWN:

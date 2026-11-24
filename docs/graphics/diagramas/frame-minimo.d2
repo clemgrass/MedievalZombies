@@ -1,0 +1,56 @@
+# El frame mínimo de engine/gpu, nivel de proceso: adquirir, grabar, enviar y presentar.
+# Lo que hace cada vuelta del juego para pintar la ventana de un color. Las funciones son
+# las de mz/gpu/frame_loop.h, mz/gpu/clear.h y mz/gpu/swapchain.h (recreate); el ejemplo
+# lo escribe FrameLoopTest.WritesTheDiagramExample (tests/gpu/frame_test.cpp).
+...@../../diagramas/leyenda
+...@"frame-minimo.ejemplo.d2"
+
+direction: down
+
+title: |md
+  # El frame mínimo, nivel de proceso
+
+  Adquirir → grabar → enviar → presentar, con 2 frames en vuelo.
+| {near: top-center; width: 640}
+
+swapchain: "swapchain\nlas imágenes de la ventana" {class: data}
+frame: "frame\nel slot, su command buffer\ny la imagen que le tocó" {class: data}
+present_result: "present_result\nsi hay que recrear el swapchain" {class: data}
+
+begin: "1. frame_loop::begin()\n\nespera la fence del slot,\nadquiere una imagen,\ny recién entonces resetea la fence\ny abre el command buffer" {
+  class: func
+}
+record_clear: "2. record_clear()\n\nbarrera: UNDEFINED →\nCOLOR_ATTACHMENT_OPTIMAL,\ndesde COLOR_ATTACHMENT_OUTPUT\n\nclear con dynamic rendering\n\nbarrera: → PRESENT_SRC_KHR" {
+  class: func
+}
+end: "3. frame_loop::end()\n\nvkQueueSubmit2(): envía el command buffer\nvkQueuePresentKHR(): presenta la imagen" {
+  class: func
+}
+recreate: "swapchain::recreate()\n\nsolo cuando el swapchain ya no sirve:\nespera a la GPU (vkDeviceWaitIdle)\ny lo rehace con el tamaño de la ventana" {
+  class: func
+}
+
+m_done: "fence del slot\nm_done, una por frame en vuelo" {class: gpu}
+m_acquired: "semáforo de imagen adquirida\nm_acquired, uno por frame en vuelo" {class: gpu}
+m_rendered: "semáforo de render terminado\nm_rendered, uno por imagen" {class: gpu}
+
+swapchain -> begin: {class: flow}
+begin -> frame: "si hubo imagen\n(std::optional<frame>)" {class: flow}
+begin -> recreate: "vacío si OUT_OF_DATE:\nla fence queda señalada" {class: flow}
+present_result -> recreate: "recreate_swapchain" {class: flow}
+recreate -> swapchain: "lo rehace" {class: flow}
+frame -> record_clear: {class: flow}
+frame -> end: {class: flow}
+swapchain -> end: {class: flow}
+end -> present_result: {class: flow}
+
+m_done -> begin: "la CPU la espera:\nla GPU terminó este slot" {class: flow}
+end -> m_done: "la GPU la señala\nal terminar el frame" {class: flow}
+begin -> m_acquired: "la presentación lo señala\ncuando suelta la imagen" {class: flow}
+m_acquired -> end: "el envío lo espera\nen COLOR_ATTACHMENT_OUTPUT" {class: flow}
+end -> m_rendered: "el envío\nlo señala" {class: flow}
+m_rendered -> end: "la presentación\nlo espera" {class: flow}
+
+swapchain -- example_swapchain: {class: note}
+frame -- example_frame: {class: note}
+present_result -- example_present_result: {class: note}

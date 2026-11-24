@@ -80,6 +80,12 @@ std::string_view purpose_of(std::string_view requirement) {
     if (requirement == graphics_queue_requirement) {
         return "mandarle a la GPU el trabajo de dibujar y mostrar cada imagen";
     }
+    if (requirement == srgb_format_requirement) {
+        return "mostrar los colores como se ven en la pantalla, sin aclararlos ni oscurecerlos";
+    }
+    if (requirement == opaque_requirement) {
+        return "que la ventana no se vea transparente: el juego guarda otra cosa en el alfa";
+    }
     return {};
 }
 

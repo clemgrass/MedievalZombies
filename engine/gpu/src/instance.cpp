@@ -9,6 +9,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -78,8 +79,23 @@ bool has_layer(const global_functions &global, std::string_view name) {
     }
     layers.push_back(validation_layer_name);
     wanted.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    wanted.push_back(VK_EXT_LAYER_SETTINGS_EXTENSION_NAME);
     return std::nullopt;
 }
+
+// La validación de sincronización: además de revisar cada llamada, la layer sigue qué lee y
+// qué escribe cada comando en cada recurso, y avisa de un *hazard*: una lectura o una
+// escritura sin una barrera que la ordene con la anterior (por ejemplo, el clear de una
+// imagen que la presentación todavía está leyendo). Viene apagada porque cuesta: la layer
+// guarda la historia de acceso de cada recurso. Los hazards llegan como errores: abortan.
+constexpr VkBool32 sync_validation = VK_TRUE;
+constexpr std::array<VkLayerSettingEXT, 1> validation_settings = {{
+    {.pLayerName = validation_layer_name,
+     .pSettingName = "validate_sync",
+     .type = VK_LAYER_SETTING_TYPE_BOOL32_EXT,
+     .valueCount = 1,
+     .pValues = &sync_validation},
+}};
 
 // La primera de `wanted` que el loader no tiene, o vacío.
 std::string_view first_missing_extension(const global_functions &global,
@@ -111,8 +127,7 @@ std::optional<init_error> instance::build(PFN_vkGetInstanceProcAddr get,
         return init_error{.m_failure = init_failure::old_vulkan, .m_name = required_api_name};
     }
     std::uint32_t version = 0;
-    detail::check_enumeration(global.vkEnumerateInstanceVersion(&version),
-                              "vkEnumerateInstanceVersion");
+    detail::check_call(global.vkEnumerateInstanceVersion(&version), "vkEnumerateInstanceVersion");
     if (version < required_api_version) {
         return init_error{.m_failure = init_failure::old_vulkan, .m_name = required_api_name};
     }
@@ -143,11 +158,19 @@ std::optional<init_error> instance::build(PFN_vkGetInstanceProcAddr get,
     // El messenger también va en la cadena de la instancia: así recibe los mensajes de
     // vkCreateInstance y vkDestroyInstance, cuando el messenger propio todavía no existe o
     // ya no existe.
+    // Delante, los ajustes de la layer (la validación de sincronización). El messenger va
+    // último: se reusa tal cual para crear el propio, y ahí su pNext tiene que ser nulo.
     const VkDebugUtilsMessengerCreateInfoEXT messages = messenger_info();
+    const VkLayerSettingsCreateInfoEXT settings{
+        .sType = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
+        .pNext = &messages,
+        .settingCount = static_cast<std::uint32_t>(validation_settings.size()),
+        .pSettings = validation_settings.data(),
+    };
     VkInstanceCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     if constexpr (validation_enabled) {
-        info.pNext = &messages;
+        info.pNext = &settings;
     }
     info.pApplicationInfo = &application;
     info.enabledLayerCount = static_cast<std::uint32_t>(layers.size());

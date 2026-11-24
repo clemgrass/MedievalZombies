@@ -25,7 +25,7 @@ docs/
 ├── research/        notas de investigación de los ADRs transversales
 ├── diagramas/       diagramas técnicos transversales (el frame), la leyenda común y el
 │                    diagrama teórico del proyecto (lo que eligió cada ADR)
-├── graphics/        renderer: README, adr/, research/
+├── graphics/        renderer: README, adr/, research/, diagramas/
 ├── slicing/         corte de mallas: README, adr/, research/
 ├── animation/       animación: README, adr/, research/
 ├── physics/         física: README, adr/, research/

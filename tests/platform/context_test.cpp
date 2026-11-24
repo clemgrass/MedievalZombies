@@ -101,6 +101,14 @@ TEST_F(ContextTest, FocusArrivesGainedAndLost) {
     EXPECT_EQ(next(platform).m_type, event_type::focus_lost);
 }
 
+TEST_F(ContextTest, MinimizingArrivesMinimizedAndRestored) {
+    context platform = started();
+    push(window_event(SDL_EVENT_WINDOW_MINIMIZED));
+    push(window_event(SDL_EVENT_WINDOW_RESTORED));
+    EXPECT_EQ(next(platform).m_type, event_type::minimized);
+    EXPECT_EQ(next(platform).m_type, event_type::restored);
+}
+
 TEST_F(ContextTest, EscapeArrivesByItsPosition) {
     context platform = started();
     push(key_event(SDL_EVENT_KEY_DOWN, SDL_SCANCODE_ESCAPE));

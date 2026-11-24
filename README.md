@@ -135,7 +135,9 @@ un tercio de esos vértices: serían unos 0,2 a 0,3 ms.
 
 ## Compilar
 
-En Linux, con CMake 3.29 o más nuevo, Ninja, Clang y `lld`:
+En Linux, con CMake 3.29 o más nuevo, Ninja, Clang y `lld`, más SDL3 y GoogleTest. Los
+tests de la ventana corren sin pantalla y usan el driver de Vulkan por software de Mesa,
+lavapipe (en Arch: `sdl3 gtest vulkan-icd-loader vulkan-swrast`):
 
 ```bash
 cmake --preset debug
@@ -143,6 +145,9 @@ cmake --build --preset debug
 ctest --preset debug
 ./build/debug/game/game
 ```
+
+SDL3 sale del sistema. Con `-DMZ_VENDOR_SDL3=ON`, CMake baja y compila una copia con la
+versión fijada, la misma en todas las máquinas.
 
 Hay cinco presets: `debug` (con AddressSanitizer y UndefinedBehaviorSanitizer),
 `debug-gcc` (lo mismo con GCC, el compilador secundario), `relwithdebinfo` (optimizado,

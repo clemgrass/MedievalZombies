@@ -1,6 +1,8 @@
 mz_add_test_suite(platform
     SOURCES
-        platform_test.cpp
+        context_test.cpp
         memory_test.cpp
-    DEPS engine_platform
+        window_test.cpp
+    # SDL3 directo: los tests de platform inyectan eventos de SDL y miran sus ventanas.
+    DEPS engine_platform SDL3::SDL3
 )

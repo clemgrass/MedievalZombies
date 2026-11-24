@@ -65,6 +65,26 @@ if(MZ_SANITIZE)
     )
     target_compile_options(mz_sanitizers INTERFACE ${sanitize_flags})
     target_link_options(mz_sanitizers INTERFACE ${sanitize_flags})
+
+    # El soporte de los sanitizers que va dentro de cada ejecutable (lo enlazan
+    # mz_add_module y mz_add_test_executable): las supresiones de LSan para las fugas de
+    # terceros, y los drivers de Vulkan cargados hasta el final para que LSan los
+    # reconozca. Si cambia la lista, CMake vuelve a configurar.
+    set(sanitizers_dir ${CMAKE_CURRENT_LIST_DIR}/../tools/sanitizers)
+    set(MZ_LSAN_SUPPRESSIONS_FILE ${sanitizers_dir}/lsan.supp)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${MZ_LSAN_SUPPRESSIONS_FILE})
+    file(READ ${MZ_LSAN_SUPPRESSIONS_FILE} MZ_LSAN_SUPPRESSIONS)
+    configure_file(${sanitizers_dir}/sanitizer_support.cpp.in
+        ${CMAKE_BINARY_DIR}/sanitizers/sanitizer_support.cpp @ONLY)
+    add_library(mz_sanitizer_support OBJECT ${CMAKE_BINARY_DIR}/sanitizers/sanitizer_support.cpp)
+    # Es código propio, aunque generado: se compila con las reglas de todos los targets.
+    target_compile_features(mz_sanitizer_support PRIVATE cxx_std_20)
+    set_target_properties(mz_sanitizer_support PROPERTIES
+        CXX_EXTENSIONS OFF
+        CXX_SCAN_FOR_MODULES OFF
+        COMPILE_WARNING_AS_ERROR ON
+    )
+    target_link_libraries(mz_sanitizer_support PRIVATE mz_warnings mz_engine_flags)
 endif()
 
 # Cobertura de Clang: cada ejecutable escribe sus contadores en un .profraw, y llvm-cov

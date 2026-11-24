@@ -30,3 +30,5 @@ para saber de dónde vino cada archivo.
 | [libvorbis](https://xiph.org/vorbis/) | BSD-3-Clause | Codificar la música en Vorbis, solo en el cocinador de assets (ADR-0024) |
 | [libogg](https://xiph.org/ogg/) | BSD-3-Clause | Contenedor Ogg de la música, solo en el cocinador de assets (ADR-0024) |
 | [GoogleTest](https://github.com/google/googletest) | BSD-3-Clause | Tests del engine, solo en los ejecutables de tests; no se distribuye (ADR-0011) |
+| [lavapipe](https://docs.mesa3d.org/drivers/llvmpipe.html) (Mesa) | MIT | Driver de Vulkan por software: los tests de la ventana corren sin GPU y sin pantalla; no se distribuye (ADR-0011) |
+| [Vulkan-Loader](https://github.com/KhronosGroup/Vulkan-Loader) | Apache-2.0 | Carga el driver de Vulkan en los tests; no se distribuye: el juego usa el loader del sistema del jugador, que SDL3 carga en runtime (ADR-0035) |

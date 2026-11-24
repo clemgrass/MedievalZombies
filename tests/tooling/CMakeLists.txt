@@ -45,6 +45,34 @@ mz_tooling_test(tooling.subset.coroutine
 mz_tooling_test(tooling.subset.clean
     COMMAND bash ${tools_dir}/cpp-subset.sh ${fixtures}/subset_clean.cpp)
 
+# SDL: solo se incluye en los .cpp de platform y en sus tests, y su renderer y su API
+# gráfica no se usan en ningún lado. Los casos por carpeta ponen el mismo fixture en
+# distintas rutas de un repo falso.
+mz_tooling_test(tooling.subset.sdl_outside_platform
+    COMMAND bash ${tools_dir}/cpp-subset.sh ${fixtures}/sdl_outside_platform.cpp
+    EXPECT "sdl_outside_platform\\.cpp:4: SDL solo se incluye en engine/platform/src")
+mz_tooling_test(tooling.subset.sdl_renderer
+    COMMAND bash ${tools_dir}/cpp-subset.sh ${fixtures}/sdl_renderer.cpp
+    EXPECT "sdl_renderer\\.cpp:4: SDL_GPU y SDL_Renderer están prohibidos")
+
+function(mz_subset_path_test test_name relative_path)
+    mz_tooling_test(${test_name}
+        COMMAND ${CMAKE_COMMAND}
+            -DSCRIPT=${tools_dir}/cpp-subset.sh
+            -DFIXTURE=${fixtures}/sdl_outside_platform.cpp
+            -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/${test_name}
+            -DRELATIVE_PATH=${relative_path}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_subset_path_case.cmake
+        ${ARGN})
+endfunction()
+
+# Un header público de platform lo incluye el resto del engine: no puede traer SDL.
+mz_subset_path_test(tooling.subset.sdl_platform_public_header
+    engine/platform/include/mz/platform/leak.h
+    EXPECT "leak\\.h:4: SDL solo se incluye en engine/platform/src")
+mz_subset_path_test(tooling.subset.sdl_platform_source engine/platform/src/leak.cpp)
+mz_subset_path_test(tooling.subset.sdl_platform_tests tests/platform/leak_test.cpp)
+
 # Qué cambió un PR: de esta decisión dependen los jobs que la CI salta, y un salto cuenta
 # como éxito. Cada caso es un repo git temporal donde el PR agrega un solo archivo.
 function(mz_changes_test test_name changed_file expected)
@@ -61,6 +89,8 @@ mz_changes_test(tooling.changes.docs_only docs/notas.md "code=false")
 mz_changes_test(tooling.changes.engine engine/core/a.cpp "code=true")
 # Un C++ fuera de las carpetas de código también cuenta: el formato revisa todo el C++.
 mz_changes_test(tooling.changes.cpp_elsewhere tools/otra/a.cpp "code=true")
+# La lista de supresiones de LSan no es C++, pero va compilada en cada ejecutable de debug.
+mz_changes_test(tooling.changes.lsan_suppressions tools/sanitizers/lsan.supp "code=true")
 # Sin base (un push a main), todo cuenta como cambiado.
 mz_tooling_test(tooling.changes.no_base
     COMMAND bash ${tools_dir}/changes.sh

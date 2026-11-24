@@ -133,7 +133,9 @@ about 0.2 to 0.3 ms.
 
 ## Building
 
-On Linux, with CMake 3.29 or newer, Ninja, Clang and `lld`:
+On Linux, with CMake 3.29 or newer, Ninja, Clang and `lld`, plus SDL3 and GoogleTest. The
+window tests run without a display and use Mesa's software Vulkan driver, lavapipe (on
+Arch: `sdl3 gtest vulkan-icd-loader vulkan-swrast`):
 
 ```bash
 cmake --preset debug
@@ -141,6 +143,9 @@ cmake --build --preset debug
 ctest --preset debug
 ./build/debug/game/game
 ```
+
+SDL3 comes from the system. With `-DMZ_VENDOR_SDL3=ON`, CMake downloads and builds a copy
+pinned to a fixed version, the same on every machine.
 
 There are five presets: `debug` (with AddressSanitizer and UndefinedBehaviorSanitizer),
 `debug-gcc` (the same with GCC, the secondary compiler), `relwithdebinfo` (optimized,

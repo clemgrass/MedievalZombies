@@ -44,6 +44,10 @@ function(mz_add_module name)
 
     if(arg_EXECUTABLE)
         add_executable(${name} ${arg_SOURCES})
+        # Con sanitizers, cada ejecutable lleva su soporte (cmake/mz_flags.cmake).
+        if(TARGET mz_sanitizer_support)
+            target_link_libraries(${name} PRIVATE mz_sanitizer_support)
+        endif()
     else()
         add_library(${name} STATIC ${arg_SOURCES})
     endif()

@@ -1,0 +1,23 @@
+// Soporte de los sanitizers que va dentro de cada ejecutable del preset debug (el juego y
+// los tests). CMake genera este archivo con el contenido de tools/sanitizers/lsan.supp; no
+// se edita a mano.
+
+#include <cstdlib>
+
+// LeakSanitizer llama a esta función al arrancar, si el ejecutable la define, y usa lo que
+// devuelve como su lista de supresiones. Así no hace falta LSAN_OPTIONS.
+extern "C" const char *__lsan_default_suppressions() {
+    return R"mz_lsan_supp(@MZ_LSAN_SUPPRESSIONS@)mz_lsan_supp";
+}
+
+namespace {
+
+// Una supresión por módulo solo encuentra la fuga si la biblioteca sigue cargada cuando
+// LSan reporta, al salir. El loader de Vulkan descarga sus drivers antes, y la fuga
+// aparecería como "<unknown module>". Corre antes de main, antes de que nadie cargue
+// Vulkan, y no pisa un valor que ya venga en el entorno.
+[[gnu::constructor]] void keep_vulkan_drivers_loaded() {
+    setenv("VK_LOADER_DISABLE_DYNAMIC_LIBRARY_UNLOADING", "1", 0);
+}
+
+} // namespace

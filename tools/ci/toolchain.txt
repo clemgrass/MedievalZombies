@@ -24,7 +24,10 @@ ninja
 sdl3
 gtest
 
-# Vulkan para los tests de platform, sin GPU: el loader, y lavapipe, el driver de software
-# de Mesa. Los tests usan solo ese driver, en la CI y en la máquina.
+# Vulkan: los headers, para compilar gpu. Y para los tests de platform y gpu, sin GPU: el
+# loader, lavapipe (el driver de software de Mesa) y las validation layers, que en debug
+# revisan cada llamada. Los tests usan solo lavapipe, en la CI y en la máquina.
+vulkan-headers
 vulkan-icd-loader
 vulkan-swrast
+vulkan-validation-layers

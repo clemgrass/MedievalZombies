@@ -77,3 +77,18 @@ mz_add_cmake_case(cmake.warnings.dependency_isolated CASE dependency_warnings)
 mz_add_cmake_case(cmake.warnings.dependency_global_flags CASE dependency_warnings
     OPTION -DMZ_GLOBAL_WARNINGS=ON
     EXPECT "noisy\\.cpp.*\\[-Werror[,=]")
+
+# Vulkan sin enlazar el loader. Con VK_NO_PROTOTYPES, llamar a una función de Vulkan
+# directo no compila: todas pasan por la tabla de engine/gpu. GCC cita el nombre antes del
+# mensaje, con comillas que dependen del locale (ver no_rtti).
+mz_add_cmake_case(cmake.vulkan.no_prototypes CASE vulkan_no_prototypes
+    EXPECT "direct_call\\.cpp.*(undeclared identifier 'vkCreateInstance'|vkCreateInstance.+ was not declared in this scope)")
+
+# Y el ejecutable no carga libvulkan al arrancar: la carga SDL3 en runtime. ldd lista todo
+# lo que carga, también lo que piden sus dependencias. PASS pide que ldd haya respondido
+# (libc siempre está); FAIL, que libvulkan no aparezca.
+add_test(NAME cmake.vulkan.game_does_not_link_libvulkan COMMAND ldd $<TARGET_FILE:game>)
+set_tests_properties(cmake.vulkan.game_does_not_link_libvulkan PROPERTIES
+    LABELS cmake
+    PASS_REGULAR_EXPRESSION "libc\\.so"
+    FAIL_REGULAR_EXPRESSION "libvulkan")

@@ -1,0 +1,8 @@
+# Las reglas de la raíz, más una excepción que solo vale en engine/gpu.
+InheritParentConfig: true
+
+CheckOptions:
+  # Los punteros de las tablas de funciones de Vulkan se llaman como la función en la
+  # especificación (functions.vkCreateDevice), sin m_: así una llamada se busca tal cual en
+  # la especificación y en los mensajes de la validación.
+  readability-identifier-naming.MemberIgnoredRegexp: '^vk[A-Z][A-Za-z0-9]*$'

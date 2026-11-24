@@ -32,3 +32,4 @@ para saber de dónde vino cada archivo.
 | [GoogleTest](https://github.com/google/googletest) | BSD-3-Clause | Tests del engine, solo en los ejecutables de tests; no se distribuye (ADR-0011) |
 | [lavapipe](https://docs.mesa3d.org/drivers/llvmpipe.html) (Mesa) | MIT | Driver de Vulkan por software: los tests de la ventana corren sin GPU y sin pantalla; no se distribuye (ADR-0011) |
 | [Vulkan-Loader](https://github.com/KhronosGroup/Vulkan-Loader) | Apache-2.0 | Carga el driver de Vulkan en los tests; no se distribuye: el juego usa el loader del sistema del jugador, que SDL3 carga en runtime (ADR-0035) |
+| [Vulkan-ValidationLayers](https://github.com/KhronosGroup/Vulkan-ValidationLayers) | Apache-2.0 | Revisa cada llamada a Vulkan en los builds de desarrollo (`debug`) y en sus tests; no se distribuye (ADR-0005) |

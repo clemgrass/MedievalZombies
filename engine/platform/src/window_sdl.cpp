@@ -1,8 +1,9 @@
 #include "mz/platform/window.h"
 
-#include "open_windows.h"
+#include "dependents.h"
 
 #include <SDL3/SDL_video.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include <cstdint>
 #include <utility>
@@ -46,6 +47,17 @@ pixel_size window::size_in_pixels() const {
     SDL_GetWindowSizeInPixels(native_of(m_native), &width, &height);
     return {.m_width = static_cast<std::uint32_t>(width),
             .m_height = static_cast<std::uint32_t>(height)};
+}
+
+VkSurfaceKHR window::create_vulkan_surface(VkInstance instance) const {
+    // SDL elige la función del sistema de ventanas (vkCreateWaylandSurfaceKHR,
+    // vkCreateXlibSurfaceKHR...) y la pide a la instancia. Falla si la instancia no tiene
+    // esa extensión.
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    if (!SDL_Vulkan_CreateSurface(native_of(m_native), instance, nullptr, &surface)) {
+        return VK_NULL_HANDLE;
+    }
+    return surface;
 }
 
 } // namespace mz::platform

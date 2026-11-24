@@ -3,7 +3,7 @@
 - **Estado:** Propuesto <!-- Propuesto | Aceptado | Reemplazado | Descartado -->
 - **Fecha:** AAAA-MM-DD
 - **Ticket:** #N
-- **Reemplaza / Reemplazado por:** — <!-- ADR-XXXX, si aplica -->
+- **Reemplaza / Reemplazado por:** — <!-- ADR-XXXX, si aplica. Si un ADR nuevo reemplaza solo una parte (una Decisión o parte de ella), el anterior sigue Aceptado y aquí dice qué parte y por cuál ADR. -->
 <!-- - **Fe de erratas:** AAAA-MM-DD (#N): qué se corrigió. Solo durante la investigación (ADR-0014, regla 11). -->
 
 ## Contexto y problema

@@ -58,6 +58,10 @@ function(mz_add_test_executable name)
     target_link_libraries(${name} PRIVATE
         mz_warnings mz_engine_flags mz_sanitizers mz_coverage
         mz_test_support ${arg_DEPS})
+    # Con sanitizers, cada ejecutable lleva su soporte (cmake/mz_flags.cmake).
+    if(TARGET mz_sanitizer_support)
+        target_link_libraries(${name} PRIVATE mz_sanitizer_support)
+    endif()
     set_property(GLOBAL APPEND PROPERTY MZ_TEST_EXECUTABLES ${name})
 endfunction()
 

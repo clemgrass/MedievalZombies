@@ -23,3 +23,8 @@ ninja
 # Las bibliotecas que enlaza el engine y las de los tests.
 sdl3
 gtest
+
+# Vulkan para los tests de platform, sin GPU: el loader, y lavapipe, el driver de software
+# de Mesa. Los tests usan solo ese driver, en la CI y en la máquina.
+vulkan-icd-loader
+vulkan-swrast

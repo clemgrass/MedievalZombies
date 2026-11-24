@@ -107,7 +107,9 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
   en el contenedor), `run.sh <job>` (corre un job en local, en el mismo contenedor) y
   `compare-toolchain.sh`. Guía: `docs/process/ci.md`. `install-hooks.sh` instala el
   hook de formato. Las reglas viven en la raíz:
-  `.clang-format`, `.clang-tidy` y `.editorconfig` (ADR-0013);
+  `.clang-format`, `.clang-tidy` y `.editorconfig` (ADR-0013). `tools/sanitizers/` tiene
+  la lista de supresiones de LSan para fugas de terceros, que va compilada dentro de cada
+  ejecutable de `debug` (guía: `docs/process/testing.md`);
 - `LICENSE`, `LICENSES/`, `REUSE.toml` y `CREDITS.md`: licencias (ADR-0019).
 
 La spec de la base del proyecto define la estructura de `docs/`, el formato de ADR, el

@@ -1,0 +1,12 @@
+# Fugas de memoria de bibliotecas de terceros que LeakSanitizer reporta y que el engine no
+# puede arreglar. Cada ejecutable con sanitizers (el preset debug) trae esta lista
+# compilada adentro: vale igual para el juego y para los tests.
+#
+# Solo bibliotecas de terceros, nunca código propio: una fuga propia se arregla. Cada
+# entrada va por módulo (los drivers vienen sin símbolos) y con su paquete, su versión, lo
+# que fuga y el issue donde apareció. La guía: docs/process/testing.md.
+
+# nvidia-utils 615.78.08: el driver de Vulkan de NVIDIA deja 183 bytes en 4 bloques al
+# descargarse. El loader de Vulkan lo carga aunque la máquina no tenga una GPU NVIDIA.
+# Encontrado en #94.
+leak:libnvidia-glcore.so

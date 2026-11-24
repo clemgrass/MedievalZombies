@@ -221,7 +221,9 @@ Qué mirar:
   superior. Un target propio declarado con `add_library` o `add_executable` a mano queda
   fuera del chequeo: es un hallazgo.
 - **SDL3 solo detrás de la interfaz `platform::`.** Nada fuera de `engine/platform`
-  incluye headers de SDL. `SDL_GPU` y `SDL_Renderer` están prohibidos. **Lo mismo con
+  incluye headers de SDL, salvo sus tests (`tests/platform`), que inyectan eventos de
+  SDL. Los headers públicos de platform tampoco lo incluyen. `SDL_GPU` y `SDL_Renderer`
+  están prohibidos. **Lo mismo con
   Windows** (fe de erratas del ADR-0004, por el ADR-0035): `windows.h` y los tipos de
   Win32 solo dentro de `engine/platform`.
 - **`platform::` entrega eventos con tipos propios y su *timestamp*,** nunca eventos de

@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -226,6 +227,29 @@ TEST(ArenaProperty, AllocationsNeverOverlap) {
         }
         taken.push_back(s);
     }
+}
+
+// Lugar para `count` objetos T: count × sizeof(T) bytes, alineados para T.
+TEST(ArenaTest, AllocateStorageGivesRoomForCountObjectsAlignedForT) {
+    arena a = make_arena("lugar para T", 4 * kib);
+    (void)a.allocate(1, 1);
+    struct alignas(32) wide {
+        std::array<std::byte, 48> m_bytes;
+    };
+    const wide *p = a.allocate_storage<wide>(3);
+    EXPECT_EQ(reinterpret_cast<std::uintptr_t>(p) % 32, 0U);
+    // 1 byte, 31 de relleno hasta el 32 y 3 × 64 (sizeof redondea 48 a la alineación).
+    EXPECT_EQ(a.used(), 32U + (3U * sizeof(wide)));
+}
+
+// count × sizeof(T) no puede dar la vuelta y parecer un pedido chico que cabe.
+TEST(ArenaDeathTest, AllocateStorageAbortsWhenTheSizeOverflows) {
+    arena a = make_arena("multiplicación", 4 * kib);
+    // std::uint32_t y no otro tipo: el pool también lo pide (sus generaciones). Un tipo que
+    // solo se pidiera aquí tendría su instanciación con un solo lado de la rama, y el
+    // resumen de llvm-cov, que cuenta por instanciación, la vería sin cubrir.
+    EXPECT_DEATH((void)a.allocate_storage<std::uint32_t>((~std::size_t{0} / 4) + 2),
+                 "arena \"multiplicación\": .* objetos de 4 bytes no caben en size_t");
 }
 
 } // namespace

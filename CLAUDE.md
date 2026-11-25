@@ -101,8 +101,10 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
   formato, subconjunto de C++ (ADR-0009), `clang-tidy`, `reuse`, `actionlint`,
   `build.sh <preset>` (la segunda etapa: los *workflow presets* `debug`, `debug-gcc`,
   `relwithdebinfo` y `release`), `coverage.sh` (la meta del 100 %, con las carpetas en
-  `tests/CMakeLists.txt`), y `lint.sh`, que corre los tres primeros en la
-  máquina. También la fecha del snapshot
+  `tests/CMakeLists.txt`), `blender.sh` (el Blender fijado corre y es su versión), y
+  `lint.sh`, que corre los tres primeros en la máquina. También el pin de Blender
+  (`blender-version`: versión y `sha256`) y `install-blender.sh`, que lo instala desde el
+  tarball oficial en la CI y en la máquina, con caché. También la fecha del snapshot
   del Arch Linux Archive (`archive-date`), las listas de paquetes, `install.sh` (instala
   en el contenedor), `run.sh <job>` (corre un job en local, en el mismo contenedor) y
   `compare-toolchain.sh`. Guía: `docs/process/ci.md`. `install-hooks.sh` instala el

@@ -17,3 +17,16 @@ python
 # Los workflows de GitHub Actions. actionlint usa shellcheck para revisar los run:.
 actionlint
 shellcheck
+
+# Blender no sale de pacman (tools/ci/install-blender.sh lo baja con su sha256), pero el
+# binario oficial enlaza estas bibliotecas de X11 y OpenGL aunque corra sin interfaz
+# (blender -b), y la imagen base no las trae. La máquina del autor ya las tiene.
+libx11
+libxext
+libxrender
+libxfixes
+libxi
+libxkbcommon
+libsm
+libice
+libglvnd

@@ -15,6 +15,7 @@ fallo de la CI se repite en local con un comando.
 | `fast-cpp (cpp-subset)` | `cpp-subset.sh` | Si el PR toca código |
 | `fast-repo (reuse)` | `reuse.sh` | Siempre |
 | `fast-repo (actionlint)` | `actionlint.sh` | Siempre |
+| `blender` | `blender.sh` | Si el PR toca código. Instala el Blender fijado y comprueba su versión |
 | `build (debug)` | `build.sh debug` | Si el PR toca código y la etapa rápida pasó |
 | `build (debug-gcc)` | `build.sh debug-gcc` | Igual |
 | `build (relwithdebinfo)` | `build.sh relwithdebinfo` | Igual |
@@ -110,6 +111,40 @@ La fecha vive en un solo archivo, `tools/ci/archive-date` (`AAAA/MM/DD`). La lee
 
 Los volúmenes de fechas viejas se borran con
 `docker volume rm mz-ci-pacman-<fecha-vieja>`.
+
+## Blender
+
+Blender no sale de `pacman`: el paquete de Arch sigue la fecha del snapshot, no la
+versión que elegimos, y aun con la misma versión es otro build. La CI y tu máquina usan
+el **tarball oficial** de `download.blender.org`, con la versión y su `sha256` fijados
+en un solo archivo, `tools/ci/blender-version`.
+
+```sh
+tools/ci/install-blender.sh   # instala (si hace falta) y escribe la ruta del binario
+tools/ci/blender.sh           # lo mismo que el job: instala y corre blender -b --version
+```
+
+`install-blender.sh` no necesita root. Baja el tarball, verifica el `sha256` y lo
+extrae en `~/.cache/medievalzombies/blender-<versión>/` (o en `$MZ_TOOLS_DIR`, si está
+definida). Si el `sha256` no coincide, falla y no instala nada. Esa carpeta es la caché:
+la segunda corrida no baja nada, y si cambia el pin se reinstala sola. Lo único que
+escribe en stdout es la ruta del binario, para que quien lo llama la use tal cual. El
+cocinador nunca usa el `blender` del `PATH`.
+
+En la CI, la carpeta instalada va a la caché de GitHub con el pin como clave.
+`tools/ci/run.sh` monta tu caché en el contenedor, así que un tarball bajado sirve para
+las dos. Las bibliotecas de X11 y OpenGL que el binario enlaza aunque corra sin interfaz
+están en `tools/ci/tools.txt`.
+
+**Cambiar la versión:**
+
+1. Busca el `sha256` en `https://download.blender.org/release/Blender<X.Y>/`, en el
+   archivo `blender-<versión>.sha256`, en la línea de `blender-<versión>-linux-x64.tar.xz`.
+2. Cambia `version` y `sha256` en `tools/ci/blender-version`, en un PR `build:`.
+3. Corre `tools/ci/blender.sh` en tu máquina.
+4. Cuando haya assets, el mismo PR vuelve a exportar todo y revisa la diferencia: con la
+   misma versión la exportación es idéntica bit a bit, y cambiarla es un cambio
+   deliberado. Si modelas en otro computador, pásalo también a la versión nueva.
 
 ## Agregar un job
 

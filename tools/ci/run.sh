@@ -15,6 +15,11 @@
 # no quede como root. Los paquetes bajados quedan en un volumen de Docker por fecha
 # (mz-ci-pacman-AAAA-MM-DD): la segunda corrida no los vuelve a bajar.
 #
+# Las herramientas que no salen de pacman (Blender) se instalan en la misma caché de la
+# máquina (${MZ_TOOLS_DIR:-${XDG_CACHE_HOME:-~/.cache}/medievalzombies}), montada en
+# /opt/mz-tools como en la CI: un tarball bajado sirve para la máquina y para el
+# contenedor.
+#
 # /src/build es un volumen anónimo, que se borra al terminar: el contenedor compila desde
 # cero, como la CI, y no toca el build/ de la máquina. Ese build/ está configurado con las
 # rutas de la máquina, y CMake no acepta una caché creada en otra carpeta.
@@ -59,13 +64,16 @@ exec setpriv --reuid="$HOST_UID" --regid="$HOST_GID" --clear-groups \
     env HOME=/tmp bash "tools/ci/$job.sh" "$@"
 '
 
-# El punto de montaje de /src/build: si no existiera, Docker lo crearía como root.
-mkdir -p "$root/build"
+# Los puntos de montaje de /src/build y de la caché de herramientas: si no existieran,
+# Docker los crearía como root.
+tools_dir="${MZ_TOOLS_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/medievalzombies}"
+mkdir -p "$root/build" "$tools_dir"
 
 docker run --rm "${tty[@]}" \
     --volume "$root:/src" --workdir /src \
     --volume /src/build \
     --volume "$volume:/var/cache/pacman/pkg" \
+    --volume "$tools_dir:/opt/mz-tools" --env MZ_TOOLS_DIR=/opt/mz-tools \
     --env HOST_UID="$(id -u)" --env HOST_GID="$(id -g)" \
     archlinux:latest \
     bash -c "$inside" bash "$job" "$@"

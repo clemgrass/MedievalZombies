@@ -1,7 +1,9 @@
-# Tests de las herramientas de análisis estático, de los chequeos del subconjunto de C++ y
-# de la decisión de qué cambió un PR (changes.sh).
+# Tests de las herramientas de análisis estático, de los chequeos del subconjunto de C++,
+# de la decisión de qué cambió un PR (changes.sh), de la meta de cobertura y del
+# instalador de Blender.
 # Corren los mismos scripts de tools/ci/ que usa la CI sobre los fixtures de fixtures/,
-# que rompen una regla a propósito o la cumplen.
+# que rompen una regla a propósito o la cumplen, o sobre un repo falso armado por el caso
+# (los de Blender, con un mirror falso y sin red).
 #
 # Igual que en tests/cmake/, los casos que deben fallar se verifican con
 # PASS_REGULAR_EXPRESSION: tienen que fallar por el motivo esperado.
@@ -120,6 +122,26 @@ mz_coverage_goal_test(tooling.coverage.unevaluated_branch unevaluated_branch.lco
     EXPECT "engine/core/src/math\\.cpp:2: la condición 1 nunca fue verdadera")
 mz_coverage_goal_test(tooling.coverage.missing_file missing_file.lcov
     EXPECT "engine/core/src/math\\.cpp: no está en el reporte")
+
+# Blender por su tarball: un sha256 distinto hace fallar la instalación, la segunda corrida
+# usa la caché, y el job falla si el binario no es la versión fijada. Sin red: el tarball
+# es falso y se sirve desde un mirror local.
+function(mz_blender_test mode)
+    mz_tooling_test(tooling.blender.${mode}
+        COMMAND ${CMAKE_COMMAND}
+            -DTOOLS_DIR=${tools_dir}
+            -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/blender_${mode}
+            -DMODE=${mode}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_blender_case.cmake
+        ${ARGN})
+endfunction()
+
+mz_blender_test(cache)
+mz_blender_test(stale_marker)
+mz_blender_test(bad_sha256
+    EXPECT "El sha256 de blender-5\\.2\\.2-linux-x64\\.tar\\.xz no coincide")
+mz_blender_test(wrong_version
+    EXPECT "Se esperaba Blender 5\\.2\\.2 y el binario dice: Blender 5\\.2\\.3 LTS")
 
 # clang-tidy: prueba la configuración del repo, no solo que la herramienta corre.
 find_program(MZ_CLANG_TIDY clang-tidy)

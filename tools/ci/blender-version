@@ -1,0 +1,8 @@
+# La versión de Blender que usan la CI y el cocinador, y el sha256 de su tarball oficial
+# para Linux (blender-<versión>-linux-x64.tar.xz). tools/ci/install-blender.sh la baja de
+# download.blender.org y falla si el sha256 no coincide. La guía para cambiarla está en
+# docs/process/ci.md.
+#
+# Se lee con grep, nunca con source: una línea clave=valor por dato.
+version=5.2.2
+sha256=84098912789dc450e95697c4184fb8a90acbe5111c2ba4aede3fecb57806a168

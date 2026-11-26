@@ -92,7 +92,11 @@ cmake --workflow --preset debug-gcc   # configurar, compilar y probar con GCC
 ## Cambiar la fecha del snapshot
 
 La fecha vive en un solo archivo, `tools/ci/archive-date` (`AAAA/MM/DD`). La leen la CI,
-`run.sh` y la clave de la caché de paquetes.
+`run.sh` y las claves de las dos cachés de la CI: la de los paquetes y la de las bases de
+datos de los repositorios (`core.db`, `extra.db`). Las bases de datos de una fecha no
+cambian, así que `install.sh` solo las baja si las que tiene no son de esa fecha (lo dice
+una marca, `/var/lib/pacman/sync/mz-archive-date`) o si falta alguna. Con las dos cachés, un job no le pide
+nada al archivo, que a veces no responde.
 
 1. Después de actualizar tu máquina, corre:
 
@@ -110,7 +114,7 @@ La fecha vive en un solo archivo, `tools/ci/archive-date` (`AAAA/MM/DD`). La lee
    del audio) y lo dice en su descripción (ADR-0029, Decisión 7).
 
 Los volúmenes de fechas viejas se borran con
-`docker volume rm mz-ci-pacman-<fecha-vieja>`.
+`docker volume rm mz-ci-pacman-<fecha-vieja> mz-ci-pacman-sync-<fecha-vieja>`.
 
 ## Blender
 

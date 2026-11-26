@@ -2045,7 +2045,9 @@ Qué mirar:
 
 - **El entorno:** los jobs que compilan o prueban corren en un contenedor
   `archlinux:latest` con el `mirrorlist` en la fecha del snapshot del Arch Linux
-  Archive, leída del único archivo de `tools/ci/` que la guarda, y `pacman -Syyuu`. Una
+  Archive, leída del único archivo de `tools/ci/` que la guarda, y `pacman -Syy` (se salta
+  si las bases de datos de la caché son de esa fecha y están todas) seguido de
+  `pacman -Suu`, que es `-Syyuu` partido en dos. Una
   fecha escrita en el YAML contradice la Decisión 2; un job de build en el runner Ubuntu
   nativo o una imagen propia en GHCR contradicen la Decisión 1. Mezclar el archivo con mirrors al día también:
   la wiki de Arch lo desaconseja. La única excepción es la corrida nocturna, que usa
@@ -2091,7 +2093,8 @@ Qué mirar:
   ecosistema `github-actions`; nunca `pull_request_target`; **ningún secreto en la CI**
   (el único de la CD, abajo); ningún runner propio (`runs-on: self-hosted`). Un valor del evento (título, rama, cuerpo de un
   PR) usado directo dentro de un `run:` es `bloqueante` por inyección: va por `env:`.
-- **Velocidad:** caché de `/var/cache/pacman/pkg` con la fecha como clave, y de Blender
+- **Velocidad:** caché de `/var/cache/pacman/pkg` y de `/var/lib/pacman/sync` con la fecha
+  como clave (`run.sh` las monta como dos volúmenes por fecha), y de Blender
   y D2 con sus versiones; `cancel-in-progress` solo en los PRs. Si una corrida real pasa
   de 10 minutos, se anota y se abre un ticket.
 - **CD (ADR-0035): el disparo y el orden.** Corre solo con un tag `v*`. **El paquete de

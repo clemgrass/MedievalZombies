@@ -6,6 +6,11 @@
 #
 #   tools/ci/run.sh <job>
 #
+# Antes de instalar, cada job restaura dos cachés con la fecha en la clave: los paquetes
+# (/var/cache/pacman/pkg, que también dependen de las listas) y las bases de datos de los
+# repositorios (/var/lib/pacman/sync). Con las dos, un job no le pide nada al Arch Linux
+# Archive, que a veces no responde.
+#
 # El único chequeo obligatorio de "Proteger main" es ci-ok. Lo que no hace falta en un
 # PR se salta con un if: según lo que decide el job changes, nunca con paths:.
 name: CI
@@ -66,6 +71,10 @@ jobs:
         with:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/lib/pacman/sync
+          key: pacman-sync-${{ hashFiles('tools/ci/archive-date') }}
       - run: bash tools/ci/install.sh
       # Con git ya instalado, un clon real en lugar del tarball: los scripts usan
       # git ls-files.
@@ -93,6 +102,10 @@ jobs:
         with:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/lib/pacman/sync
+          key: pacman-sync-${{ hashFiles('tools/ci/archive-date') }}
       - run: bash tools/ci/install.sh
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -125,6 +138,10 @@ jobs:
         with:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/lib/pacman/sync
+          key: pacman-sync-${{ hashFiles('tools/ci/archive-date') }}
       - run: bash tools/ci/install.sh
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -158,6 +175,10 @@ jobs:
         with:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/lib/pacman/sync
+          key: pacman-sync-${{ hashFiles('tools/ci/archive-date') }}
       - run: bash tools/ci/install.sh
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -190,6 +211,10 @@ jobs:
         with:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/lib/pacman/sync
+          key: pacman-sync-${{ hashFiles('tools/ci/archive-date') }}
       - run: bash tools/ci/install.sh
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -227,6 +252,10 @@ jobs:
         with:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /var/lib/pacman/sync
+          key: pacman-sync-${{ hashFiles('tools/ci/archive-date') }}
       - run: bash tools/ci/install.sh
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

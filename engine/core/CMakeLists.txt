@@ -1,5 +1,6 @@
 mz_add_module(engine_core LAYER core
     SOURCES
+        src/asset_format.cpp
         src/assert.cpp
         src/core.cpp
         src/mat.cpp

@@ -93,6 +93,8 @@ mz_changes_test(tooling.changes.engine engine/core/a.cpp "code=true")
 mz_changes_test(tooling.changes.cpp_elsewhere tools/otra/a.cpp "code=true")
 # La lista de supresiones de LSan no es C++, pero va compilada en cada ejecutable de debug.
 mz_changes_test(tooling.changes.lsan_suppressions tools/sanitizers/lsan.supp "code=true")
+# El script que exporta los .blend corre dentro del build.
+mz_changes_test(tooling.changes.blender_script tools/blender/export_glb.py "code=true")
 # Sin base (un push a main), todo cuenta como cambiado.
 mz_tooling_test(tooling.changes.no_base
     COMMAND bash ${tools_dir}/changes.sh

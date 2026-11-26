@@ -101,10 +101,12 @@ jobs:
           JOB: ${{ matrix.job }}
         run: bash "tools/ci/$JOB.sh"
 
-  # En paralelo con la etapa rápida, sin frenar la segunda: el Blender de
-  # tools/ci/blender-version, desde su tarball oficial y verificado con su sha256, corre
-  # sin interfaz y es esa versión. Solo si el PR toca código. La carpeta instalada va a la
-  # caché con el pin como clave: cambiar la versión o el sha256 la invalida.
+  # En paralelo con la etapa rápida: el Blender de tools/ci/blender-version, desde su
+  # tarball oficial y verificado con su sha256, corre sin interfaz y es esa versión. Solo
+  # si el PR toca código. La carpeta instalada va a la caché con el pin como clave:
+  # cambiar la versión o el sha256 la invalida. La segunda etapa lo espera, porque su
+  # configuración exporta los .blend (cmake/mz_blender.cmake): así Blender se baja y se
+  # guarda en la caché una sola vez por pin, y nada compila si Blender está roto.
   blender:
     needs: changes
     if: needs.changes.outputs.code == 'true'
@@ -134,12 +136,16 @@ jobs:
   # entrada de la matriz es un workflow preset de CMakePresets.json (build.sh <preset>):
   # debug con Clang y debug con GCC compilan y corren los tests, con ASan, UBSan y LSan;
   # relwithdebinfo y release solo compilan. Los warnings son errores en los cuatro.
+  # Como coverage y clang-tidy, restaura el Blender que dejó en la caché el job blender:
+  # la configuración lo necesita para exportar los .blend.
   build:
-    needs: [changes, fast-cpp, fast-repo]
+    needs: [changes, fast-cpp, fast-repo, blender]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     container: archlinux:latest
     timeout-minutes: 20
+    env:
+      MZ_TOOLS_DIR: /opt/mz-tools
     strategy:
       fail-fast: false
       matrix:
@@ -153,6 +159,10 @@ jobs:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
       - run: bash tools/ci/install.sh
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /opt/mz-tools/blender-*
+          key: blender-${{ hashFiles('tools/ci/blender-version') }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -165,11 +175,13 @@ jobs:
   # job dice qué. El reporte HTML se sube como artefacto también si falla, que es cuando
   # hace falta revisarlo.
   coverage:
-    needs: [changes, fast-cpp, fast-repo]
+    needs: [changes, fast-cpp, fast-repo, blender]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     container: archlinux:latest
     timeout-minutes: 20
+    env:
+      MZ_TOOLS_DIR: /opt/mz-tools
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -179,6 +191,10 @@ jobs:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
       - run: bash tools/ci/install.sh
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /opt/mz-tools/blender-*
+          key: blender-${{ hashFiles('tools/ci/blender-version') }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -196,11 +212,13 @@ jobs:
   # .clang-tidy, donde cada hallazgo es un error. Solo configura, para tener la base de
   # compilación: no compila.
   clang-tidy:
-    needs: [changes, fast-cpp, fast-repo]
+    needs: [changes, fast-cpp, fast-repo, blender]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     container: archlinux:latest
     timeout-minutes: 15
+    env:
+      MZ_TOOLS_DIR: /opt/mz-tools
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -210,6 +228,10 @@ jobs:
           path: /var/cache/pacman/pkg
           key: pacman-${{ hashFiles('tools/ci/archive-date', 'tools/ci/toolchain.txt', 'tools/ci/tools.txt') }}
       - run: bash tools/ci/install.sh
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /opt/mz-tools/blender-*
+          key: blender-${{ hashFiles('tools/ci/blender-version') }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

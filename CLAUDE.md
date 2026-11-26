@@ -89,10 +89,13 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
 - `tests/`: las pruebas (ADR-0011): un ejecutable de GoogleTest por módulo
   (`mz_add_test_suite`, en `cmake/mz_testing.cmake`), `support/` (el `main` y el
   generador de los tests de propiedades), `regression/` (los bugs, flujo *xfail*),
-  `toolchain/` (los *sanitizers* y los *death tests*), y los casos del build y de las
-  herramientas de análisis estático;
+  `toolchain/` (los *sanitizers* y los *death tests*), `tools/` (el cocinador de assets:
+  hoy, la exportación `.blend` → `.glb`, con su cubo de prueba), y los casos del build y
+  de las herramientas de análisis estático;
 - `cmake/`, `CMakeLists.txt` y `CMakePresets.json`: el build (ADR-0006), con
-  `mz_add_module` y la regla de capas;
+  `mz_add_module` y la regla de capas, y `mz_export_blend` (`cmake/mz_blender.cmake`),
+  que verifica el Blender fijado al configurar y exporta cada `.blend` a `.glb`
+  (ADR-0017);
 - `docs/`: ADRs, investigación, specs, planes, guías y diagramas técnicos (ADR-0030);
 - `.github/`: formularios de issue, plantilla de PR y el workflow de la CI
   (`workflows/ci.yml`, con el agregador `ci-ok`);
@@ -111,7 +114,8 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
   hook de formato. Las reglas viven en la raíz:
   `.clang-format`, `.clang-tidy` y `.editorconfig` (ADR-0013). `tools/sanitizers/` tiene
   la lista de supresiones de LSan para fugas de terceros, que va compilada dentro de cada
-  ejecutable de `debug` (guía: `docs/process/testing.md`);
+  ejecutable de `debug` (guía: `docs/process/testing.md`). `tools/blender/` tiene los
+  scripts que corren dentro de Blender, como `export_glb.py`;
 - `LICENSE`, `LICENSES/`, `REUSE.toml` y `CREDITS.md`: licencias (ADR-0019).
 
 La spec de la base del proyecto define la estructura de `docs/`, el formato de ADR, el

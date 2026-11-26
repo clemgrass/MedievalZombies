@@ -16,7 +16,7 @@ fallo de la CI se repite en local con un comando.
 | `fast-repo (reuse)` | `reuse.sh` | Siempre |
 | `fast-repo (actionlint)` | `actionlint.sh` | Siempre |
 | `blender` | `blender.sh` | Si el PR toca código. Instala el Blender fijado y comprueba su versión |
-| `build (debug)` | `build.sh debug` | Si el PR toca código y la etapa rápida pasó |
+| `build (debug)` | `build.sh debug` | Si el PR toca código, y pasaron la etapa rápida y `blender` |
 | `build (debug-gcc)` | `build.sh debug-gcc` | Igual |
 | `build (relwithdebinfo)` | `build.sh relwithdebinfo` | Igual |
 | `build (release)` | `build.sh release` | Igual |
@@ -26,8 +26,8 @@ fallo de la CI se repite en local con un comando.
 
 En un push a `main` corre todo.
 
-Los jobs `build` son la segunda etapa del ADR-0029: arrancan solo si pasaron `fast-cpp`
-y `fast-repo`. Cada uno corre un *workflow preset* de `CMakePresets.json`, que configura,
+Los jobs `build` son la segunda etapa del ADR-0029: arrancan solo si pasaron `fast-cpp`,
+`fast-repo` y `blender` (la configuración necesita Blender, ver [Blender](#blender)). Cada uno corre un *workflow preset* de `CMakePresets.json`, que configura,
 compila y, en los dos `debug`, corre los tests:
 
 | Preset | Compilador | Qué hace |
@@ -131,6 +131,14 @@ la segunda corrida no baja nada, y si cambia el pin se reinstala sola. Lo único
 escribe en stdout es la ruta del binario, para que quien lo llama la use tal cual. El
 cocinador nunca usa el `blender` del `PATH`.
 
+**El build lo necesita** (ADR-0017): `cmake/mz_blender.cmake` llama a
+`install-blender.sh` al configurar (o usa `-DMZ_BLENDER=<ruta>`: un Blender oficial de la
+misma versión en otra carpeta, sin verificar el `sha256`), verifica que el binario
+sea la versión fijada y exporta cada `.blend` a `.glb` con `tools/blender/export_glb.py`.
+Por eso toda la segunda etapa espera al job `blender` y restaura su caché: Blender se baja
+una sola vez por pin. Los tests de la exportación tienen la etiqueta `assets`
+(`ctest --preset debug -L assets`).
+
 En la CI, la carpeta instalada va a la caché de GitHub con el pin como clave.
 `tools/ci/run.sh` monta tu caché en el contenedor, así que un tarball bajado sirve para
 las dos. Las bibliotecas de X11 y OpenGL que el binario enlaza aunque corra sin interfaz
@@ -142,8 +150,9 @@ están en `tools/ci/tools.txt`.
    archivo `blender-<versión>.sha256`, en la línea de `blender-<versión>-linux-x64.tar.xz`.
 2. Cambia `version` y `sha256` en `tools/ci/blender-version`, en un PR `build:`.
 3. Corre `tools/ci/blender.sh` en tu máquina.
-4. Cuando haya assets, el mismo PR vuelve a exportar todo y revisa la diferencia: con la
-   misma versión la exportación es idéntica bit a bit, y cambiarla es un cambio
+4. Compila: el pin es una dependencia de cada exportación, así que el build vuelve a
+   configurar y a exportar todos los `.blend`. Revisa la diferencia en el mismo PR: con
+   la misma versión la exportación es idéntica bit a bit, y cambiarla es un cambio
    deliberado. Si modelas en otro computador, pásalo también a la versión nueva.
 
 ## Agregar un job

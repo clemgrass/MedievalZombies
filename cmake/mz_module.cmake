@@ -9,6 +9,13 @@
 # puede enlazar con módulos de capas más bajas. La regla se revisa al final de la
 # configuración, sobre todos los enlaces de cada módulo, así que también atrapa un
 # target_link_libraries escrito a mano y no depende del orden en que se declaran.
+#
+# La capa tool queda fuera de la pila: es la de las herramientas de tools/, como el
+# cocinador de assets. Una herramienta enlaza solo con core (la matemática y el formato
+# de los assets, los mismos que usa el juego) y con otras herramientas. Ningún módulo del
+# engine ni del juego enlaza una herramienta. Las dependencias de terceros de las
+# herramientas (cgltf, por ejemplo) no son módulos, pero llevan la propiedad MZ_LAYER en
+# tool, así que el engine y el juego tampoco las pueden enlazar directo.
 
 include_guard(GLOBAL)
 
@@ -33,10 +40,10 @@ function(mz_add_module name)
             "${arg_UNPARSED_ARGUMENTS}")
     endif()
     _mz_layer_rank("${arg_LAYER}" rank)
-    if(rank EQUAL -1)
+    if(rank EQUAL -1 AND NOT arg_LAYER STREQUAL "tool")
         get_property(layers GLOBAL PROPERTY MZ_LAYERS)
         message(FATAL_ERROR "mz_add_module(${name}): capa '${arg_LAYER}' inválida. "
-            "Las capas son: ${layers}.")
+            "Las capas son: ${layers} y, fuera de la pila, tool.")
     endif()
     if(NOT arg_SOURCES)
         message(FATAL_ERROR "mz_add_module(${name}): falta SOURCES.")
@@ -84,7 +91,6 @@ function(_mz_check_layers)
     get_property(modules GLOBAL PROPERTY MZ_MODULES)
     foreach(module IN LISTS modules)
         get_target_property(layer ${module} MZ_LAYER)
-        _mz_layer_rank(${layer} rank)
 
         get_target_property(own_links ${module} LINK_LIBRARIES)
         get_target_property(interface_links ${module} INTERFACE_LINK_LIBRARIES)
@@ -109,11 +115,26 @@ function(_mz_check_layers)
             if(NOT dep_layer)
                 continue()
             endif()
-            _mz_layer_rank(${dep_layer} dep_rank)
-            if(dep_rank GREATER_EQUAL rank)
+            if(layer STREQUAL "tool")
+                # También platform, aunque esté debajo de core: core ya la enlaza para lo
+                # que necesite, y la herramienta no la usa directo.
+                if(NOT dep_layer MATCHES "^(core|tool)$")
+                    message(SEND_ERROR
+                        "${module} (capa tool) enlaza con ${dep} (capa ${dep_layer}). "
+                        "Una herramienta solo puede enlazar con core y con otras herramientas.")
+                endif()
+            elseif(dep_layer STREQUAL "tool")
                 message(SEND_ERROR
-                    "${module} (capa ${layer}) enlaza con ${dep} (capa ${dep_layer}). "
-                    "Un módulo solo puede enlazar con módulos de capas más bajas.")
+                    "${module} (capa ${layer}) enlaza con ${dep} (capa tool). "
+                    "Nada del engine ni del juego enlaza una herramienta.")
+            else()
+                _mz_layer_rank(${layer} rank)
+                _mz_layer_rank(${dep_layer} dep_rank)
+                if(dep_rank GREATER_EQUAL rank)
+                    message(SEND_ERROR
+                        "${module} (capa ${layer}) enlaza con ${dep} (capa ${dep_layer}). "
+                        "Un módulo solo puede enlazar con módulos de capas más bajas.")
+                endif()
             endif()
         endforeach()
     endforeach()

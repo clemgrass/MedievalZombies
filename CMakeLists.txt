@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(mz_module)
 include(mz_sdl3)
 include(mz_vulkan)
-include(mz_blender)
+include(mz_cook)
 
 enable_testing()
 
@@ -19,4 +19,7 @@ add_subdirectory(engine/platform)
 add_subdirectory(engine/core)
 add_subdirectory(engine/gpu)
 add_subdirectory(game)
+# El cocinador va antes que todo lo que cocina assets (mz_cook_blend necesita el target).
+add_subdirectory(tools/third_party)
+add_subdirectory(tools/cooker)
 add_subdirectory(tests)

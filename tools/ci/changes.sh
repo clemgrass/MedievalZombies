@@ -11,8 +11,9 @@
 #   code   el C++, el build y lo que los revisa: engine/, game/, tests/, cmake/, los
 #          CMakeLists.txt y CMakePresets.json de la raíz, las reglas .clang-*, los
 #          scripts de tools/ci/, el soporte de los sanitizers de tools/sanitizers/ (va
-#          compilado dentro de cada ejecutable de debug), los workflows, y cualquier
-#          .cpp, .h o .hpp, esté donde esté.
+#          compilado dentro de cada ejecutable de debug), los scripts de Blender de
+#          tools/blender/ (el build exporta los .blend con ellos), los workflows, y
+#          cualquier .cpp, .h o .hpp, esté donde esté.
 #
 # Compara <head> con su ancestro común con <base> (git diff base...head): solo cuenta lo
 # que cambió el PR, no lo que entró a main mientras tanto. Sin <base> (un push a main),
@@ -22,7 +23,7 @@ set -euo pipefail
 base="${1:-}"
 head="${2:-HEAD}"
 
-code_pattern='^(engine|game|tests|cmake|tools/ci|tools/sanitizers|\.github/workflows)/'
+code_pattern='^(engine|game|tests|cmake|tools/ci|tools/sanitizers|tools/blender|\.github/workflows)/'
 code_pattern+='|^(CMakeLists\.txt|CMakePresets\.json|\.clang-format|\.clang-format-ignore|\.clang-tidy)$'
 code_pattern+='|\.(cpp|h|hpp)$'
 

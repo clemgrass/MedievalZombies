@@ -150,6 +150,13 @@ SDL3 comes from the system. With `-DMZ_VENDOR_SDL3=ON`, CMake downloads and buil
 pinned to a fixed version, the same on every machine. The same goes for the Vulkan headers
 with `-DMZ_VENDOR_VULKAN_HEADERS=ON`.
 
+The build also needs **Blender**, at the version pinned in `tools/ci/blender-version`: the
+repo stores models as `.blend` files, and the build exports them to glTF. On the first
+configure, CMake downloads the official tarball (366 MiB), checks its `sha256` and keeps
+it in `~/.cache/medievalzombies/`. It never uses the system `blender`. To use an official
+Blender of the same version installed in another folder: `-DMZ_BLENDER=<path>` (it
+doesn't check the `sha256`).
+
 There are five presets: `debug` (with AddressSanitizer and UndefinedBehaviorSanitizer),
 `debug-gcc` (the same with GCC, the secondary compiler), `relwithdebinfo` (optimized,
 with symbols and frame pointers, for profiling), `release` and `coverage`. Each one

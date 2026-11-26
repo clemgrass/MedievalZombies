@@ -8,6 +8,7 @@ add_subdirectory(toolchain)
 add_subdirectory(regression)
 add_subdirectory(cmake)
 add_subdirectory(tooling)
+add_subdirectory(tools)
 
 # Las carpetas con la meta del 100 % en líneas y ramas: el core y las zonas
 # con TDD. Esta es la única lista; cada zona nueva con TDD se suma aquí en su ticket.

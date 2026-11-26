@@ -12,8 +12,10 @@
 #
 # El repo se monta en /src. install.sh corre como root y su salida solo se muestra si
 # falla; el job corre con el usuario del autor, para que lo que escriba (format --fix)
-# no quede como root. Los paquetes bajados quedan en un volumen de Docker por fecha
-# (mz-ci-pacman-AAAA-MM-DD): la segunda corrida no los vuelve a bajar.
+# no quede como root. Los paquetes bajados y las bases de datos de los repositorios quedan
+# en dos volúmenes de Docker por fecha (mz-ci-pacman-AAAA-MM-DD y
+# mz-ci-pacman-sync-AAAA-MM-DD), como las dos cachés de la CI: la segunda corrida no le
+# pide nada al Arch Linux Archive.
 #
 # Las herramientas que no salen de pacman (Blender) se instalan en la misma caché de la
 # máquina (${MZ_TOOLS_DIR:-${XDG_CACHE_HOME:-~/.cache}/medievalzombies}), montada en
@@ -40,6 +42,7 @@ fi
 
 date="$(tr -d '[:space:]' <"$root/tools/ci/archive-date")"
 volume="mz-ci-pacman-${date//\//-}"
+sync_volume="mz-ci-pacman-sync-${date//\//-}"
 
 # Con una terminal, -t mantiene los colores de las herramientas.
 tty=()
@@ -73,6 +76,7 @@ docker run --rm "${tty[@]}" \
     --volume "$root:/src" --workdir /src \
     --volume /src/build \
     --volume "$volume:/var/cache/pacman/pkg" \
+    --volume "$sync_volume:/var/lib/pacman/sync" \
     --volume "$tools_dir:/opt/mz-tools" --env MZ_TOOLS_DIR=/opt/mz-tools \
     --env HOST_UID="$(id -u)" --env HOST_GID="$(id -g)" \
     archlinux:latest \

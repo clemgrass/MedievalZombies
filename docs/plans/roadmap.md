@@ -132,6 +132,7 @@ al abrir M5 y M7 (ADR-0033, Abierto).
 | AS2.1 | cocinador mínimo: blender -b fijado, .blend a .glb determinista, regla CMake | 0017, 0029, 0006 | F1, CI4.1 | — | #127 |
 | AS2.2 | cocinador mínimo: cgltf, malla estática a binario | 0017, 0008, 0006, 0019 | AS1, AS2.1 | estricto | #128 |
 | RE1 | formato del paquete, cargador con validación y primitivas de archivo | 0028, 0035, 0017, 0004 | AS1 | estricto | #129 |
+| F10 | fuzzing con libFuzzer: los cargadores de assets y del paquete | 0011, 0017, 0028, 0006, 0029 | AS1, RE1, CI2 | — | #177 |
 | EC1 | ECS: sparse sets, handles, capacidad fija, iteración en orden de id | 0012, 0010, 0009, 0030 | F7 | estricto | #130 |
 | AS9.1 | datos del corte: índice soldado y cáscaras (malla estática) | 0007, 0017 | AS2.2 | estricto | #131 |
 | AS9.2 | datos del corte: validación manifold que falla el build | 0007, 0017 | AS9.1 | estricto | #132 |

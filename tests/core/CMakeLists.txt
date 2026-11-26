@@ -16,6 +16,7 @@ mz_add_test_suite(core
         scratch_test.cpp
         fixed_vector_test.cpp
         pool_test.cpp
+        asset_format_test.cpp
     DEPS engine_core
 )
 

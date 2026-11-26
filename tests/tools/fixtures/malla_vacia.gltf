@@ -1,0 +1,33 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "make_gltf.py"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "MallaVacia",
+      "mesh": 0
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": []
+    }
+  ],
+  "accessors": [],
+  "bufferViews": [],
+  "buffers": [
+    {
+      "byteLength": 0,
+      "uri": "data:application/octet-stream;base64,"
+    }
+  ]
+}

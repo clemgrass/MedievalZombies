@@ -15,6 +15,19 @@ path = ["docs/**", "README.md", "README.en.md", "CREDITS.md", "CLAUDE.md"]
 SPDX-FileCopyrightText = "2026 Clemente Grass"
 SPDX-License-Identifier = "CC-BY-4.0"
 
+# Dependencias copiadas en el repo, con el copyright de sus autores. El archivo que compila
+# cada una (por ejemplo, cgltf.c) es propio, y queda bajo la anotación por defecto.
+[[annotations]]
+path = "tools/third_party/cgltf/LICENSE"
+SPDX-FileCopyrightText = "2018-2021 Johannes Kuhlmann"
+SPDX-License-Identifier = "MIT"
+
+# cgltf.h trae adentro el parser de JSON jsmn, con su propio autor (también MIT).
+[[annotations]]
+path = "tools/third_party/cgltf/cgltf.h"
+SPDX-FileCopyrightText = ["2018-2021 Johannes Kuhlmann", "2010 Serge A. Zaitsev"]
+SPDX-License-Identifier = "MIT"
+
 # Assets propios bajo CC BY 4.0.
 # Los assets de terceros declaran su propia licencia y autor en CREDITS.md
 # y con una anotación específica aquí, debajo de esta.

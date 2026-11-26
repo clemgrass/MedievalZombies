@@ -4,9 +4,9 @@
 #
 #   tools/ci/cpp-subset.sh [archivos...]
 #
-# Sin archivos, revisa el C++ versionado de engine/, game/ y tests/, sin los fixtures de
-# tests/cmake/ y tests/tooling/, que rompen las reglas a propósito. Falla con el archivo,
-# la línea y la regla que se rompe.
+# Sin archivos, revisa el C++ versionado de engine/, game/, tests/ y tools/cooker/, sin los
+# fixtures de tests/cmake/ y tests/tooling/, que rompen las reglas a propósito. Falla con el
+# archivo, la línea y la regla que se rompe.
 #
 # También revisa las reglas de SDL de la capa de plataforma, que CMake no puede hacer
 # cumplir porque los headers del sistema se ven desde cualquier target: SDL solo se
@@ -30,6 +30,7 @@ if [[ ${#files[@]} -eq 0 ]]; then
     mapfile -t files < <(git ls-files -- \
         'engine/*.cpp' 'engine/*.h' 'engine/*.hpp' 'game/*.cpp' 'game/*.h' 'game/*.hpp' \
         'tests/*.cpp' 'tests/*.h' 'tests/*.hpp' \
+        'tools/cooker/*.cpp' 'tools/cooker/*.h' 'tools/cooker/*.hpp' \
         ':(exclude)tests/cmake/cases/**' ':(exclude)tests/tooling/fixtures/**')
 fi
 if [[ ${#files[@]} -eq 0 ]]; then

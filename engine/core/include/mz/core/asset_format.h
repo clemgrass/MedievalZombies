@@ -60,8 +60,21 @@ inline constexpr std::uint32_t asset_max_sections = 65'535;
 
 // Qué es el asset y qué hay en cada sección. El lector no los interpreta: los revisa el
 // cargador de cada tipo de asset. Los valores se suman cuando existe el asset que los usa.
-enum class asset_kind : std::uint32_t {};
-enum class section_kind : std::uint32_t {};
+// El 0 es none: un campo en cero (un búfer sin escribir) nunca parece un tipo válido. Ocupan
+// 4 bytes porque son campos del disco, no por sus valores.
+// NOLINTNEXTLINE(performance-enum-size)
+enum class asset_kind : std::uint32_t {
+    none = 0,
+    mesh = 1, // mz/core/mesh_format.h
+};
+
+// NOLINTNEXTLINE(performance-enum-size)
+enum class section_kind : std::uint32_t {
+    none = 0,
+    mesh_vertices = 1,
+    mesh_indices = 2,
+    mesh_submeshes = 3,
+};
 
 // Cómo están guardados los bytes de una sección. Hoy nada se comprime; el campo
 // existe para sumar compresión si el tamaño en disco lo pide, sin rehacer la tabla. Ocupa 4

@@ -90,12 +90,15 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
   (`mz_add_test_suite`, en `cmake/mz_testing.cmake`), `support/` (el `main` y el
   generador de los tests de propiedades), `regression/` (los bugs, flujo *xfail*),
   `toolchain/` (los *sanitizers* y los *death tests*), `tools/` (el cocinador de assets:
-  hoy, la exportación `.blend` → `.glb`, con su cubo de prueba), y los casos del build y
+  su biblioteca sobre los `.gltf` chicos de `fixtures/`, que genera `make_gltf.py`, y la
+  cadena `.blend` → `.glb` → `.mzasset` con su cubo de prueba), y los casos del build y
   de las herramientas de análisis estático;
 - `cmake/`, `CMakeLists.txt` y `CMakePresets.json`: el build (ADR-0006), con
-  `mz_add_module` y la regla de capas, y `mz_export_blend` (`cmake/mz_blender.cmake`),
-  que verifica el Blender fijado al configurar y exporta cada `.blend` a `.glb`
-  (ADR-0017);
+  `mz_add_module` y la regla de capas (más la capa `tool`, fuera de la pila: una
+  herramienta enlaza solo `core`, y nada del engine ni del juego enlaza una herramienta),
+  y `mz_cook_blend` (`cmake/mz_cook.cmake`), que exporta cada `.blend` a `.glb` con el
+  Blender fijado (`cmake/mz_blender.cmake`, que lo verifica al configurar) y lo cocina a
+  `.mzasset` con `mz_cook` (ADR-0017);
 - `docs/`: ADRs, investigación, specs, planes, guías y diagramas técnicos (ADR-0030);
 - `.github/`: formularios de issue, plantilla de PR y el workflow de la CI
   (`workflows/ci.yml`, con el agregador `ci-ok`);
@@ -115,7 +118,11 @@ Monorepo público: `github.com/clemgrass/MedievalZombies`. Por ahora existen:
   `.clang-format`, `.clang-tidy` y `.editorconfig` (ADR-0013). `tools/sanitizers/` tiene
   la lista de supresiones de LSan para fugas de terceros, que va compilada dentro de cada
   ejecutable de `debug` (guía: `docs/process/testing.md`). `tools/blender/` tiene los
-  scripts que corren dentro de Blender, como `export_glb.py`;
+  scripts que corren dentro de Blender, como `export_glb.py`. `tools/cooker/` es el
+  cocinador de assets (capa `tool`): la biblioteca `tools_cooker` (lee el glTF con
+  cgltf, lo valida, pasa los ejes a los del engine y escribe el asset de forma atómica) y
+  el ejecutable `mz_cook`, que solo la llama. `tools/third_party/` tiene las dependencias
+  de las herramientas copiadas en el repo, con su licencia (hoy, cgltf 1.15);
 - `LICENSE`, `LICENSES/`, `REUSE.toml` y `CREDITS.md`: licencias (ADR-0019).
 
 La spec de la base del proyecto define la estructura de `docs/`, el formato de ADR, el

@@ -10,13 +10,14 @@
 #     el de Arch es otro build, y sigue otra versión;
 #   - se verifica que el binario sea la versión fijada, o la configuración falla.
 #
-# Deja MZ_BLENDER_EXECUTABLE y MZ_BLENDER_VERSION, y la función:
+# Deja MZ_BLENDER_EXECUTABLE y MZ_BLENDER_VERSION, y la función interna:
 #
-#   mz_export_blend(<target> <archivo.blend>...)
+#   _mz_export_blend(<archivo.blend> <variable>)
 #
-# Exporta cada .blend (con su ruta relativa a la carpeta actual) al .glb de la misma ruta
-# en la carpeta del build: modelos/cubo.blend → <build>/modelos/cubo.glb. El target, que
-# compila con ALL, agrupa las exportaciones.
+# Agrega la regla que exporta el .blend (con su ruta relativa a la carpeta actual) al .glb
+# de la misma ruta en la carpeta del build, modelos/cubo.blend → <build>/modelos/cubo.glb, y
+# deja la ruta del .glb en <variable>. La usa mz_cook_blend (cmake/mz_cook.cmake), que
+# encadena la exportación con el cocinado.
 #
 # Cada .glb se reexporta cuando cambia su .blend, el script de exportación o el pin:
 # Ninja compara la fecha de cada salida con las de sus dependencias, y guarda el comando en
@@ -89,28 +90,24 @@ block(SCOPE_FOR VARIABLES PROPAGATE MZ_BLENDER_EXECUTABLE MZ_BLENDER_VERSION)
     message(STATUS "Blender ${MZ_BLENDER_VERSION}: ${MZ_BLENDER_EXECUTABLE}")
 endblock()
 
-function(mz_export_blend target)
-    set(outputs)
-    foreach(blend IN LISTS ARGN)
-        cmake_path(ABSOLUTE_PATH blend BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            NORMALIZE OUTPUT_VARIABLE source)
-        cmake_path(REPLACE_EXTENSION blend LAST_ONLY .glb OUTPUT_VARIABLE relative)
-        set(output ${CMAKE_CURRENT_BINARY_DIR}/${relative})
+function(_mz_export_blend blend out_var)
+    cmake_path(ABSOLUTE_PATH blend BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        NORMALIZE OUTPUT_VARIABLE source)
+    cmake_path(REPLACE_EXTENSION blend LAST_ONLY .glb OUTPUT_VARIABLE relative)
+    set(output ${CMAKE_CURRENT_BINARY_DIR}/${relative})
 
-        # --factory-startup: sin la configuración de quien compila, y sin correr los scripts
-        # que trae el .blend. --python-exit-code 1: una excepción que nadie captura en el
-        # script o en el exportador hace salir a Blender con 1, y el build falla; sin él,
-        # saldría con 0.
-        add_custom_command(
-            OUTPUT ${output}
-            COMMAND ${MZ_BLENDER_EXECUTABLE} -b --factory-startup -noaudio
-                --python-exit-code 1 ${source}
-                --python ${_mz_blender_script} -- ${output} ${MZ_BLENDER_VERSION}
-            DEPENDS ${source} ${_mz_blender_script} ${_mz_blender_pin}
-            COMMENT "Exportando ${blend} a glTF"
-            VERBATIM
-        )
-        list(APPEND outputs ${output})
-    endforeach()
-    add_custom_target(${target} ALL DEPENDS ${outputs})
+    # --factory-startup: sin la configuración de quien compila, y sin correr los scripts
+    # que trae el .blend. --python-exit-code 1: una excepción que nadie captura en el
+    # script o en el exportador hace salir a Blender con 1, y el build falla; sin él,
+    # saldría con 0.
+    add_custom_command(
+        OUTPUT ${output}
+        COMMAND ${MZ_BLENDER_EXECUTABLE} -b --factory-startup -noaudio
+            --python-exit-code 1 ${source}
+            --python ${_mz_blender_script} -- ${output} ${MZ_BLENDER_VERSION}
+        DEPENDS ${source} ${_mz_blender_script} ${_mz_blender_pin}
+        COMMENT "Exportando ${blend} a glTF"
+        VERBATIM
+    )
+    set(${out_var} ${output} PARENT_SCOPE)
 endfunction()

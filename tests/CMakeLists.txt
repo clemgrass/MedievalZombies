@@ -17,4 +17,6 @@ mz_add_coverage_target(
         engine/core
         engine/gpu
         engine/platform
+        tools/cooker/include
+        tools/cooker/src
 )

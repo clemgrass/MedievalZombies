@@ -38,6 +38,16 @@ mz_add_cmake_case(cmake.layers.same_layer CASE layers_same
 mz_add_cmake_case(cmake.layers.manual_link CASE layers_manual_link
     EXPECT "engine_platform \\(capa platform\\) enlaza con engine_core \\(capa core\\)")
 
+# La capa tool, fuera de la pila: una herramienta enlaza solo core y otras herramientas, y
+# nada del engine ni del juego enlaza una herramienta.
+mz_add_cmake_case(cmake.layers.tool_core CASE layers_tool_core)
+mz_add_cmake_case(cmake.layers.tool_lower CASE layers_tool_lower
+    EXPECT "tools_cooker \\(capa tool\\) enlaza con engine_platform \\(capa platform\\)")
+mz_add_cmake_case(cmake.layers.into_tool CASE layers_into_tool
+    EXPECT "game \\(capa game\\) enlaza con tools_cooker \\(capa tool\\)")
+mz_add_cmake_case(cmake.layers.into_tool_dep CASE layers_into_tool_dep
+    EXPECT "game \\(capa game\\) enlaza con tools_cgltf \\(capa tool\\)")
+
 # Subconjunto de C++. Los mensajes cubren Clang y GCC. GCC cita con comillas tipográficas
 # (‘typeid’) si el locale es UTF-8, y con ' en el locale C del contenedor: la regex
 # acepta cualquiera de las dos.

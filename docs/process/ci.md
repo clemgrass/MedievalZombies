@@ -50,8 +50,9 @@ En la misma etapa corren otros dos jobs:
   `.cpp` que ningún ejecutable de tests enlaza, y el resumen del job dice cuál es, con su
   archivo y su línea. El reporte HTML queda como artefacto `cobertura` (14 días), también
   cuando el job falla.
-- **`clang-tidy`** corre `clang-tidy` sobre `engine/`, `game/` y `tests/` con la
-  configuración de `.clang-tidy`, que trata cada hallazgo como un error.
+- **`clang-tidy`** corre `clang-tidy` sobre `engine/`, `game/`, `tests/` y `tools/cooker/`
+  (cgltf, de terceros, no entra) con la configuración de `.clang-tidy`, que trata cada
+  hallazgo como un error.
 
 Una zona nueva con TDD suma su carpeta a la lista en el mismo ticket que la crea. Si
 alguna vez una línea no se puede cubrir, el ADR-0011 pide una justificación escrita junto
@@ -139,9 +140,12 @@ cocinador nunca usa el `blender` del `PATH`.
 `install-blender.sh` al configurar (o usa `-DMZ_BLENDER=<ruta>`: un Blender oficial de la
 misma versión en otra carpeta, sin verificar el `sha256`), verifica que el binario
 sea la versión fijada y exporta cada `.blend` a `.glb` con `tools/blender/export_glb.py`.
-Por eso toda la segunda etapa espera al job `blender` y restaura su caché: Blender se baja
-una sola vez por pin. Los tests de la exportación tienen la etiqueta `assets`
-(`ctest --preset debug -L assets`).
+Después, `mz_cook` (el cocinador de `tools/cooker/`, que se compila en el mismo build)
+cocina cada `.glb` al `.mzasset` que carga el juego (`mz_cook_blend`, en
+`cmake/mz_cook.cmake`). Por eso toda la segunda etapa espera al job `blender` y restaura
+su caché: Blender se baja una sola vez por pin. Los tests de la cadena tienen la etiqueta
+`assets` (`ctest --preset debug -L assets`), y los de la biblioteca del cocinador, la
+etiqueta `tools`.
 
 En la CI, la carpeta instalada va a la caché de GitHub con el pin como clave.
 `tools/ci/run.sh` monta tu caché en el contenedor, así que un tarball bajado sirve para

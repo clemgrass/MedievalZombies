@@ -1,5 +1,5 @@
 # Exporta el .blend que Blender tiene abierto a un .glb (glTF 2.0 binario). Lo
-# corre la regla de mz_export_blend (cmake/mz_blender.cmake):
+# corre la regla de _mz_export_blend (cmake/mz_blender.cmake), que usa mz_cook_blend:
 #
 #   blender -b --factory-startup -noaudio --python-exit-code 1 <entrada.blend> \
 #       --python tools/blender/export_glb.py -- <salida.glb> <versión esperada>
